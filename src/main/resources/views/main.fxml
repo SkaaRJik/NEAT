@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import com.jfoenix.controls.JFXToggleButton?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
+   <top>
+      <AnchorPane prefHeight="0.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+         <children>
+            <BorderPane prefHeight="46.0" prefWidth="200.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+               <left>
+                  <Label fx:id="currentProjectLabel" text="Label" BorderPane.alignment="CENTER">
+                     <BorderPane.margin>
+                        <Insets left="5.0" right="5.0" />
+                     </BorderPane.margin></Label>
+               </left>
+               <center>
+                  <TextField fx:id="currentProjectTextField" editable="false" BorderPane.alignment="CENTER" />
+               </center>
+               <top>
+                  <MenuBar BorderPane.alignment="CENTER">
+                    <menus>
+                      <Menu fx:id="file" mnemonicParsing="false" text="File">
+                        <items>
+                              <MenuItem fx:id="newProject" mnemonicParsing="false" onAction="#createNewProject" text="New project" />
+                              <MenuItem fx:id="openProject" mnemonicParsing="false" onAction="#openProject" text="Open project" />
+                              <MenuItem fx:id="saveProject" mnemonicParsing="false" text="Save project" />
+                              <MenuItem fx:id="exit" mnemonicParsing="false" text="Exit" />
+                        </items>
+                      </Menu>
+                      <Menu fx:id="settings" mnemonicParsing="false" text="Settings">
+                        <items>
+                          <MenuItem fx:id="languages" mnemonicParsing="false" text="Languages" />
+                        </items>
+                      </Menu>
+                      <Menu fx:id="help" mnemonicParsing="false" text="Help">
+                        <items>
+                          <MenuItem fx:id="about" mnemonicParsing="false" text="About" />
+                        </items>
+                      </Menu>
+                    </menus>
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                     <BorderPane.margin>
+                        <Insets bottom="4.0" />
+                     </BorderPane.margin>
+                  </MenuBar>
+               </top>
+               <right>
+                  <HBox spacing="7.0" BorderPane.alignment="CENTER">
+                     <children>
+                        <JFXButton contentDisplay="CENTER" mnemonicParsing="false" onAction="#openProject" styleClass="JFXButton" text=" " wrapText="true">
+                           <HBox.margin>
+                              <Insets left="5.0" />
+                           </HBox.margin>
+                           <tooltip>
+                              <Tooltip fx:id="openProjectTooltip" text="Empty Tooltip" />
+                           </tooltip>
+                           <graphic>
+                              <FontAwesomeIconView glyphName="FOLDER_ALT" size="18.0" />
+                           </graphic></JFXButton>
+                        <JFXButton alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#createNewProject" styleClass="JFXButton" text=" " wrapText="true">
+                           <tooltip>
+                              <Tooltip fx:id="newProjectTooltip" text="Empty Tooltip" />
+                           </tooltip>
+                           <graphic>
+                              <FontAwesomeIconView glyphName="FILE_ALT" size="18.0" />
+                           </graphic></JFXButton>
+                     </children>
+                     <BorderPane.margin>
+                        <Insets left="2.0" right="5.0" />
+                     </BorderPane.margin>
+                  </HBox>
+               </right>
+            </BorderPane>
+         </children>
+      </AnchorPane>
+   </top>
+   <center>
+      <SplitPane dividerPositions="0.5" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets top="4.0" />
+         </BorderPane.margin>
+         <items>
+            <BorderPane prefHeight="383.0" prefWidth="372.0">
+               <center>
+                  <AnchorPane prefHeight="391.0" prefWidth="223.0">
+                     <children>
+                        <ScrollPane fx:id="parametresPane" fitToWidth="true" pannable="true" prefHeight="391.2" prefWidth="223.2" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <content>
+                              <Accordion>
+                                 <panes>
+                                    <TitledPane fx:id="GASettingsTitledPane" animated="false" expanded="false" prefHeight="12.0" prefWidth="222.0" text="GA Probabilites">
+                                      <content>
+                                          <VBox prefHeight="271.0" prefWidth="206.0" spacing="20.0">
+                                             <children>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="mutationProbabilityTextField" labelFloat="true" promptText="Mutation probability" BorderPane.alignment="CENTER">
+                                                         <BorderPane.margin>
+                                                            <Insets top="15.0" />
+                                                         </BorderPane.margin>
+                                                      </JFXTextField>
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="crossoverProbabilityTextField" labelFloat="true" promptText="Crossover probability" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="addLinkProbabilityTextField" labelFloat="true" promptText="Add link probability" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="addNodeProbabilityTextField" labelFloat="true" promptText="Add node probability" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="mutateBiasProbabilityTextField" labelFloat="true" promptText="Mutate bias probability" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="toggleLinkProbabilityTextFIeld" labelFloat="true" promptText="Toggle link probability" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="weightReplaceProbabilityTextField" labelFloat="true" promptText="Weight replace probability" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                             </children>
+                                          </VBox>
+                                      </content>
+                                    </TitledPane>
+                                    <TitledPane fx:id="neatSpecificTitledPane" animated="false" expanded="false" prefHeight="12.0" prefWidth="222.0" text="NEAT specific">
+                                       <content>
+                                          <VBox prefHeight="271.0" prefWidth="206.0" spacing="20.0">
+                                             <children>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="generatorSeedTextField" labelFloat="true" promptText="Generator seed" BorderPane.alignment="CENTER">
+                                                         <BorderPane.margin>
+                                                            <Insets right="5.0" top="15.0" />
+                                                         </BorderPane.margin>
+                                                      </JFXTextField>
+                                                   </center>
+                                                   <right>
+                                                      <JFXButton contentDisplay="CENTER" onAction="#generateNewSeed" text=" " BorderPane.alignment="CENTER">
+                                                         <BorderPane.margin>
+                                                            <Insets top="15.0" />
+                                                         </BorderPane.margin>
+                                                         <graphic>
+                                                            <FontAwesomeIconView glyphName="REPEAT" size="20.0" textAlignment="CENTER" />
+                                                         </graphic>
+                                                      </JFXButton>
+                                                   </right>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="excessCoefficientTextField" labelFloat="true" promptText="Excess coefficient" BorderPane.alignment="CENTER">
+                                                         <BorderPane.margin>
+                                                            <Insets />
+                                                         </BorderPane.margin>
+                                                      </JFXTextField>
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="disjointCoefficientTextField" labelFloat="true" promptText="Disjoint coefficient" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="weightCoefficientTextField" labelFloat="true" promptText="Weight coefficient" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                             </children>
+                                          </VBox>
+                                       </content>
+                                    </TitledPane>
+                                    <TitledPane fx:id="speciationControlTitledPane" animated="false" expanded="false" prefHeight="12.0" prefWidth="222.0" text="Speciation control">
+                                       <content>
+                                          <VBox prefHeight="271.0" prefWidth="206.0" spacing="20.0">
+                                             <children>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="thresholdCompabilityTextField" labelFloat="true" promptText="Threshold compability" BorderPane.alignment="CENTER">
+                                                         <BorderPane.margin>
+                                                            <Insets top="15.0" />
+                                                         </BorderPane.margin>
+                                                      </JFXTextField>
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="changeCompabilityTextField" labelFloat="true" promptText="Change compability" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="specieCountTextField" labelFloat="true" promptText="Specie count" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="survivalThresholdTextField" labelFloat="true" promptText="Survival threshold" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="specieAgeThresholdTextField" labelFloat="true" promptText="Specie age threshold" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="specieYouthThresholdTextFIeld" labelFloat="true" promptText="Specie youth threshold" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="specieOldPenaltyTextField" labelFloat="true" promptText="Specie old penalty" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="specieYouthBoostTextField" labelFloat="true" promptText="Specie youth boost" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="specieFitnessMaxTextField" labelFloat="true" promptText="Specie fitness max" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                             </children>
+                                          </VBox>
+                                       </content>
+                                    </TitledPane>
+                                    <TitledPane fx:id="networkControlTitledPane" animated="false" expanded="false" prefHeight="12.0" prefWidth="222.0" text="Network control">
+                                       <content>
+                                          <VBox prefHeight="271.0" prefWidth="206.0" spacing="20.0">
+                                             <children>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="inputNodesTextField" editable="false" labelFloat="true" promptText="Input nodes" BorderPane.alignment="CENTER">
+                                                         <BorderPane.margin>
+                                                            <Insets top="15.0" />
+                                                         </BorderPane.margin>
+                                                      </JFXTextField>
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="outputNodesTextField" editable="false" labelFloat="true" promptText="Output nodes" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="maxPertrubTextField" labelFloat="true" promptText="Threshold compability" BorderPane.alignment="CENTER">
+                                                         <BorderPane.margin>
+                                                            <Insets />
+                                                         </BorderPane.margin>
+                                                      </JFXTextField>
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="maxBiasPertrubTextField" labelFloat="true" promptText="Max bias pertrub" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXToggleButton fx:id="featureSelectionToogle" contentDisplay="RIGHT" text="Feature selection" wrapText="true" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXToggleButton fx:id="reccurencyAllowedToogle" contentDisplay="RIGHT" text="Reccurency allowed" wrapText="true" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                             </children>
+                                          </VBox>
+                                       </content>
+                                    </TitledPane>
+                                    <TitledPane fx:id="extinctionControlTitledPane" animated="false" expanded="false" prefHeight="12.0" prefWidth="222.0" text="Extinction control">
+                                       <content>
+                                          <VBox prefHeight="271.0" prefWidth="206.0" spacing="20.0">
+                                             <children>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXToggleButton fx:id="eleEventsToogle" contentDisplay="RIGHT" text="Ele events" wrapText="true" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="eleSurvivalCountTextField" labelFloat="true" promptText="Ele survival count" BorderPane.alignment="CENTER">
+                                                         <BorderPane.margin>
+                                                            <Insets />
+                                                         </BorderPane.margin>
+                                                      </JFXTextField>
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="eleEventTimeTextField" labelFloat="true" promptText="Ele event time" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                             </children>
+                                          </VBox>
+                                       </content>
+                                    </TitledPane>
+                                    <TitledPane fx:id="epochControlTitledPane" animated="false" expanded="false" prefHeight="12.0" prefWidth="222.0" text="Epoch control">
+                                       <content>
+                                          <VBox prefHeight="271.0" prefWidth="206.0" spacing="20.0">
+                                             <children>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXToggleButton fx:id="keepBestEverToogle" contentDisplay="RIGHT" text="Keep best ever" wrapText="true" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="extraFeatureCountTextField" labelFloat="true" promptText="Extra feature count" BorderPane.alignment="CENTER">
+                                                         <BorderPane.margin>
+                                                            <Insets />
+                                                         </BorderPane.margin>
+                                                      </JFXTextField>
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="popSizeTextField" labelFloat="true" promptText="Pop size" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                                <BorderPane prefHeight="0.0" prefWidth="201.0">
+                                                   <center>
+                                                      <JFXTextField fx:id="numberEpochsTextField" labelFloat="true" promptText="Number epochs" BorderPane.alignment="CENTER" />
+                                                   </center>
+                                                </BorderPane>
+                                             </children>
+                                          </VBox>
+                                       </content>
+                                    </TitledPane>
+                                 </panes>
+                              </Accordion>
+                           </content>
+                        </ScrollPane>
+                     </children>
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                  </AnchorPane>
+               </center>
+               <top>
+                  <Label fx:id="neatOptionsLabel" text="Label" wrapText="true" BorderPane.alignment="CENTER">
+                     <BorderPane.margin>
+                        <Insets bottom="6.0" top="6.0" />
+                     </BorderPane.margin>
+                  </Label>
+               </top>
+            </BorderPane>
+            <TabPane fx:id="infoTabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
+              <tabs>
+                <Tab fx:id="datasetsTab" text="Datasets">
+                  <content>
+                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                           <children>
+                              <BorderPane layoutX="5.0" layoutY="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0">
+                                 <center>
+                                    <AnchorPane>
+                                       <children>
+                                          <ScrollPane fx:id="dataSetsScrollPane" fitToHeight="true" fitToWidth="true" prefHeight="488.0" prefWidth="480.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                            <content>
+                                                <SplitPane dividerPositions="0.5" orientation="VERTICAL">
+                                                   <items>
+                                                    <AnchorPane minHeight="0.0" minWidth="0.0">
+                                                         <children>
+                                                            <TitledPane fx:id="trainTitledPane" animated="false" text="untitled" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                              <content>
+                                                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                                                     <children>
+                                                                        <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                                          <content>
+                                                                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0">
+                                                                                 <children>
+                                                                                    <TableView fx:id="trainTableView" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                                                 </children>
+                                                                              </AnchorPane>
+                                                                          </content>
+                                                                        </ScrollPane>
+                                                                     </children>
+                                                                  </AnchorPane>
+                                                              </content>
+                                                            </TitledPane>
+                                                         </children>
+                                                      </AnchorPane>
+                                                      <AnchorPane minHeight="0.0" minWidth="0.0">
+                                                         <children>
+                                                            <TitledPane fx:id="testTitledPane" animated="false" text="untitled" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                               <content>
+                                                                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                                                     <children>
+                                                                        <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                                           <content>
+                                                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0">
+                                                                                 <children>
+                                                                                    <TableView fx:id="testTableView" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                                                 </children>
+                                                                              </AnchorPane>
+                                                                           </content>
+                                                                        </ScrollPane>
+                                                                     </children>
+                                                                  </AnchorPane>
+                                                               </content>
+                                                            </TitledPane>
+                                                         </children>
+                                                      </AnchorPane>
+                                                   </items>
+                                                </SplitPane>
+                                            </content>
+                                          </ScrollPane>
+                                       </children>
+                                       <BorderPane.margin>
+                                          <Insets top="5.0" />
+                                       </BorderPane.margin>
+                                    </AnchorPane>
+                                 </center>
+                                 <top>
+                                    <BorderPane BorderPane.alignment="CENTER">
+                                       <center>
+                                          <AnchorPane BorderPane.alignment="CENTER">
+                                             <children>
+                                                <ChoiceBox fx:id="datasetChoiceBox" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                             </children>
+                                          </AnchorPane>
+                                       </center>
+                                       <right>
+                                          <JFXButton fx:id="loadNewDataButton" onAction="#prepareNewData" text="Load new data" wrapText="true" BorderPane.alignment="CENTER">
+                                             <BorderPane.margin>
+                                                <Insets left="5.0" />
+                                             </BorderPane.margin>
+                                          </JFXButton>
+                                       </right>
+                                       <left>
+                                          <Label fx:id="chooseDatasetLavel" text="Label" BorderPane.alignment="CENTER">
+                                             <BorderPane.margin>
+                                                <Insets right="5.0" />
+                                             </BorderPane.margin>
+                                          </Label>
+                                       </left>
+                                    </BorderPane>
+                                 </top>
+                              </BorderPane>
+                           </children>
+                        </AnchorPane>
+                  </content>
+                </Tab>
+                <Tab fx:id="trainigTab" text="Training">
+                  <content>
+                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                  </content>
+                </Tab>
+                  <Tab fx:id="testingTab" text="Testing">
+                     <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                     </content>
+                  </Tab>
+              </tabs>
+            </TabPane>
+         </items>
+      </SplitPane>
+   </center>
+</BorderPane>

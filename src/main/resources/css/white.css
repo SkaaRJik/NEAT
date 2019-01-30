@@ -1,0 +1,57 @@
+
+
+
+.jfx-text-field{
+    -fx-border-color: black;
+    -fx-border-radius: 6;
+}
+
+.jfx-button{
+    -fx-border-radius: 6;
+    -fx-border-color: black;
+
+}
+/*.jfx-text-field .error-label{
+    -fx-alignment : TOP-RIGHT;
+    -fx-content-display: RIGHT;
+    !*-fx-min-width: 270;
+    -fx-pref-width: 270;
+    -fx-max-width: 270;*!
+
+
+}*/
+
+.jfx-text-field .input-line{
+    visibility: false;
+}
+
+.tab-pane-next .tab{
+
+}
+
+.selected-as-train{
+    -fx-background-color: lightgreen;
+}
+
+.selected-as-test{
+    -fx-background-color: yellow;
+}
+
+.selected-as-train-and-test{
+    -fx-background-color: rgb(141,174,243);
+}
+
+.legend{
+    -fx-border-color: black;
+}
+
+.table-row-cell:train {
+    -fx-background: lightgreen;
+}
+.table-row-cell:test {
+    -fx-background: yellow;
+}
+
+.table-row-cell:train-and-test {
+    -fx-background: rgb(141,174,243);
+}

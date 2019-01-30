@@ -1,0 +1,20 @@
+package org.neat4j.neat.nn.core.functions;
+
+import org.neat4j.neat.nn.core.ActivationFunction;
+
+/**
+ * @author MSimmerson
+ * @fixed Filippov
+ */
+public class LinearFunction extends ActivationFunctionImpl {
+
+	public LinearFunction(double factor) { this.factor = factor; }
+	public LinearFunction() {this.factor = 1; }
+	public double activate(double neuronIp) {
+		return (neuronIp*this.factor);
+	}
+	public double derivative(double neuronIp) {
+		return (this.factor);
+	}
+
+}
