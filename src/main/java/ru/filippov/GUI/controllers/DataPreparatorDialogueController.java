@@ -506,6 +506,7 @@ public class DataPreparatorDialogueController {
             alert.setHeaderText(dataWasCreated);
             alert.setContentText(useChoiceBox);
             alert.show();
+            this.stage.close();
         }
 
 
@@ -517,12 +518,27 @@ public class DataPreparatorDialogueController {
         normalisedTestDataTableView.getColumns().clear();
         normalisedTestDataTableView.getItems().clear();
 
-        ObservableList<TableColumn<List<Double>, ?>> columns = FXCollections.observableList(normalisedDataTableView.getColumns());
+        //ObservableList<TableColumn<List<Double>, ?>> columns = FXCollections.observableList(normalisedDataTableView.getColumns());
 
+        for( int i = 0 ; i < normalisedDataTableView.getColumns().size(); i++){
+            TableColumn<List<Double>, ?> column = normalisedDataTableView.getColumns().get(i);
+            TableColumn<List<Double>, Double> col = new TableColumn<List<Double>, Double>();
+            int finalI = i;
+            col.setCellValueFactory(p -> {
+               return new SimpleObjectProperty<Double>((p.getValue().get(finalI)));
+            });
+            normalisedTrainDataTableView.getColumns().add(col);
+            col.setText(column.getText());
 
-        normalisedTrainDataTableView.getColumns().addAll(columns);
-        columns = FXCollections.observableList(normalisedDataTableView.getColumns());
-        normalisedTestDataTableView.getColumns().addAll(columns);
+            col = new TableColumn<List<Double>, Double>();
+            col.setCellValueFactory(p -> {
+                return new SimpleObjectProperty<Double>((p.getValue().get(finalI)));
+            });
+            col.setText(column.getText());
+            normalisedTestDataTableView.getColumns().add(col);
+
+        }
+
         ObservableList<List<Double>> normalisedTrainData = FXCollections.observableArrayList();
         ObservableList<List<Double>> normalisedTestData = FXCollections.observableArrayList();
         for(int index : trainSetIndexes){
