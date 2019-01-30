@@ -24,7 +24,6 @@ import org.neat4j.neat.core.NEATConfig;
 import org.neat4j.neat.core.NEATLoader;
 import ru.filippov.GUI.windows.DataPreparatorDialogue;
 import ru.filippov.utils.CsControl;
-import ru.filippov.utils.FileWorker;
 import ru.filippov.GUI.windows.AlertWindow;
 import ru.filippov.GUI.windows.NewProjectDialogue;
 
@@ -61,7 +60,7 @@ public class MainController {
     @FXML private JFXTextField addLinkProbabilityTextField;
     @FXML private JFXTextField addNodeProbabilityTextField;
     @FXML private JFXTextField mutateBiasProbabilityTextField;
-    @FXML private JFXTextField toggleLinkProbabilityTextFIeld;
+    @FXML private JFXTextField toggleLinkProbabilityTextField;
     @FXML private JFXTextField weightReplaceProbabilityTextField;
     @FXML private TitledPane neatSpecificTitledPane;
     @FXML private JFXTextField generatorSeedTextField;
@@ -75,7 +74,7 @@ public class MainController {
     @FXML private JFXTextField specieCountTextField;
     @FXML private JFXTextField survivalThresholdTextField;
     @FXML private JFXTextField specieAgeThresholdTextField;
-    @FXML private JFXTextField specieYouthThresholdTextFIeld;
+    @FXML private JFXTextField specieYouthThresholdTextField;
     @FXML private JFXTextField specieOldPenaltyTextField;
     @FXML private JFXTextField specieYouthBoostTextField;
     @FXML private JFXTextField specieFitnessMaxTextField;
@@ -118,6 +117,8 @@ public class MainController {
     @FXML
     private Tab testingTab;
 
+    @FXML
+    private Button startTrainingButton;
 
 
 
@@ -142,7 +143,7 @@ public class MainController {
         addReqieredFieldValidator(this.addLinkProbabilityTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.addNodeProbabilityTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.mutateBiasProbabilityTextField, requiredFieldValidator);
-        addReqieredFieldValidator(this.toggleLinkProbabilityTextFIeld, requiredFieldValidator);
+        addReqieredFieldValidator(this.toggleLinkProbabilityTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.weightReplaceProbabilityTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.excessCoefficientTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.disjointCoefficientTextField, requiredFieldValidator);
@@ -152,7 +153,7 @@ public class MainController {
         addReqieredFieldValidator(this.specieCountTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.survivalThresholdTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.specieAgeThresholdTextField, requiredFieldValidator);
-        addReqieredFieldValidator(this.specieYouthThresholdTextFIeld, requiredFieldValidator);
+        addReqieredFieldValidator(this.specieYouthThresholdTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.specieOldPenaltyTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.specieYouthBoostTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.specieFitnessMaxTextField, requiredFieldValidator);
@@ -220,7 +221,7 @@ public class MainController {
 
     }
 
-    public void loadDataset(String datasetName){
+    private void loadDataset(String datasetName){
         String pathToDatasetDirectory = this.currentProjectTextField.getText() + "\\datasets\\" + datasetName;
         String trainDataSetName = pathToDatasetDirectory + "\\" +datasetName+"@train.dataset";
         String testDataSetName = pathToDatasetDirectory + "\\" +datasetName+"@test.dataset";
@@ -307,7 +308,7 @@ public class MainController {
     }
 
 
-    public void loadLanguage(Locale locale) {
+    private void loadLanguage(Locale locale) {
         switch (locale.getLanguage()){
             case "ru":
                 resourceBundle = ResourceBundle.getBundle("properties.languages.language", CsControl.Cp1251);
@@ -338,13 +339,13 @@ public class MainController {
         addLinkProbabilityTextField.setPromptText(resourceBundle.getString("ADD_LINK_PROBABILITY"));
         addNodeProbabilityTextField.setPromptText(resourceBundle.getString("ADD_NODE_PROBABILITY"));
         mutateBiasProbabilityTextField.setPromptText(resourceBundle.getString("MUTATE_BIAS_PROBABILITY"));
-        toggleLinkProbabilityTextFIeld.setPromptText(resourceBundle.getString("TOGGLE_LINK_PROBABILITY"));
+        toggleLinkProbabilityTextField.setPromptText(resourceBundle.getString("TOGGLE_LINK_PROBABILITY"));
         weightReplaceProbabilityTextField.setPromptText(resourceBundle.getString("WEIGHT_REPLACED_PROBABILITY"));
 
 
         AlertWindow.setLanguage(resourceBundle);
         NewProjectDialogue.getInstance(this.scene).setLanguage(resourceBundle);
-        //DataPreparatorDialogue.getInstance(this.scene).changeLanguage(resourceBundle);
+
 
 
     }
@@ -353,7 +354,8 @@ public class MainController {
         return new NEATLoader().loadConfig(path);
     }
 
-    public void openProject(){
+    @FXML
+    private void openProject(){
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialDirectory(new File(Paths.get("").toAbsolutePath().toString()+"\\projects\\"));
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NEAT file", "*.neat"));
@@ -361,6 +363,7 @@ public class MainController {
         File projectFile = fileChooser.showOpenDialog(this.scene.getWindow());
         openProject(projectFile);
     }
+
 
     private void openProject(File projectFile) {
         if(projectFile != null){
@@ -372,11 +375,8 @@ public class MainController {
             infoTabPane.setVisible(true);
             this.projectFile = projectFile;
             fillDataSetChoiceBox(originalProjectConfig);
+            fillFieldsUsingOriginalConfig();
         }
-    }
-
-    private void setSaveProject(AIConfig config, File dest){
-
     }
 
     private void fillDataSetChoiceBox(AIConfig sourceConfig) {
@@ -387,7 +387,8 @@ public class MainController {
         }
     }
 
-    public void createNewProject(ActionEvent actionEvent){
+    @FXML
+    private void createNewProject(ActionEvent actionEvent){
         NewProjectDialogue dialogue = NewProjectDialogue.getInstance(this.scene);
         dialogue.show();
         if(dialogue.getProjectName().length() != 0 ){
@@ -444,12 +445,88 @@ public class MainController {
 
     }
 
-
-    public void saveConfig(){
-
+    @FXML
+    private void saveConfig(){
+        try {
+            initRunnableConfigUsingGUI();
+            runnableProjectConfig.saveConfig(this.projectFile);
+        } catch (IOException e) {
+            AlertWindow.getAlert("CANT_SAVE_FILE").show();
+        }
     }
 
-    public void prepareNewData(ActionEvent actionEvent) {
+    private void initRunnableConfigUsingGUI() {
+         runnableProjectConfig.updateConfig("PROBABILITY.MUTATION", mutationProbabilityTextField.getText());
+         runnableProjectConfig.updateConfig("PROBABILITY.CROSSOVER", crossoverProbabilityTextField.getText());
+         runnableProjectConfig.updateConfig("PROBABILITY.ADDLINK", addLinkProbabilityTextField.getText());
+         runnableProjectConfig.updateConfig("PROBABILITY.ADDNODE", addNodeProbabilityTextField.getText());
+         runnableProjectConfig.updateConfig("PROBABILITY.MUTATEBIAS", mutateBiasProbabilityTextField.getText());
+         runnableProjectConfig.updateConfig("PROBABILITY.TOGGLELINK", toggleLinkProbabilityTextField.getText());
+         runnableProjectConfig.updateConfig("PROBABILITY.WEIGHT.REPLACED", weightReplaceProbabilityTextField.getText());
+         runnableProjectConfig.updateConfig("GENERATOR.SEED", generatorSeedTextField.getText());
+         runnableProjectConfig.updateConfig("EXCESS.COEFFICIENT", excessCoefficientTextField.getText());
+         runnableProjectConfig.updateConfig("DISJOINT.COEFFICIENT", disjointCoefficientTextField.getText());
+         runnableProjectConfig.updateConfig("WEIGHT.COEFFICIENT", weightCoefficientTextField.getText());
+         runnableProjectConfig.updateConfig("COMPATABILITY.THRESHOLD", thresholdCompabilityTextField.getText());
+         runnableProjectConfig.updateConfig("COMPATABILITY.CHANGE", changeCompabilityTextField.getText());
+         runnableProjectConfig.updateConfig("SPECIE.COUNT", specieCountTextField.getText());
+         runnableProjectConfig.updateConfig("SURVIVAL.THRESHOLD", survivalThresholdTextField.getText());
+         runnableProjectConfig.updateConfig("SPECIE.AGE.THRESHOLD", specieAgeThresholdTextField.getText());
+         runnableProjectConfig.updateConfig("SPECIE.YOUTH.THRESHOLD", specieYouthThresholdTextField.getText());
+         runnableProjectConfig.updateConfig("SPECIE.OLD.PENALTY", specieOldPenaltyTextField.getText());
+         runnableProjectConfig.updateConfig("SPECIE.YOUTH.BOOST", specieYouthBoostTextField.getText());
+         runnableProjectConfig.updateConfig("SPECIE.FITNESS.MAX", specieFitnessMaxTextField.getText());
+         runnableProjectConfig.updateConfig("INPUT.NODES", inputNodesTextField.getText());
+         runnableProjectConfig.updateConfig("OUTPUT.NODES", outputNodesTextField.getText());
+         runnableProjectConfig.updateConfig("MAX.PERTURB", maxPertrubTextField.getText());
+         runnableProjectConfig.updateConfig("MAX.BIAS.PERTURB", maxBiasPertrubTextField.getText());
+         runnableProjectConfig.updateConfig("FEATURE.SELECTION", String.valueOf(featureSelectionToogle.isSelected()));
+         runnableProjectConfig.updateConfig("RECURRENCY.ALLOWED", String.valueOf(reccurencyAllowedToogle.isSelected()));
+         runnableProjectConfig.updateConfig("ELE.EVENTS", String.valueOf(eleEventsToogle.isSelected()));
+         runnableProjectConfig.updateConfig("ELE.SURVIVAL.COUNT", eleSurvivalCountTextField.getText());
+         runnableProjectConfig.updateConfig("ELE.EVENT.TIME", eleEventTimeTextField.getText());
+         runnableProjectConfig.updateConfig("KEEP.BEST.EVER", String.valueOf(keepBestEverToogle.isSelected()));
+         runnableProjectConfig.updateConfig("EXTRA.FEATURE.COUNT", extraFeatureCountTextField.getText());
+         runnableProjectConfig.updateConfig("POP.SIZE", popSizeTextField.getText());
+         runnableProjectConfig.updateConfig("NUMBER.EPOCHS", numberEpochsTextField.getText());
+    }
+    
+    private void fillFieldsUsingOriginalConfig(){
+        mutationProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.MUTATION"));
+        crossoverProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.CROSSOVER"));
+        addLinkProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.ADDLINK"));
+        addNodeProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.ADDNODE"));
+        mutateBiasProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.MUTATEBIAS"));
+        toggleLinkProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.TOGGLELINK"));
+        weightReplaceProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.WEIGHT.REPLACED"));
+        generatorSeedTextField.setText(originalProjectConfig.configElement("GENERATOR.SEED"));
+        excessCoefficientTextField.setText(originalProjectConfig.configElement("EXCESS.COEFFICIENT"));
+        disjointCoefficientTextField.setText(originalProjectConfig.configElement("DISJOINT.COEFFICIENT"));
+        weightCoefficientTextField.setText(originalProjectConfig.configElement("WEIGHT.COEFFICIENT"));
+        thresholdCompabilityTextField.setText(originalProjectConfig.configElement("COMPATABILITY.THRESHOLD"));
+        changeCompabilityTextField.setText(originalProjectConfig.configElement("COMPATABILITY.CHANGE"));
+        specieCountTextField.setText(originalProjectConfig.configElement("SPECIE.COUNT"));
+        survivalThresholdTextField.setText(originalProjectConfig.configElement("SURVIVAL.THRESHOLD"));
+        specieAgeThresholdTextField.setText(originalProjectConfig.configElement("SPECIE.AGE.THRESHOLD"));
+        specieYouthThresholdTextField.setText(originalProjectConfig.configElement("SPECIE.YOUTH.THRESHOLD"));
+        specieOldPenaltyTextField.setText(originalProjectConfig.configElement("SPECIE.OLD.PENALTY"));
+        specieYouthBoostTextField.setText(originalProjectConfig.configElement("SPECIE.YOUTH.BOOST"));
+        specieFitnessMaxTextField.setText(originalProjectConfig.configElement("SPECIE.FITNESS.MAX"));
+        maxPertrubTextField.setText(originalProjectConfig.configElement("MAX.PERTURB"));
+        maxBiasPertrubTextField.setText(originalProjectConfig.configElement("MAX.BIAS.PERTURB"));
+        featureSelectionToogle.setSelected(Boolean.parseBoolean(originalProjectConfig.configElement("FEATURE.SELECTION")));
+        reccurencyAllowedToogle.setSelected(Boolean.parseBoolean(originalProjectConfig.configElement("RECURRENCY.ALLOWED")));
+        eleEventsToogle.setSelected(Boolean.parseBoolean(originalProjectConfig.configElement("ELE.EVENTS")));
+        eleSurvivalCountTextField.setText(originalProjectConfig.configElement("ELE.SURVIVAL.COUNT"));
+        eleEventTimeTextField.setText(originalProjectConfig.configElement("ELE.EVENT.TIME"));
+        keepBestEverToogle.setSelected(Boolean.parseBoolean(originalProjectConfig.configElement("KEEP.BEST.EVER")));
+        extraFeatureCountTextField.setText(originalProjectConfig.configElement("EXTRA.FEATURE.COUNT"));
+        popSizeTextField.setText(originalProjectConfig.configElement("POP.SIZE"));
+        numberEpochsTextField.setText(originalProjectConfig.configElement("NUMBER.EPOCHS"));
+    }
+    
+    @FXML
+    private void prepareNewData(ActionEvent actionEvent) {
         DataPreparatorDialogue.getInstance(this.scene).setProjectPath(this.currentProjectTextField.getText()).show();
         String nameOfDataSet = DataPreparatorDialogue.getInstance(this.scene).getNameOfDataSet();
         if( nameOfDataSet != null ){
@@ -468,5 +545,9 @@ public class MainController {
 
     public void generateNewSeed() {
         generatorSeedTextField.setText(String.valueOf(System.currentTimeMillis()));
+    }
+
+
+    public void trainModel(ActionEvent actionEvent) {
     }
 }

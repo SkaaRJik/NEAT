@@ -37,7 +37,7 @@
                            <top>
                               <BorderPane prefHeight="0.0" prefWidth="600.0" BorderPane.alignment="CENTER">
                                  <center>
-                                    <TextField fx:id="fileTextField" promptText="Open the file" BorderPane.alignment="CENTER">
+                                    <TextField fx:id="fileTextField" editable="false" promptText="Open the file" BorderPane.alignment="CENTER">
                                        <BorderPane.margin>
                                           <Insets top="5.0" />
                                        </BorderPane.margin></TextField>
@@ -229,7 +229,7 @@
                   </AnchorPane>
                </content>
             </Tab>
-            <Tab fx:id="setDataSetNameTable" text="Untitled Tab">
+            <Tab fx:id="setDataSetNameTable" disable="true" text="Untitled Tab">
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>

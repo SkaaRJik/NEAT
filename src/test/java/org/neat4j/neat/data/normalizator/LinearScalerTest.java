@@ -32,4 +32,9 @@ class LinearScalerTest {
 
         Assertions.assertEquals(new SigmoidFunction().derivative(x), bar);
     }
+
+    @Test
+    void bar(){
+        double a = Double.parseDouble("0,5");
+    }
 }

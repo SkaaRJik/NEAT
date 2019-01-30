@@ -21,7 +21,6 @@ public class Main extends Application {
         controller.init();
         primaryStage.show();
 
-
     }
 
 

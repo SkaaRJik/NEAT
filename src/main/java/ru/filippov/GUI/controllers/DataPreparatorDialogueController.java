@@ -3,6 +3,7 @@ package ru.filippov.GUI.controllers;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTextField;
+import com.sun.xml.internal.ws.util.StringUtils;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -32,6 +33,8 @@ import ru.filippov.utils.Validator;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DataPreparatorDialogueController {
 
@@ -40,138 +43,59 @@ public class DataPreparatorDialogueController {
 
 
 
-    @FXML
-    private TabPane tabPane;
+    @FXML    private TabPane tabPane;
+    @FXML    private Tab loadDataTab;
+    @FXML    private TextField fileTextField;
+    @FXML    private JFXComboBox<String> encodingChoiceBox;
+    @FXML    private TextArea dataTextArea;
+    @FXML    private JFXTextField decimalSeparatorTextField;
+    @FXML    private JFXTextField dataSeparatorTextField;
+    @FXML    private CheckBox containsHeadersCheckBox;
 
-    @FXML
-    private Tab loadDataTab;
+    @FXML    private Tab selectUsableDataTab;
+    @FXML    private TableView<List<Double>> selectUsableDataTableView;
 
-    @FXML
-    private TextField fileTextField;
+    @FXML    private Tab normaliseDataTab;
+    @FXML    private Label chooseNormaliseMethodLabel;
+    @FXML    private ChoiceBox<String> chooseNormaliseMethodChoiceBox;
+    @FXML    private Label chooseActivationFunctionLabel;
+    @FXML    private ChoiceBox<String> chooseActivationFunctionChoiceBox;
+    @FXML    private Button runNormaliseButton;
+    @FXML    private Accordion normaliseDataAccordion;
+    @FXML    private TableView<List<Double>> normalisedDataTableView;
+    @FXML    private BarChart<Number, Number> normaliseStatisticBarChart;
 
-    @FXML
-    private JFXComboBox<String> encodingChoiceBox;
-
-    @FXML
-    private TextArea dataTextArea;
-
-    @FXML
-    private JFXTextField decimalSeparatorTextField;
-
-    @FXML
-    private JFXTextField dataSeparatorTextField;
-
-    @FXML
-    private CheckBox containsHeadersCheckBox;
-
-
-
-
-
-
-    @FXML
-    private Tab selectUsableDataTab;
-
-    @FXML private TableView<List<Double>> selectUsableDataTableView;
-
-
-
-    @FXML
-    private Tab normaliseDataTab;
-
-    @FXML
-    private Label chooseNormaliseMethodLabel;
-
-    @FXML
-    private ChoiceBox<String> chooseNormaliseMethodChoiceBox;
-
-    @FXML
-    private Label chooseActivationFunctionLabel;
-
-    @FXML
-    private ChoiceBox<String> chooseActivationFunctionChoiceBox;
-
-    @FXML
-    private Button runNormaliseButton;
-
-    @FXML
-    private Accordion normaliseDataAccordion;
-
-    @FXML
-    private TableView<List<Double>> normalisedDataTableView;
-
-    @FXML
-    private BarChart<Number, Number> normaliseStatisticBarChart;
-
-    @FXML
-    private Tab selectTrainingDataTab;
-
-    @FXML
-    private TableView<List<Double>> selectTrainingDataTableView;
-
-    @FXML
-    private Label trainingSetPercentageLabel;
-
-    @FXML
-    private TextField trainingSetPercentageTextField;
-
-    @FXML
-    private CheckBox manualSelectionCheckBox;
-
-    @FXML
-    private Label testingSetPercentageLabel;
-
-    @FXML
-    private TextField testingSetPercentageTextField;
+    @FXML    private Tab selectTrainingDataTab;
+    @FXML    private TableView<List<Double>> selectTrainingDataTableView;
+    @FXML    private Label trainingSetPercentageLabel;
+    @FXML    private TextField trainingSetPercentageTextField;
+    @FXML    private CheckBox manualSelectionCheckBox;
+    @FXML    private Label testingSetPercentageLabel;
+    @FXML    private TextField testingSetPercentageTextField;
+    @FXML    private Label trainingSetLegendLabel;
+    @FXML    private Label testingSetLegendLabel;
+    @FXML    private Label trainingAndTestingSetLegendLabel;
+    @FXML    private Button confirmPercantageSetButton;
 
 
 
-    @FXML
-    private Label trainingSetLegendLabel;
+    @FXML    private Tab setDataSetNameTable;
+    @FXML    private JFXTextField dataSetNameTextField;
+    @FXML    private Label dataSetsHeaderLabel;
+    @FXML    private TitledPane normalizedTrainDataTitledPane;
+    @FXML    private TableView<List<Double>> normalisedTrainDataTableView;
+    @FXML    private TitledPane normalizedTestDataTitledPane;
+    @FXML    private TableView<List<Double>> normalisedTestDataTableView;
 
-    @FXML
-    private Label testingSetLegendLabel;
-
-    @FXML
-    private Label trainingAndTestingSetLegendLabel;
-
-    @FXML
-    private Button confirmPercantageSetButton;
-
-
-
-    @FXML
-    private Tab setDataSetNameTable;
-
-    @FXML
-    private JFXTextField dataSetNameTextField;
-
-    @FXML
-    private Label dataSetsHeaderLabel;
-
-    @FXML
-    private TitledPane normalizedTrainDataTitledPane;
-
-    @FXML
-    private TableView<List<Double>> normalisedTrainDataTableView;
-
-    @FXML
-    private TitledPane normalizedTestDataTitledPane;
-
-    @FXML
-    private TableView<List<Double>> normalisedTestDataTableView;
-
-    @FXML
-    private JFXButton previousButton;
-
-    @FXML
-    private JFXButton nextButton;
-
-    @FXML
-    private JFXButton cancelButton;
+    @FXML    private JFXButton previousButton;
+    @FXML    private JFXButton nextButton;
+    @FXML    private JFXButton cancelButton;
 
     private Stage stage;
     ResourceBundle resourceBundle;
+
+
+    Pattern patternDelimetr = Pattern.compile("[;,. _]");
 
     int inputs = 0;
     int outputs = 0;
@@ -186,6 +110,8 @@ public class DataPreparatorDialogueController {
 
     String projectPath;
 
+
+    private String stringFromFile;
 
     private String finish = "Завершить";
     private String next = "Далее";
@@ -202,8 +128,10 @@ public class DataPreparatorDialogueController {
     private String success = "Success";
     private String dataWasCreated = "Data was successfully saved";
     private String useChoiceBox = "Use drop out list on main window, to select it";
-    public void init(){
+    private String reloadData = "Upload your data again to apply encoding";
 
+
+    public void init(){
 
         this.stage = ((Stage) this.tabPane.getScene().getWindow());
 
@@ -217,34 +145,33 @@ public class DataPreparatorDialogueController {
                 break;
         }
 
-        this.encodingChoiceBox.getSelectionModel()
-                .selectedItemProperty()
-                .addListener((observable, oldValue, newValue) -> {
-            if(this.dataTextArea.getText().length() != 0 && this.fileTextField.getText().length() != 0) {
-                this.dataTextArea.setText("");
-                try {
-                    this.lines = loadData(new File(this.fileTextField.getText()));
-                    this.lines.stream().forEach(s -> this.dataTextArea.appendText(s+"\n"));
-                    fillSeparators();
-                } catch (UnsupportedEncodingException e){
-                    this.dataTextArea.setText(this.unsupportedEncoding);
-                    e.printStackTrace();
-                } catch (FileNotFoundException e){
-                    e.printStackTrace();
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
+        this.encodingChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue!=null){
+                if(newValue.length()!=0) {
+                    if(fileTextField.getText().length()!=0) {
+                        this.dataTextArea.setText(reloadData);
+                        this.nextButton.setDisable(true);
+                    }
                 }
             }
-            checkLoadDataTab1ToGoNext();
+        });
+
+        this.dataTextArea.textProperty().addListener((observable, oldValue, newValue) -> {
+            if(this.dataTextArea.getText().length() != 0) {
+                checkLoadDataTab1ToGoNext();
+                fillSeparators();
+            }
         });
 
         this.stage.getScene().setOnKeyPressed(keyEvent -> {
             switch (keyEvent.getCode()){
                 case ENTER:
-                    if(!this.nextButton.isDisable())
-                        nextStep();
-                    //Stop letting it do anything else
+                    if(!this.encodingChoiceBox.isFocused()) {
+                        if (!this.nextButton.isDisable())
+                            nextStep();
+                    } else {
+                        loadData();
+                    }
                     keyEvent.consume();
                     break;
                 case ESCAPE:
@@ -265,12 +192,6 @@ public class DataPreparatorDialogueController {
 
         });
 
-        this.dataTextArea.textProperty().addListener((observable, oldValue, newValue) -> {
-            if(this.dataTextArea.getText().length() != 0) {
-                fillSeparators();
-                checkLoadDataTab1ToGoNext();
-            }
-        });
 
         chooseNormaliseMethodChoiceBox.setItems(FXCollections.observableArrayList("Линейный", "Нелинейный", "Выбеливание входов"));
         chooseNormaliseMethodChoiceBox.getSelectionModel().selectFirst();
@@ -286,16 +207,8 @@ public class DataPreparatorDialogueController {
         });
 
         chooseActivationFunctionChoiceBox.setItems(FXCollections.observableArrayList("sigmoid(x)", "th(x)", "arctg(x)"));
-        //selectTrainingDataTableView.setPlaceholder(new BorderPane(new CheckBox("Ручная выборка")));
-
 
         selectTrainingDataTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-
-        /*trainingSetLegendLabel.pseudoClassStateChanged(PseudoClass.getPseudoClass("train"), true);
-        testingSetLegendLabel.pseudoClassStateChanged(PseudoClass.getPseudoClass("test"), true);
-        trainingAndTestingSetLegendLabel.pseudoClassStateChanged(PseudoClass.getPseudoClass("train-and-test"), true);*/
-
-
 
         selectTrainingDataTableView.setRowFactory( tableView2 -> {
 
@@ -307,23 +220,21 @@ public class DataPreparatorDialogueController {
 
                 @Override
                 public void updateItem(List<Double> item, boolean empty){
-
-                    if (item != null) {
-                        int index = usedData.indexOf(item);
-                        this.pseudoClassStateChanged(train, trainSetIndexes.contains(index));
-                        this.pseudoClassStateChanged(test, testSetIndexes.contains(index));
-                        this.pseudoClassStateChanged(trainAndTest, trainSetIndexes.contains(index) && testSetIndexes.contains(index));
-                    } else {
-                        this.pseudoClassStateChanged(train, false);
-                        this.pseudoClassStateChanged(test, false);
-                        this.pseudoClassStateChanged(trainAndTest, false);
-                    }
-                    if(trainSetIndexes.isEmpty() || testSetIndexes.isEmpty()){
-                        nextButton.setDisable(true);
-                    } else {
-                        nextButton.setDisable(false);
-                    }
-
+                if (item != null) {
+                    int index = usedData.indexOf(item);
+                    this.pseudoClassStateChanged(train, trainSetIndexes.contains(index));
+                    this.pseudoClassStateChanged(test, testSetIndexes.contains(index));
+                    this.pseudoClassStateChanged(trainAndTest, trainSetIndexes.contains(index) && testSetIndexes.contains(index));
+                } else {
+                    this.pseudoClassStateChanged(train, false);
+                    this.pseudoClassStateChanged(test, false);
+                    this.pseudoClassStateChanged(trainAndTest, false);
+                }
+                if(trainSetIndexes.isEmpty() || testSetIndexes.isEmpty()){
+                    nextButton.setDisable(true);
+                } else {
+                    nextButton.setDisable(false);
+                }
                 }
             };
 
@@ -440,13 +351,78 @@ public class DataPreparatorDialogueController {
             }
         });
     }
-    @FXML
-    private void cancel() {
+    @FXML    private void cancel() {
         this.stage.close();
     }
 
-    @FXML
-    void nextStep() {
+    private List<List<Object>> getListDataFromTextArea() throws NumberFormatException{
+
+        String textAreaString = this.dataTextArea.getText();
+
+        String valueDelimetr = this.dataSeparatorTextField.getText() ;
+        String decimalDelimetr = this.decimalSeparatorTextField.getText() ;
+        if(!valueDelimetr.equals(".")){
+            if(!decimalDelimetr.equals(".")){
+                valueDelimetr = ".";
+            } else {
+                decimalDelimetr = valueDelimetr;
+                valueDelimetr = ".";
+            }
+        }
+
+        StringTokenizer stringTokenizer = new StringTokenizer(textAreaString, "\n");
+
+        int tokens = stringTokenizer.countTokens();
+        StringTokenizer elementTokenizer;
+        List<List<Object>> valuesList;
+
+        if(containsHeadersCheckBox.isSelected()) valuesList = new ArrayList<>(tokens);
+        else valuesList = new ArrayList<>(tokens+1);
+        List<Object> row;
+        int countOfValues = 0;
+        for (int i = 0; i < tokens; i++) {
+            //TODO replace , on .
+            String tempStr = stringTokenizer.nextToken();
+            if(i == 0){
+                if(!containsHeadersCheckBox.isSelected()){
+                    tempStr = tempStr.replaceAll(decimalDelimetr, ".");
+                }
+            }
+            elementTokenizer = new StringTokenizer(tempStr, valueDelimetr);
+            if(i == 0) {
+                countOfValues = elementTokenizer.countTokens();
+            }
+            row = new ArrayList<>(countOfValues);
+            if(i==0) {
+                if (containsHeadersCheckBox.isSelected()) {
+                    for (int j = 0; j < countOfValues; j++) {
+                        row.add(String.valueOf(j + 1));
+                    }
+                    valuesList.add(row);
+                    row = new ArrayList<>(countOfValues);
+                } else {
+                    for (int j = 0; j < countOfValues; j++) {
+                        row.add(elementTokenizer.nextToken());
+                    }
+                    valuesList.add(row);
+                    continue;
+                }
+            }
+            for (int j = 0; j < countOfValues; j++) {
+                row.add(Double.valueOf(elementTokenizer.nextToken()));
+            }
+            valuesList.add(row);
+        }
+
+        return valuesList;
+
+
+    }
+
+
+
+
+    @FXML    void nextStep() {
         int i = this.tabPane.getSelectionModel().getSelectedIndex();
         if( this.tabPane.getSelectionModel().getSelectedItem() == loadDataTab) {
             //TODO Check List lines, if user just copy-paste his data - List is empty
@@ -461,7 +437,7 @@ public class DataPreparatorDialogueController {
                 return;
             }
             try {
-                firstStep();
+                firstStep(getListDataFromTextArea());
             } catch (NumberFormatException e) {
                 AlertWindow.getAlert(cantProcessData).show();
                 return;
@@ -590,9 +566,6 @@ public class DataPreparatorDialogueController {
         }
         this.selectTrainingDataTableView.getColumns().addAll(outputTableColumns);
 
-        List<Double> row;
-        List<Double> dataForTable = new ArrayList<>(usedData.size());
-
         this.selectTrainingDataTableView.setItems(FXCollections.observableArrayList(usedData));
 
         this.testSetIndexes = new HashSet<>();
@@ -665,90 +638,86 @@ public class DataPreparatorDialogueController {
 
     }
 
-    private void firstStep() throws NumberFormatException{
+    private void firstStep(List<List<Object>> values) throws NumberFormatException{
         this.dataSeparatorTextField.setVisible(false);
         this.decimalSeparatorTextField.setVisible(false);
         this.containsHeadersCheckBox.setVisible(false);
 
-        StringTokenizer stringTokenizer = new StringTokenizer(lines.get(0), dataSeparatorTextField.getText());
+
         TableColumn tableColumn;
-        int tokens = stringTokenizer.countTokens();
+
         this.selectUsableDataTableView.getColumns().clear();
         this.selectUsableDataTableView.getItems().clear();
 
-        for (int j = 0; j < tokens; j++) {
-            tableColumn = new TableColumn();
-            tableColumn.setSortable(false);
-            ChoiceBox<String> choiceBox = new ChoiceBox<>(FXCollections.observableArrayList("Input", "Output", "Unused"));
-            choiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-                if (oldValue != null) {
-                    switch (oldValue) {
-                        case "Input":
-                            this.inputs--;
-                            break;
-                        case "Output":
-                            this.outputs--;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                switch (newValue){
-                    case "Input":
-                        this.inputs++;
-                        break;
-                    case "Output":
-                        this.outputs++;
-                        break;
-                    default:
-                        break;
-                }
-                if (this.inputs == 0 || this.outputs == 0) {
-                    this.nextButton.setDisable(true);
-                } else {
-                    this.nextButton.setDisable(false);
-                }
-            });
-            if (j == tokens-1) choiceBox.getSelectionModel().select("Output");
-            else choiceBox.getSelectionModel().select("Input");
-            Label headerLabel = null;
-
-            if(containsHeadersCheckBox.isSelected()){
-                headerLabel = new Label(stringTokenizer.nextToken());
-            } else {
-                headerLabel = new Label(String.valueOf(j+1));
-            }
-            BorderPane borderPane = new BorderPane(choiceBox, headerLabel, null, null, null);
-            tableColumn.setGraphic(borderPane);
-            int finalJ = j;
-            tableColumn.setPrefWidth(65);
-            tableColumn.setCellValueFactory((Callback<TableColumn.CellDataFeatures<List<Double>, Double>, ObservableValue<Double>>) p ->
-            {
-                return new SimpleObjectProperty<Double>((p.getValue().get(finalJ)));
-            });
-            selectUsableDataTableView.getColumns().add(tableColumn);
-        }
-        int startIndex = 0;
-        if (containsHeadersCheckBox.isSelected()) startIndex = 1;
-        List<List<Double>> data = new ArrayList<>(lines.size());
+        List<List<Double>> data = new ArrayList<>(values.size()-1);
         List<Double> row;
-        for (int j = startIndex; j < lines.size(); j++) {
-            if (!decimalSeparatorTextField.getText().contains(".")) lines.set(j, lines.get(j).replaceAll(decimalSeparatorTextField.getText(), "."));
-            stringTokenizer = new StringTokenizer(lines.get(j), dataSeparatorTextField.getText());
-            tokens = stringTokenizer.countTokens();
-            row = new ArrayList<>(tokens);
-            for (int k = 0; k < tokens; k++) {
-                row.add(Double.valueOf(stringTokenizer.nextToken()));
+
+        for (int i = 0; i < values.size(); i++) {
+
+            row = new ArrayList<Double>(values.get(i).size());
+            for (int j = 0; j < values.get(i).size(); j++) {
+                if(i == 0) {
+                    tableColumn = new TableColumn();
+                    tableColumn.setSortable(false);
+                    ChoiceBox<String> choiceBox = createInputOutputChoiceBox();
+                    if (j == values.get(0).size() - 1) choiceBox.getSelectionModel().select("Output");
+                    Label headerLabel = new Label((String) values.get(0).get(j));
+                    BorderPane borderPane = new BorderPane(choiceBox, headerLabel, null, null, null);
+                    tableColumn.setGraphic(borderPane);
+                    int finalJ = j;
+                    tableColumn.setPrefWidth(65);
+                    tableColumn.setCellValueFactory((Callback<TableColumn.CellDataFeatures<List<Double>, Double>, ObservableValue<Double>>) p ->
+                    {
+                        return new SimpleObjectProperty<Double>((p.getValue().get(finalJ)));
+                    });
+                    selectUsableDataTableView.getColumns().add(tableColumn);
+                } else {
+                    row.add((Double) values.get(i).get(j));
+                }
             }
-            data.add(row);
+            if(i!=0) data.add(row);
         }
         ObservableList<List<Double>> observableList = FXCollections.observableArrayList();
         observableList.addAll(data);
         this.selectUsableDataTableView.setItems(observableList);
     }
 
-    @FXML
-    void previousStep(ActionEvent event) {
+    private ChoiceBox<String> createInputOutputChoiceBox() {
+        ChoiceBox<String> choiceBox = new ChoiceBox<>(FXCollections.observableArrayList("Input", "Output", "Unused"));
+        choiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (oldValue != null) {
+                switch (oldValue) {
+                    case "Input":
+                        this.inputs--;
+                        break;
+                    case "Output":
+                        this.outputs--;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            switch (newValue){
+                case "Input":
+                    this.inputs++;
+                    break;
+                case "Output":
+                    this.outputs++;
+                    break;
+                default:
+                    break;
+            }
+            if (this.inputs == 0 || this.outputs == 0) {
+                this.nextButton.setDisable(true);
+            } else {
+                this.nextButton.setDisable(false);
+            }
+        });
+        choiceBox.getSelectionModel().select("Input");
+        return choiceBox;
+    }
+
+    @FXML    void previousStep(ActionEvent event) {
         int i = this.tabPane.getSelectionModel().getSelectedIndex();
         if (this.tabPane.getSelectionModel().getSelectedItem() == loadDataTab){
             this.dataSeparatorTextField.setVisible(true);
@@ -769,7 +738,9 @@ public class DataPreparatorDialogueController {
     }
 
     public void refresh() {
-        this.nextButton.setDisable(true);
+
+        stringFromFile = "";
+
         this.previousButton.setDisable(true);
         this.tabPane.getSelectionModel().select(0);
         this.fileTextField.setText("");
@@ -779,7 +750,7 @@ public class DataPreparatorDialogueController {
     }
 
 
-    public void loadData(ActionEvent actionEvent) {
+    public void loadData() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialDirectory(new File(Paths.get("").toAbsolutePath().toString()+"\\projects\\"));
         fileChooser.getExtensionFilters().addAll(//
@@ -797,41 +768,11 @@ public class DataPreparatorDialogueController {
 
             fillSeparators();
             try {
-                    this.lines = loadData(dataFile);
-                    this.dataTextArea.setText("");
-                this.lines.stream().forEach(s -> this.dataTextArea.appendText(s+"\n"));
-
-
-                boolean hasNumbers = false;
-                char currentChar;
-                for (int i = 0; i < lines.size(); i++) {
-                    for (int j = 0; j < lines.get(i).length(); j++) {
-                        currentChar = lines.get(i).charAt(j);
-                        if (Character.isDigit(currentChar)) {
-                            hasNumbers = true;
-                            break;
-                        }
-                        if (i == 0) containsHeadersCheckBox.setSelected(true);
-                        if(j == 3) break;
-                    }
-                    if (hasNumbers) break;
-                    if (i == 3) {
-                        AlertWindow.getAlert(this.thereWasntNumeric).show();
-                        this.nextButton.setDisable(true);
-                        return;
-                    }
-                }
-
-
-
-
-
-
-
-            } catch (UnsupportedEncodingException ex){
-                this.dataTextArea.setText(unsupportedEncoding);
-            }
-            catch (IOException e) {
+                stringFromFile = readData(dataFile);
+                dataTextArea.setText(stringFromFile);
+                encodingChoiceBox.setDisable(false);
+                dataTextArea.requestFocus();
+            } catch (IOException e) {
                 this.dataTextArea.setText(e.getMessage());
                 e.printStackTrace();
                 // log error
@@ -843,44 +784,57 @@ public class DataPreparatorDialogueController {
     private void fillSeparators() {
         this.decimalSeparatorTextField.setDisable(false);
         this.dataSeparatorTextField.setDisable(false);
-        switch (Locale.getDefault().getLanguage()){
-            case "ru":
-                this.decimalSeparatorTextField.setText(",");
-                this.dataSeparatorTextField.setText(";");
-                break;
-            default:
-                this.decimalSeparatorTextField.setText(".");
-                this.dataSeparatorTextField.setText(";");
-                break;
+        if(this.dataSeparatorTextField.getText().length() == 0
+                && this.decimalSeparatorTextField.getText().length() == 0) {
+            switch (Locale.getDefault().getLanguage()) {
+                case "ru":
+                    this.decimalSeparatorTextField.setText(",");
+                    this.dataSeparatorTextField.setText(";");
+                    break;
+                default:
+                    this.decimalSeparatorTextField.setText(".");
+                    this.dataSeparatorTextField.setText(";");
+                    break;
+            }
         }
 
     }
 
-    public List<String> loadData(File dataFile) throws IOException {
-        List<String> lines = new ArrayList<>(30);
+    public String readData(File dataFile) throws IOException {
         BufferedReader reader = new BufferedReader(
                 new InputStreamReader(
                         new FileInputStream(dataFile), this.encodingChoiceBox.getSelectionModel().getSelectedItem()));
+        StringBuilder stringBuilder = new StringBuilder();
         String line;
+        Pattern pattern = Pattern.compile("[^\\d ;,.{}()\\s\\n]?");
+
+        boolean readingHeader = true;
         while ((line = reader.readLine()) != null) {
-            lines.add(line);
+            if(readingHeader){
+                Matcher matcher = pattern.matcher(line);
+                if(matcher.find()){
+                    containsHeadersCheckBox.setSelected(matcher.group().length() != 0);
+                }
+                readingHeader = false;
+            }
+            stringBuilder.append(line+"\n");
         }
-        return lines;
+        return stringBuilder.toString();
+
     }
 
     private void checkLoadDataTab1ToGoNext(){
         if(this.tabPane.getSelectionModel().getSelectedIndex() == 0) {
             nextButton.setDisable(true);
             if (dataTextArea.getText().length() == 0) return;
-            if (dataTextArea.getText().equals(this.unsupportedEncoding)) return;
+            if (dataTextArea.getText().contains(this.unsupportedEncoding)) return;
             if (decimalSeparatorTextField.getText().length() == 0) return;
             if (dataSeparatorTextField.getText().length() == 0) return;
             nextButton.setDisable(false);
         }
     }
 
-    @FXML
-    void normaliseData(ActionEvent event) {
+    @FXML    void normaliseData(ActionEvent event) {
         normaliseDataAccordion.setVisible(true);
         DataScaler dataScaler;
         switch (chooseNormaliseMethodChoiceBox.getValue()){
@@ -950,8 +904,7 @@ public class DataPreparatorDialogueController {
         }
     }
 
-    @FXML
-    void confirmPercentage(ActionEvent event) {
+    @FXML    void confirmPercentage(ActionEvent event) {
         clearSelectionsOfTestingTableView();
 
         double percent = Double.parseDouble(this.trainingSetPercentageTextField.getText());
