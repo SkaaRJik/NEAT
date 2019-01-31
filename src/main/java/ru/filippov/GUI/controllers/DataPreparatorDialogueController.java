@@ -392,6 +392,7 @@ public class DataPreparatorDialogueController {
             if(i == 0) {
                 countOfValues = elementTokenizer.countTokens();
             }
+            //Think about it
             row = new ArrayList<>(countOfValues);
             if(i==0) {
                 if (containsHeadersCheckBox.isSelected()) {
