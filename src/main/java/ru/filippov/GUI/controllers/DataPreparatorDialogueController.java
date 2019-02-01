@@ -217,24 +217,19 @@ public class DataPreparatorDialogueController {
             PseudoClass trainAndTest = PseudoClass.getPseudoClass("train-and-test");
             /*Percentage selection with button*/
             final TableRow<List<Double>> row = new TableRow<List<Double>>(){
-
                 @Override
-                public void updateItem(List<Double> item, boolean empty){
-                if (item != null) {
-                    int index = usedData.indexOf(item);
+                public void updateIndex(int i) {
+                    super.updateIndex(i);
+                    if(i<0 || i>=usedData.size()) return;
+                    int index = usedData.indexOf(this.getTableView().getItems().get(i));
                     this.pseudoClassStateChanged(train, trainSetIndexes.contains(index));
                     this.pseudoClassStateChanged(test, testSetIndexes.contains(index));
                     this.pseudoClassStateChanged(trainAndTest, trainSetIndexes.contains(index) && testSetIndexes.contains(index));
-                } else {
-                    this.pseudoClassStateChanged(train, false);
-                    this.pseudoClassStateChanged(test, false);
-                    this.pseudoClassStateChanged(trainAndTest, false);
-                }
-                if(trainSetIndexes.isEmpty() || testSetIndexes.isEmpty()){
-                    nextButton.setDisable(true);
-                } else {
-                    nextButton.setDisable(false);
-                }
+                    if(trainSetIndexes.isEmpty() || testSetIndexes.isEmpty()){
+                        nextButton.setDisable(true);
+                    } else {
+                        nextButton.setDisable(false);
+                    }
                 }
             };
 
@@ -916,21 +911,27 @@ public class DataPreparatorDialogueController {
 
     @FXML    void confirmPercentage(ActionEvent event) {
         clearSelectionsOfTestingTableView();
+        String trainingSetPercentage = this.trainingSetPercentageTextField.getText().replaceAll(decimalSeparatorTextField.getText(),"." );
+        String testSetPercentage = this.testingSetPercentageTextField.getText().replaceAll(decimalSeparatorTextField.getText(),"." );
 
-        double percent = Double.parseDouble(this.trainingSetPercentageTextField.getText());
-        percent = percent > 1 ? percent / 100 : percent;
-        trainSize = (int) (Math.floor(usedData.size() * percent));
-        percent = Double.parseDouble(this.testingSetPercentageTextField .getText());
-        percent = percent > 1 ? percent / 100 : percent;
-        testSize = (int) (Math.floor(usedData.size() * percent));
 
+        double percent = Double.parseDouble(trainingSetPercentage);
+        percent = percent >= 1 ? percent / 100 : percent;
+        trainSize = (int) (Math.round(usedData.size() * percent));
+        percent = Double.parseDouble(testSetPercentage);
+        percent = percent >= 1 ? percent / 100 : percent;
+        testSize = (int) (Math.round(usedData.size() * percent));
+        //if(trainSize >= usedData.size()) trainSize = usedData.size()-1;
         //put indexes
         for (int i = 0 ; i < trainSize; i++){
             trainSetIndexes.add(i);
         }
 
-        for (int i = usedData.size()-1 ; i >= usedData.size()-1-testSize; i--){
-            testSetIndexes.add(i);
+
+
+        for (int i = 0 ; i < testSize; i++){
+
+            testSetIndexes.add(usedData.size()-1-i);
         }
         this.selectTrainingDataTableView.refresh();
     }
