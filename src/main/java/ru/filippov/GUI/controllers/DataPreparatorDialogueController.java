@@ -376,7 +376,6 @@ public class DataPreparatorDialogueController {
         List<Object> row;
         int countOfValues = 0;
         for (int i = 0; i < tokens; i++) {
-            //TODO replace , on .
             String tempStr = stringTokenizer.nextToken();
             if(i == 0){
                 if(!containsHeadersCheckBox.isSelected()){
@@ -389,7 +388,6 @@ public class DataPreparatorDialogueController {
             if(i == 0) {
                 countOfValues = elementTokenizer.countTokens();
             }
-            //Think about it
             row = new ArrayList<>(countOfValues);
             if(i==0) {
                 if (!containsHeadersCheckBox.isSelected()) {
@@ -428,10 +426,9 @@ public class DataPreparatorDialogueController {
     @FXML    void nextStep() {
         int i = this.tabPane.getSelectionModel().getSelectedIndex();
         if( this.tabPane.getSelectionModel().getSelectedItem() == loadDataTab) {
-            //TODO Check List lines, if user just copy-paste his data - List is empty
             checkDecimalSeparator = "Не найден разделитель \"" + decimalSeparatorTextField.getText() + "\"!\nПожалуйста, перепроверрьте данные";
-            checkDatalSeparator = "Не найден разделитель \"" + dataSeparatorTextField.getText() + "\"!\nПожалуйста, перепроверрьте данные";;
             if (!dataTextArea.getText().contains(decimalSeparatorTextField.getText())){
+                checkDatalSeparator = "Не найден разделитель \"" + dataSeparatorTextField.getText() + "\"!\nПожалуйста, перепроверрьте данные";;
                 AlertWindow.getAlert(checkDecimalSeparator).show();
                 return;
             }
