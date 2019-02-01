@@ -361,12 +361,12 @@ public class DataPreparatorDialogueController {
 
         String valueDelimetr = this.dataSeparatorTextField.getText() ;
         String decimalDelimetr = this.decimalSeparatorTextField.getText() ;
-        if(!valueDelimetr.equals(".")){
-            if(!decimalDelimetr.equals(".")){
-                valueDelimetr = ".";
+        if(!decimalDelimetr.equals(".")){
+            if(!valueDelimetr.equals(".")){
+                decimalDelimetr = ".";
             } else {
-                decimalDelimetr = valueDelimetr;
-                valueDelimetr = ".";
+                decimalDelimetr = ".";
+                valueDelimetr = ";";
             }
         }
 
@@ -387,6 +387,8 @@ public class DataPreparatorDialogueController {
                 if(!containsHeadersCheckBox.isSelected()){
                     tempStr = tempStr.replaceAll(decimalDelimetr, ".");
                 }
+            } else {
+                tempStr = tempStr.replaceAll(decimalSeparatorTextField.getText(), decimalDelimetr);
             }
             elementTokenizer = new StringTokenizer(tempStr, valueDelimetr);
             if(i == 0) {
@@ -395,12 +397,17 @@ public class DataPreparatorDialogueController {
             //Think about it
             row = new ArrayList<>(countOfValues);
             if(i==0) {
-                if (containsHeadersCheckBox.isSelected()) {
+                if (!containsHeadersCheckBox.isSelected()) {
                     for (int j = 0; j < countOfValues; j++) {
                         row.add(String.valueOf(j + 1));
                     }
                     valuesList.add(row);
                     row = new ArrayList<>(countOfValues);
+                    /*for (int j = 0; j < countOfValues; j++) {
+                        row.add(Double.parseDouble(elementTokenizer.nextToken()));
+                    }
+                    valuesList.add(row);
+                    continue;*/
                 } else {
                     for (int j = 0; j < countOfValues; j++) {
                         row.add(elementTokenizer.nextToken());
@@ -410,7 +417,7 @@ public class DataPreparatorDialogueController {
                 }
             }
             for (int j = 0; j < countOfValues; j++) {
-                row.add(Double.valueOf(elementTokenizer.nextToken()));
+                row.add(Double.parseDouble(elementTokenizer.nextToken()));
             }
             valuesList.add(row);
         }
@@ -660,7 +667,7 @@ public class DataPreparatorDialogueController {
                 if(i == 0) {
                     tableColumn = new TableColumn();
                     tableColumn.setSortable(false);
-                    ChoiceBox<String> choiceBox = createInputOutputChoiceBox();
+                    ChoiceBox<String> choiceBox = this.createInputOutputChoiceBox();
                     if (j == values.get(0).size() - 1) choiceBox.getSelectionModel().select("Output");
                     Label headerLabel = new Label((String) values.get(0).get(j));
                     BorderPane borderPane = new BorderPane(choiceBox, headerLabel, null, null, null);
@@ -865,6 +872,8 @@ public class DataPreparatorDialogueController {
             default:
                 break;
         }
+
+        //TODO Dynamical range
         if(normalisedUsedData != null) {
             normalisedDataTableView.setItems(FXCollections.observableArrayList(normalisedUsedData));
             normaliseStatisticBarChart.getData().clear();
