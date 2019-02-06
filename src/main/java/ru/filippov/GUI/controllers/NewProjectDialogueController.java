@@ -29,6 +29,7 @@ public class NewProjectDialogueController {
     @FXML
     private Button browseButton;
 
+    private File projectFile;
     private Stage stage;
 
     final DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -79,20 +80,22 @@ public class NewProjectDialogueController {
         } else {
             file.mkdir();
             File defaultFile = new File(getClass().getClassLoader().getResource("NEATfiles/default.neat").getPath());
-            File dest = new File(file.getPath()+"/"+this.projectNameTextField.getText()+".neat");
+            projectFile = new File(file.getPath()+"/"+this.projectNameTextField.getText()+".neat");
             InputStream is = null;
             OutputStream os = null;
             try {
                 is = new FileInputStream(defaultFile);
-                os = new FileOutputStream(dest);
+                os = new FileOutputStream(projectFile);
                 byte[] buffer = new byte[1024];
                 int length;
                 while ((length = is.read(buffer)) > 0) {
                     os.write(buffer, 0, length);
                 }
             } catch (FileNotFoundException e) {
+                projectFile = null;
                 e.printStackTrace();
             } catch (IOException e) {
+                projectFile = null;
                 e.printStackTrace();
             } finally {
                 try {
@@ -110,8 +113,9 @@ public class NewProjectDialogueController {
         return this.projectLocationTextField.getText();
     }
 
-    public String getProjectName(){
-        return this.projectNameTextField.getText();
+    public File getProjectFile(){
+        if(this.projectNameTextField.getText().length() == 0 || this.projectNameTextField.getText().isEmpty()) return null;
+        return projectFile;
     }
 
     public void cancel() {
@@ -130,6 +134,7 @@ public class NewProjectDialogueController {
     }
 
     public void refreshFields(){
+        projectFile = null;
         this.projectLocationTextField.setText(Paths.get("").toAbsolutePath().toString()+"\\projects\\");
         this.projectNameTextField.setText("");
     }

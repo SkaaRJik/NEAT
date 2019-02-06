@@ -24,7 +24,7 @@ public class SideBar extends VBox {
     /**
      * creates a sidebar containing a vertical alignment of the given nodes
      */
-    SideBar(final double expandedWidth, Node... nodes) {
+    public SideBar(final double expandedWidth, Node... nodes) {
         getStyleClass().add("sidebar");
         this.setPrefWidth(expandedWidth);
         this.setMinWidth(0);

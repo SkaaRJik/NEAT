@@ -30,6 +30,15 @@ public class InnovationDatabase {
 	public static int hits = 0;
 	public static int misses = 0;
 
+	public static void refresh(){
+		innovationId = 1;
+		neuronId = 1;
+		hits = 0;
+		misses = 0;
+		if(database!=null){
+			database.innovations = new HashMap();
+		}
+	}
 
 	public static InnovationDatabase getInstance(Random random){
 		if(database == null) database = new InnovationDatabase(random);

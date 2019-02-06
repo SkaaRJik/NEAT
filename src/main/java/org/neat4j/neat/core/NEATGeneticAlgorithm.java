@@ -33,13 +33,13 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 	private Chromosome discoveredBest;
 	private Chromosome genBest;
 	private Species specieList;
-	private static int specieIdIdx = 1;
+	private int specieIdIdx;
 	private int eleCount = 0;
 	private final Random random;
 	private final int numberOfThreads;
 	private int offsetOfIndex;
 
-	Thread[] threads;
+	private final Thread[] threads;
 
 	/**
 	 * Creates a NEAT GA with behaviour defined by the getDescriptor
@@ -52,6 +52,7 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 		this.numberOfThreads = numberOfThreads-1;
 		this.threads = new Thread[numberOfThreads];
 		this.offsetOfIndex = descriptor.gaPopulationSize() / numberOfThreads;
+		specieIdIdx = 1;
 	}
 
 	/**
@@ -73,21 +74,27 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 			part[i] = currentGen[i];
 		}
 		evaluatePopulation(part);
-		for (int i = 0; i < numberOfThreads-1; i++) {
+		for (int i = 0; i < numberOfThreads; i++) {
 			try {
 				threads[i].join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-		/*this.evaluatePopulation(currentGen);*/
+		this.evaluatePopulation(currentGen);
 		this.runEvolutionCycle(currentGen);
+		/*Chromosome[] currentGen = this.pop.genoTypes();
+		this.setChromosomeNO(currentGen);
+		cat.debug("Evaluating pop");
+		this.evaluatePopulation(currentGen);
+		this.runEvolutionCycle(currentGen);*/
 	}
 
 	private Chromosome[] getPartChromosomes(Chromosome[] currentGen, int i) {
 		final Chromosome[] part = new Chromosome[offsetOfIndex];
 		int k = 0;
-		for (int j = (i + 1)*offsetOfIndex; j < (i + 1)*offsetOfIndex+offsetOfIndex; j++) {
+		i++;
+		for (int j = (i)*offsetOfIndex; j < (i)*offsetOfIndex+offsetOfIndex; j++) {
 			part[k++] = currentGen[j];
 		}
 		return part;

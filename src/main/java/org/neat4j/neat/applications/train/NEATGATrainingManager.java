@@ -31,9 +31,9 @@ import java.util.Random;
  */
 public class NEATGATrainingManager {
 	private static final Category cat = Category.getInstance(NEATGATrainingManager.class);
-	private GeneticAlgorithm ga;
-	private AIConfig config;
-	private Random random;
+	protected GeneticAlgorithm ga;
+	protected AIConfig config;
+	protected Random random;
 	public GeneticAlgorithm ga() {
 		return (this.ga);
 	}
@@ -41,7 +41,7 @@ public class NEATGATrainingManager {
 	 *
 	 */
 	public void initialise(AIConfig config) throws InitialisationFailedException {
-		MathUtils.setSeed(System.currentTimeMillis());
+		MathUtils.setSeed(Long.parseLong(config.configElement("GENERATOR.SEED")));
 		this.random = MathUtils.getRand();
 		GADescriptor gaDescriptor = this.createDescriptor(config);
 		this.assigGA(this.createGeneticAlgorithm(gaDescriptor));
@@ -218,10 +218,11 @@ public class NEATGATrainingManager {
 					nnConfig.updateConfig("INPUT_SIZE", config.configElement("INPUT.NODES"));
 					nnConfig.updateConfig("OUTPUT_SIZE", config.configElement("OUTPUT.NODES"));
 					nnConfig.updateConfig("LEARNABLE", config.configElement("LEARNABLE"));*/
-					if(!config.configElement("TRAINING.SET").matches("/"))
+					/*if(!config.configElement("TRAINING.SET").matches("/"))
 						config.updateConfig("TRAINING.SET", config.configElement("CONFIGURATION.FILEPATH")+"/"+config.configElement("TRAINING.SET"));
 					else
 						config.updateConfig("TRAINING.SET", config.configElement("TRAINING.SET"));
+					*/
 					netManager = new NEATNetManager();
 					netManager.initialise(config);
 					net = netManager.managedNet();

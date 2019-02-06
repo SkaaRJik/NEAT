@@ -53,12 +53,7 @@ public class NEATNetManager implements AIController {
 	
 	public NetworkDataSet dataSet(String keyName, AIConfig config, int opSize) {
 		NetworkDataSet dSet = null;
-		String fileName;
-		if(!config.configElement(keyName).contains("\\")){
-			fileName = config.configElement("CONFIGURATION.FILEPATH") + "/" +config.configElement(keyName);
-		} else {
-			fileName = config.configElement(keyName);
-		}
+		String fileName = config.configElement(keyName);
 		if (fileName != null) {
 			dSet = new CSVDataLoader(fileName, opSize).loadData();			
 		}

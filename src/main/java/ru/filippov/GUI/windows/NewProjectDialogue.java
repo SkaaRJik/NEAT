@@ -7,6 +7,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import ru.filippov.GUI.controllers.NewProjectDialogueController;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ResourceBundle;
 
@@ -61,8 +62,8 @@ public class NewProjectDialogue {
         return this.controller.getProjectLocation();
     }
 
-    public String getProjectName(){
-        return this.controller.getProjectName();
+    public File getProjectFile(){
+        return this.controller.getProjectFile();
     }
 
 

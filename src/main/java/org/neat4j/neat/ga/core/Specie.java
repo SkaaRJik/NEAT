@@ -29,6 +29,7 @@ public abstract class Specie implements Comparable {
 	private double bestAvFitness = 0;
 	private double survivalThreshold = 0.3;
 	protected final Random random;
+
 	public Specie(double threshold, int id, Random random) {
 		this.specieMembers = new ArrayList();
 		this.threshold = threshold;

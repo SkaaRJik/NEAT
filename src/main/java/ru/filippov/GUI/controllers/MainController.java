@@ -7,6 +7,9 @@ import com.jfoenix.controls.base.IFXLabelFloatControl;
 import com.jfoenix.skins.JFXTextFieldSkin;
 import com.jfoenix.skins.ValidationPane;
 import com.jfoenix.validation.RequiredFieldValidator;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
+import javafx.animation.*;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -16,10 +19,17 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.util.Callback;
+import javafx.util.Duration;
+import org.apache.log4j.Logger;
 import org.neat4j.core.AIConfig;
+import org.neat4j.core.InitialisationFailedException;
+import org.neat4j.neat.applications.train.NEATTrainingForJavaFX;
 import org.neat4j.neat.core.NEATConfig;
 import org.neat4j.neat.core.NEATLoader;
 import ru.filippov.GUI.windows.DataPreparatorDialogue;
@@ -33,7 +43,7 @@ import java.util.*;
 
 public class MainController {
 
-
+    Logger logger = Logger.getLogger(MainController.class);
 
     @FXML private Menu file;
     @FXML private MenuItem newProject;
@@ -49,53 +59,64 @@ public class MainController {
     @FXML private Label currentProjectLabel;
     @FXML private TextField currentProjectTextField;
 
+    @FXML
+    private SplitPane splitPane;
+    
+    
     @FXML private Label neatOptionsLabel;
-    private String neatOptionNoProjects;
-    private String neatOptionGASettings;
+    private Label noActiveProjectLabel;
 
 
-    @FXML private TitledPane GASettingsTitledPane;
-    @FXML private JFXTextField mutationProbabilityTextField;
-    @FXML private JFXTextField crossoverProbabilityTextField;
-    @FXML private JFXTextField addLinkProbabilityTextField;
-    @FXML private JFXTextField addNodeProbabilityTextField;
-    @FXML private JFXTextField mutateBiasProbabilityTextField;
-    @FXML private JFXTextField toggleLinkProbabilityTextField;
-    @FXML private JFXTextField weightReplaceProbabilityTextField;
-    @FXML private TitledPane neatSpecificTitledPane;
-    @FXML private JFXTextField generatorSeedTextField;
-    @FXML private JFXButton generateSeedButton;
-    @FXML private JFXTextField excessCoefficientTextField;
-    @FXML private JFXTextField disjointCoefficientTextField;
-    @FXML private JFXTextField weightCoefficientTextField;
-    @FXML private TitledPane speciationControlTitledPane;
-    @FXML private JFXTextField thresholdCompabilityTextField;
-    @FXML private JFXTextField changeCompabilityTextField;
-    @FXML private JFXTextField specieCountTextField;
-    @FXML private JFXTextField survivalThresholdTextField;
-    @FXML private JFXTextField specieAgeThresholdTextField;
-    @FXML private JFXTextField specieYouthThresholdTextField;
-    @FXML private JFXTextField specieOldPenaltyTextField;
-    @FXML private JFXTextField specieYouthBoostTextField;
-    @FXML private JFXTextField specieFitnessMaxTextField;
-    @FXML private TitledPane networkControlTitledPane;
-    @FXML private JFXTextField inputNodesTextField;
-    @FXML private JFXTextField outputNodesTextField;
-    @FXML private JFXTextField maxPertrubTextField;
-    @FXML private JFXTextField maxBiasPertrubTextField;
-    @FXML private JFXToggleButton featureSelectionToogle;
-    @FXML private JFXToggleButton reccurencyAllowedToogle;
-    @FXML private TitledPane extinctionControlTitledPane;
-    @FXML private JFXToggleButton eleEventsToogle;
-    @FXML private JFXTextField eleSurvivalCountTextField;
-    @FXML private JFXTextField eleEventTimeTextField;
-    @FXML private TitledPane epochControlTitledPane;
-    @FXML private JFXToggleButton keepBestEverToogle;
-    @FXML private JFXTextField extraFeatureCountTextField;
-    @FXML private JFXTextField popSizeTextField;
-    @FXML private JFXTextField numberEpochsTextField;
 
-    @FXML private ScrollPane parametresPane;
+    private Timeline openMenu, closeMenu;
+    private static final double SPEED = 2;
+
+    @FXML private MaterialDesignIconView iconView;
+    @FXML private BorderPane menuBorderPane;
+    private ScrollPane parametresScrollPane;
+    private VBox titlesPaneContainer;
+    private TitledPane GASettingsTitledPane;
+    private JFXTextField mutationProbabilityTextField;
+    private JFXTextField crossoverProbabilityTextField;
+    private JFXTextField addLinkProbabilityTextField;
+    private JFXTextField addNodeProbabilityTextField;
+    private JFXTextField mutateBiasProbabilityTextField;
+    private JFXTextField toggleLinkProbabilityTextField;
+    private JFXTextField weightReplaceProbabilityTextField;
+    private TitledPane neatSpecificTitledPane;
+    private JFXTextField generatorSeedTextField;
+    private JFXButton generateSeedButton;
+    private JFXTextField excessCoefficientTextField;
+    private JFXTextField disjointCoefficientTextField;
+    private JFXTextField weightCoefficientTextField;
+    private TitledPane speciationControlTitledPane;
+    private JFXTextField thresholdCompabilityTextField;
+    private JFXTextField changeCompabilityTextField;
+    private JFXTextField specieCountTextField;
+    private JFXTextField survivalThresholdTextField;
+    private JFXTextField specieAgeThresholdTextField;
+    private JFXTextField specieYouthThresholdTextField;
+    private JFXTextField specieOldPenaltyTextField;
+    private JFXTextField specieYouthBoostTextField;
+    private JFXTextField specieFitnessMaxTextField;
+    private TitledPane networkControlTitledPane;
+    private JFXTextField inputNodesTextField;
+    private JFXTextField outputNodesTextField;
+    private JFXTextField maxPertrubTextField;
+    private JFXTextField maxBiasPertrubTextField;
+    private JFXToggleButton featureSelectionToogle;
+    private JFXToggleButton reccurencyAllowedToogle;
+    private TitledPane extinctionControlTitledPane;
+    private JFXToggleButton eleEventsToogle;
+    private JFXTextField eleSurvivalCountTextField;
+    private JFXTextField eleEventTimeTextField;
+    private TitledPane epochControlTitledPane;
+    private JFXToggleButton keepBestEverToogle;
+    private JFXTextField extraFeatureCountTextField;
+    private JFXTextField popSizeTextField;
+    private JFXTextField numberEpochsTextField;
+
+    
     @FXML private TabPane infoTabPane;
 
     @FXML private Tab datasetsTab;
@@ -113,6 +134,10 @@ public class MainController {
 
     @FXML
     private Tab trainigTab;
+    @FXML private BorderPane trainBorderPane;
+    @FXML private ProgressBar trainingProgressBar;
+    @FXML private ProgressBar testingProgressBar;
+
 
     @FXML
     private Tab testingTab;
@@ -120,6 +145,8 @@ public class MainController {
     @FXML
     private Button startTrainingButton;
 
+    @FXML
+    private MaterialDesignIconView openMenuIcon;
 
 
     private AIConfig originalProjectConfig;
@@ -135,9 +162,187 @@ public class MainController {
     public void init() {
         this.scene = this.currentProjectLabel.getParent().getScene();
 
+
+        this.noActiveProjectLabel = new Label();
+
+        this.parametresScrollPane = new ScrollPane();
+        this.parametresScrollPane.setFitToWidth(true);
+        this.titlesPaneContainer = new VBox();
+
+        VBox tempVbox = new VBox();
+        tempVbox.setSpacing(25);
+        this.GASettingsTitledPane = new TitledPane();
+        this.mutationProbabilityTextField = new JFXTextField();
+        this.crossoverProbabilityTextField = new JFXTextField();
+        this.addLinkProbabilityTextField = new JFXTextField();
+        this.addNodeProbabilityTextField = new JFXTextField();
+        this.mutateBiasProbabilityTextField = new JFXTextField();
+        this.toggleLinkProbabilityTextField = new JFXTextField();
+        this.weightReplaceProbabilityTextField = new JFXTextField();
+        this.mutationProbabilityTextField.setLabelFloat(true);
+        this.crossoverProbabilityTextField.setLabelFloat(true);
+        this.addLinkProbabilityTextField.setLabelFloat(true);
+        this.addNodeProbabilityTextField.setLabelFloat(true);
+        this.mutateBiasProbabilityTextField.setLabelFloat(true);
+        this.toggleLinkProbabilityTextField.setLabelFloat(true);
+        this.weightReplaceProbabilityTextField.setLabelFloat(true);
+        tempVbox.getChildren().addAll(
+            this.mutationProbabilityTextField,
+            this.crossoverProbabilityTextField,
+            this.addLinkProbabilityTextField,
+            this.addNodeProbabilityTextField,
+            this.mutateBiasProbabilityTextField,
+            this.toggleLinkProbabilityTextField,
+            this.weightReplaceProbabilityTextField
+        );
+        GASettingsTitledPane.setContent(tempVbox);
+
+        tempVbox = new VBox();
+        tempVbox.setSpacing(25);
+        this.neatSpecificTitledPane = new TitledPane();
+
+        this.generatorSeedTextField = new JFXTextField();
+        this.generateSeedButton = new JFXButton();
+        this.generateSeedButton.setGraphic(new MaterialDesignIconView(MaterialDesignIcon.REFRESH));
+        this.generateSeedButton.setOnAction(event -> {
+            this.generateNewSeed();
+        });
+        HBox hBox = new HBox(20, this.generatorSeedTextField, generateSeedButton);
+        this.excessCoefficientTextField = new JFXTextField();
+        this.disjointCoefficientTextField = new JFXTextField();
+        this.weightCoefficientTextField = new JFXTextField();
+        
+        this.generatorSeedTextField.setLabelFloat(true);
+        this.excessCoefficientTextField.setLabelFloat(true);
+        this.disjointCoefficientTextField.setLabelFloat(true);
+        this.weightCoefficientTextField.setLabelFloat(true);
+
+        tempVbox.getChildren().addAll(
+                hBox,
+                this.excessCoefficientTextField,
+                this.disjointCoefficientTextField,
+                this.weightCoefficientTextField
+        );
+        this.neatSpecificTitledPane.setContent(tempVbox);
+
+        tempVbox = new VBox();
+        tempVbox.setSpacing(25);
+        this.speciationControlTitledPane = new TitledPane();
+        this.thresholdCompabilityTextField = new JFXTextField();
+        this.changeCompabilityTextField = new JFXTextField();
+        this.specieCountTextField = new JFXTextField();
+        this.survivalThresholdTextField = new JFXTextField();
+        this.specieAgeThresholdTextField = new JFXTextField();
+        this.specieYouthThresholdTextField = new JFXTextField();
+        this.specieOldPenaltyTextField = new JFXTextField();
+        this.specieYouthBoostTextField = new JFXTextField();
+        this.specieFitnessMaxTextField = new JFXTextField();
+        this.thresholdCompabilityTextField.setLabelFloat(true);
+        this.changeCompabilityTextField.setLabelFloat(true);
+        this.specieCountTextField.setLabelFloat(true);
+        this.survivalThresholdTextField.setLabelFloat(true);
+        this.specieAgeThresholdTextField.setLabelFloat(true);
+        this.specieYouthThresholdTextField.setLabelFloat(true);
+        this.specieOldPenaltyTextField.setLabelFloat(true);
+        this.specieYouthBoostTextField.setLabelFloat(true);
+        this.specieFitnessMaxTextField.setLabelFloat(true);
+        tempVbox.getChildren().addAll(
+                this.thresholdCompabilityTextField,
+                this.changeCompabilityTextField,
+                this.specieCountTextField,
+                this.survivalThresholdTextField,
+                this.specieAgeThresholdTextField,
+                this.specieYouthThresholdTextField,
+                this.specieOldPenaltyTextField,
+                this.specieYouthBoostTextField,
+                this.specieFitnessMaxTextField     
+        );
+        this.speciationControlTitledPane.setContent(tempVbox);
+
+        tempVbox = new VBox();
+        tempVbox.setSpacing(25);
+        this.networkControlTitledPane = new TitledPane();
+        this.inputNodesTextField = new JFXTextField();
+        this.outputNodesTextField = new JFXTextField();
+        this.maxPertrubTextField = new JFXTextField();
+        this.maxBiasPertrubTextField = new JFXTextField();
+        this.featureSelectionToogle = new JFXToggleButton();
+        this.reccurencyAllowedToogle = new JFXToggleButton();
+        this.inputNodesTextField.setLabelFloat(true);
+        this.outputNodesTextField.setLabelFloat(true);
+        this.maxPertrubTextField.setLabelFloat(true);
+        this.maxBiasPertrubTextField.setLabelFloat(true);
+        tempVbox.getChildren().addAll(
+                this.inputNodesTextField,
+                this.outputNodesTextField,
+                this.maxPertrubTextField,
+                this.maxBiasPertrubTextField,
+                this.featureSelectionToogle,
+                this.reccurencyAllowedToogle
+        );
+        this.networkControlTitledPane.setContent(tempVbox);
+
+
+        tempVbox = new VBox();
+        tempVbox.setSpacing(25);
+        this.extinctionControlTitledPane = new TitledPane();
+        this.eleEventsToogle = new JFXToggleButton();
+        this.eleSurvivalCountTextField = new JFXTextField();
+        this.eleEventTimeTextField = new JFXTextField();
+        tempVbox.getChildren().addAll(
+                this.eleEventsToogle,
+                this.eleSurvivalCountTextField,
+                this.eleEventTimeTextField
+        );
+        this.extinctionControlTitledPane.setContent(tempVbox);
+
+        tempVbox = new VBox();
+        tempVbox.setSpacing(25);
+        this.epochControlTitledPane = new TitledPane();
+        this.keepBestEverToogle = new JFXToggleButton();
+        this.extraFeatureCountTextField = new JFXTextField();
+        this.popSizeTextField = new JFXTextField();
+        this.numberEpochsTextField = new JFXTextField();
+        tempVbox.getChildren().addAll(
+                this.keepBestEverToogle,
+                this.extraFeatureCountTextField,
+                this.popSizeTextField,
+                this.numberEpochsTextField
+        );
+        this.epochControlTitledPane.setContent(tempVbox);
+
+
+        this.titlesPaneContainer.getChildren().addAll(
+                this.GASettingsTitledPane,
+                this.neatSpecificTitledPane,
+                this.speciationControlTitledPane,
+                this.networkControlTitledPane,
+                this.extinctionControlTitledPane,
+                this.epochControlTitledPane
+        );
+        parametresScrollPane.setContent(this.titlesPaneContainer);
+
+        this.menuBorderPane.setCenter(noActiveProjectLabel);
+        this.menuBorderPane.setMinWidth(20);
+        this.menuBorderPane.setPrefWidth(300);
+        this.menuBorderPane.setMaxWidth(300);
+
+        this.splitPane.getDividers().get(0).positionProperty().setValue(0.02);
+
+        openMenu = new Timeline(
+                new KeyFrame(Duration.millis(SPEED), event -> menuSlide(openMenu,1))
+        );
+        openMenu.setCycleCount(Timeline.INDEFINITE);
+
+        closeMenu = new Timeline(
+                new KeyFrame(Duration.millis(SPEED), event -> menuSlide(closeMenu, -1))
+        );
+        closeMenu.setCycleCount(Timeline.INDEFINITE);
+        menuBorderPane.getCenter().setVisible(false);
+
         loadLanguage(Locale.getDefault());
         RequiredFieldValidator requiredFieldValidator = new RequiredFieldValidator("It cant be empty");
-        addReqieredFieldValidator(this.mutationProbabilityTextField, requiredFieldValidator);
+        /*addReqieredFieldValidator(this.mutationProbabilityTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.mutationProbabilityTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.crossoverProbabilityTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.addLinkProbabilityTextField, requiredFieldValidator);
@@ -165,10 +370,33 @@ public class MainController {
         addReqieredFieldValidator(this.eleEventTimeTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.extraFeatureCountTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.popSizeTextField, requiredFieldValidator);
-        addReqieredFieldValidator(this.numberEpochsTextField, requiredFieldValidator);
+        addReqieredFieldValidator(this.numberEpochsTextField, requiredFieldValidator);*/
 
 
 
+        RotateTransition iconRotateTransition = new RotateTransition(Duration.millis(500), iconView);
+        iconRotateTransition.setFromAngle(0);
+        iconRotateTransition.setToAngle(180);
+        iconRotateTransition.setAutoReverse(true);
+
+        menuBorderPane.setOnMouseEntered(evt -> {
+            menuBorderPane.setMinWidth(menuBorderPane.getMinWidth()-0.1);
+            menuBorderPane.setMaxWidth(300);
+            menuBorderPane.getCenter().setVisible(true);
+            //neatOptionsLabel.setVisible(true);
+            iconRotateTransition.setRate(1);
+            iconRotateTransition.play();
+            closeMenu.stop(); openMenu.play();
+        });
+        menuBorderPane.setOnMouseExited(evt -> {
+            menuBorderPane.setMinWidth(menuBorderPane.getMinWidth()+0.1);
+            menuBorderPane.setMaxWidth(menuBorderPane.getMinWidth()+0.2);
+            menuBorderPane.getCenter().setVisible(false);
+            menuBorderPane.getCenter().setVisible(false);
+            iconRotateTransition.setRate(-1);
+            iconRotateTransition.play();
+            openMenu.stop(); closeMenu.play();
+        });
 
 
 
@@ -191,14 +419,12 @@ public class MainController {
         eleEventTimeTextField.setVisible(false);
         eleSurvivalCountTextField.setVisible(false);
 
-        //TODO uncomment
         if (this.originalProjectConfig == null){
-            this.parametresPane.setVisible(false);
+            this.parametresScrollPane.setVisible(false);
             this.infoTabPane.setVisible(false);
-            this.neatOptionsLabel.setText(resourceBundle.getString("NO_OPEN_PROJECTS"));
+            this.dataSetsScrollPane.setVisible(false);
         }
 
-        this.dataSetsScrollPane.setVisible(false);
 
         this.datasetChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
@@ -206,15 +432,39 @@ public class MainController {
                 this.dataSetsScrollPane.setVisible(true);
                 //this.originalProjectConfig.updateConfig("AI.SOURCE", newValue+"BestNetwork_temp.ser");
                 //this.originalProjectConfig.updateConfig("SAVE.LOCATION", newValue+"BestNetwork_temp.ser");
-                this.runnableProjectConfig.updateConfig("AI.SOURCE", newValue+"BestNetwork_temp.ser");
+
                 this.runnableProjectConfig.updateConfig("SAVE.LOCATION", newValue+"BestNetwork_temp.ser");
-                trainigTab.setDisable(false);
-                testingTab.setDisable(false);
+                if(new File(this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork.ser").exists()){
+                    this.runnableProjectConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork.ser");
+                    this.runnableProjectConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"@test.dataset");
+                    logger.debug(this.runnableProjectConfig.configElement("AI.SOURCE"));
+                    logger.debug(this.runnableProjectConfig.configElement("INPUT.DATA"));
+                    this.testingTab.setDisable(false);
+                } else if(new File(this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork_temp.ser").exists()){
+                    this.runnableProjectConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"@test.dataset");
+                    this.runnableProjectConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork_temp.ser");
+                    logger.debug(this.runnableProjectConfig.configElement("AI.SOURCE"));
+                    logger.debug(this.runnableProjectConfig.configElement("INPUT.DATA"));
+                    this.testingTab.setDisable(false);
+                } else {
+                    this.runnableProjectConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork_temp.ser");
+                    logger.debug(this.runnableProjectConfig.configElement("AI.SOURCE"));
+                    this.testingTab.setDisable(true);
+                }
+                /*trainigTab.setDisable(false);
+                testingTab.setDisable(false);*/
+                this.startTrainingButton.setDisable(false);
+            } else {
+                this.startTrainingButton.setDisable(true);
             }
         });
 
         trainigTab.setDisable(true);
         testingTab.setDisable(true);
+        this.trainingProgressBar = new ProgressBar(0);
+        this.testingProgressBar = new ProgressBar(0);
+        trainigTab.setGraphic(new BorderPane(trainingProgressBar,null,null,null, null));
+        testingTab.setGraphic(new BorderPane(testingProgressBar,null,null,null, null));
 
 
 
@@ -332,8 +582,8 @@ public class MainController {
         currentProjectLabel.setText(resourceBundle.getString("CURRENT_PROJECT"));
         //neatOptionsLabel.setText(resourceBundle.getString("NEAT_OPTIONS"));
         GASettingsTitledPane.setText(resourceBundle.getString("GA_SETTINGS"));
-        neatOptionGASettings = resourceBundle.getString("NEAT_OPTIONS");
-        neatOptionNoProjects = resourceBundle.getString("NO_OPEN_PROJECTS");
+        neatOptionsLabel.setText(resourceBundle.getString("NEAT_OPTIONS"));
+        noActiveProjectLabel.setText(resourceBundle.getString("NO_OPEN_PROJECTS"));
         mutationProbabilityTextField.setPromptText(resourceBundle.getString("MUTATION_PROBABILITY"));
         crossoverProbabilityTextField.setPromptText(resourceBundle.getString("CROSSOVER_PROBABILITY"));
         addLinkProbabilityTextField.setPromptText(resourceBundle.getString("ADD_LINK_PROBABILITY"));
@@ -370,9 +620,9 @@ public class MainController {
             this.originalProjectConfig = this.loadConfig(projectFile.getPath());
             this.runnableProjectConfig = new NEATConfig((NEATConfig) this.originalProjectConfig);
             this.currentProjectTextField.setText(projectFile.getParent());
-            this.neatOptionsLabel.setText(neatOptionGASettings);
-            parametresPane.setVisible(true);
-            infoTabPane.setVisible(true);
+            //this.neatOptionsLabel.setText(neatOptionGASettings);
+            this.menuBorderPane.setCenter(this.parametresScrollPane);
+            this.infoTabPane.setVisible(true);
             this.projectFile = projectFile;
             fillDataSetChoiceBox(originalProjectConfig);
             fillFieldsUsingOriginalConfig();
@@ -391,15 +641,9 @@ public class MainController {
     private void createNewProject(ActionEvent actionEvent){
         NewProjectDialogue dialogue = NewProjectDialogue.getInstance(this.scene);
         dialogue.show();
-        if(dialogue.getProjectName().length() != 0 ){
+        if(dialogue.getProjectFile() != null ){
             try {
-                this.currentProjectTextField.setText(dialogue.getProjectLocation()+dialogue.getProjectName());
-                this.originalProjectConfig = this.loadConfig(this.currentProjectTextField.getText()+"\\"+dialogue.getProjectName()+".neat");
-                /*this.originalProjectConfig.updateConfig("AI.SOURCE", dialogue.getProjectName()+"BestNetwork.ser");
-                this.originalProjectConfig.updateConfig("SAVE.LOCATION", dialogue.getProjectName()+"BestNetwork.ser");*/
-                this.neatOptionsLabel.setText(neatOptionGASettings);
-                parametresPane.setVisible(true);
-                infoTabPane.setVisible(true);
+                this.openProject(dialogue.getProjectFile());
             } catch (Exception ex){
                 AlertWindow.getAlert(ex.getMessage()).show();
             }
@@ -549,5 +793,77 @@ public class MainController {
 
 
     public void trainModel(ActionEvent actionEvent) {
+        //trainigTab.setContent(new SideBar(30, new TextField()));
+        initRunnableConfigUsingGUI();
+        this.runnableProjectConfig.updateConfig("TRAINING.SET", this.currentProjectTextField.getText()+"\\datasets\\"+this.datasetChoiceBox.getValue()+"\\"+this.datasetChoiceBox.getValue()+"@train_temp.dataset");
+
+        try {
+            this.saveTempDataSet(this.runnableProjectConfig.configElement("TRAINING.SET"));
+            logger.debug(this.runnableProjectConfig.configElement("TRAINING.SET"));
+            //TODO replace Test set init
+            this.runnableProjectConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+this.datasetChoiceBox.getValue()+"\\"+this.datasetChoiceBox.getValue()+"@test_temp.dataset");
+            trainigTab.setDisable(false);
+            infoTabPane.getSelectionModel().select(trainigTab);
+            NEATTrainingForJavaFX neatTrainingForJavaFX = new NEATTrainingForJavaFX();
+            //TODO refresh SpecieCounter
+            neatTrainingForJavaFX.initialise(runnableProjectConfig);
+            neatTrainingForJavaFX.statusProperty().addListener(observable -> {});
+            this.trainingProgressBar.progressProperty().bind(neatTrainingForJavaFX.statusProperty());
+            final Thread thread = new Thread(neatTrainingForJavaFX);
+            thread.start();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InitialisationFailedException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    public void showMenu(ActionEvent actionEvent) {
+
+    }
+
+    private void menuSlide(Timeline timeline, int i) {
+        //0.3373729476153245
+        double pos = splitPane.getDividers().get(0).getPosition();
+        double width = menuBorderPane.getWidth();
+
+
+        if(pos > 1.0) {
+            splitPane.setDividerPositions(1.0);
+            timeline.stop();
+
+        }
+        else if (width == menuBorderPane.getMinWidth()) {
+
+            splitPane.setDividerPositions(pos+0.001f);
+            timeline.stop();
+
+        }
+        else splitPane.setDividerPositions(pos +  ((double)i)/100);
+    }
+
+    public void initVisibleElements() {
+        splitPane.lookupAll(".split-pane-divider").stream()
+                .forEach(div ->  div.setMouseTransparent(true) );
+    }
+
+    public File saveTempDataSet(String dataSetPath) throws IOException {
+        File file = new File(dataSetPath);
+        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, false));
+        double value;
+        for(List<Double> list : this.trainDataSet){
+            for (int i = 0; i < list.size(); i++) {
+                value = list.get(i);
+                bufferedWriter.write(String.valueOf(value));
+                if(i != list.size()-1) bufferedWriter.write(";");
+            }
+            bufferedWriter.write("\n");
+        }
+        bufferedWriter.flush();
+        bufferedWriter.close();
+        return file;
     }
 }
