@@ -76,7 +76,7 @@ public class NEATGATrainingManager {
 	public void evolve() {
 		int epochs = Integer.parseInt(config.configElement("NUMBER.EPOCHS"));
 		double terminateVal = ((NEATGADescriptor)this.ga.getDescriptor()).getTerminationValue();
-		boolean nOrder = ((NEATGADescriptor)this.ga.getDescriptor()).isNaturalOrder();
+		boolean nOrder = this.ga.getDescriptor().isNaturalOrder();
 		boolean terminate = false;
 		int i = 0;
 		
@@ -89,7 +89,7 @@ public class NEATGATrainingManager {
 			}
 			i++;
 		}
-		cat.debug("Innovation Database Stats - Hits:" + InnovationDatabase.hits + " - misses:" + InnovationDatabase.misses);
+		cat.debug("Innovation Database Stats - Hits:" + InnovationDatabase.totalHits + " - totalMisses:" + InnovationDatabase.totalMisses);
 	}
 	
 	/**
@@ -97,11 +97,7 @@ public class NEATGATrainingManager {
 	 *
 	 */
 	public void saveBest() {
-		String pathToSave = "";
-		if(!config.configElement("SAVE.LOCATION").matches("/"))
-			pathToSave = config.configElement("CONFIGURATION.FILEPATH")+"/"+config.configElement("SAVE.LOCATION");
-		else
-			pathToSave = config.configElement("SAVE.LOCATION");
+		String pathToSave = config.configElement("SAVE.LOCATION");
 		this.save(pathToSave, this.ga.discoverdBestMember());
 	}
 	

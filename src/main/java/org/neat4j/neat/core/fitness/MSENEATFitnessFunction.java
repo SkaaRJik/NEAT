@@ -43,6 +43,6 @@ public class MSENEATFitnessFunction extends NEATFitnessFunction {
 			}
 		}
 		
-		return error;
+		return (Math.sqrt(error / eOpSet.size()));
 	}
 }

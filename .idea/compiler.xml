@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="NEAT" />
         <module name="NEAT4J" />
+        <module name="NEATJavaFX" />
       </profile>
     </annotationProcessing>
   </component>

@@ -27,14 +27,14 @@ public class InnovationDatabase {
 	private static int innovationId = 1;
 	private static int neuronId = 1;
 	private static InnovationDatabase database;
-	public static int hits = 0;
-	public static int misses = 0;
+	public static int totalHits = 0;
+	public static int totalMisses = 0;
 
 	public static void refresh(){
 		innovationId = 1;
 		neuronId = 1;
-		hits = 0;
-		misses = 0;
+		totalHits = 0;
+		totalMisses = 0;
 		if(database!=null){
 			database.innovations = new HashMap();
 		}
@@ -202,14 +202,16 @@ public class InnovationDatabase {
 		NEATNodeGene gene = null;
 
 		if (databaseEntry == null) {
-			misses++;
+			totalMisses++;
+
 			innovationNumber = this.nextInnovationNumber();
 			databaseEntry = new NEATNodeInnovation(linkGene.getInnovationNumber());
 			((NEATNodeInnovation)databaseEntry).setNodeId(this.nextNodeNumber());
 			databaseEntry.setInnovationId(innovationNumber);
 			this.innovations.put(new Integer(innovationNumber), databaseEntry);
 		} else {
-			hits++;
+
+			totalHits++;
 		}
 
 		gene = new NEATNodeGene(databaseEntry.innovationId(), ((NEATNodeInnovation)databaseEntry).getNodeId(), MathUtils.nextDouble(), NEATNodeGene.HIDDEN, MathUtils.nextPlusMinusOne());
@@ -229,13 +231,15 @@ public class InnovationDatabase {
 		NEATInnovation databaseEntry = this.findLinkInnovation(fromId, toId);
 
 		if (databaseEntry == null) {
-			misses++;
+			totalMisses++;
+
 			innovationNumber = this.nextInnovationNumber();
 			databaseEntry = new NEATLinkInnovation(fromId, toId);
 			databaseEntry.setInnovationId(innovationNumber);
 			this.innovations.put(new Integer(innovationNumber), databaseEntry);
 		} else {
-			hits++;
+			totalHits++;
+
 		}
 		// the 0 weight is a place holder
 		NEATLinkGene gene = new NEATLinkGene(databaseEntry.innovationId(), true, fromId, toId, 0);

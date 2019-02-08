@@ -73,7 +73,7 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 		for (int i = 0; i < offsetOfIndex; i++) {
 			part[i] = currentGen[i];
 		}
-		evaluatePopulation(part);
+		this.evaluatePopulation(part);
 		for (int i = 0; i < numberOfThreads; i++) {
 			try {
 				threads[i].join();
@@ -81,7 +81,7 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 				e.printStackTrace();
 			}
 		}
-		this.evaluatePopulation(currentGen);
+		//this.evaluatePopulation(currentGen);
 		this.runEvolutionCycle(currentGen);
 		/*Chromosome[] currentGen = this.pop.genoTypes();
 		this.setChromosomeNO(currentGen);

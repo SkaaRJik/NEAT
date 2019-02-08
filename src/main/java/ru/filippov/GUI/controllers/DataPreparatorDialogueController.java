@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import org.neat4j.neat.data.normaliser.DataScaler;
 import org.neat4j.neat.data.normaliser.LinearScaler;
 import org.neat4j.neat.data.normaliser.NonLinearScaler;
+import org.neat4j.neat.nn.core.functions.ActivationFunctionImpl;
 import org.neat4j.neat.nn.core.functions.ArctgFunction;
 import org.neat4j.neat.nn.core.functions.SigmoidFunction;
 import org.neat4j.neat.nn.core.functions.TanhFunction;
@@ -206,7 +207,7 @@ public class DataPreparatorDialogueController {
             }
         });
 
-        chooseActivationFunctionChoiceBox.setItems(FXCollections.observableArrayList("sigmoid(x)", "th(x)", "arctg(x)"));
+        chooseActivationFunctionChoiceBox.setItems(FXCollections.observableArrayList("sigmoid(x)", "sin(x*1.5)/2+0.5", "arctg(x)"));
 
         selectTrainingDataTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
@@ -377,11 +378,7 @@ public class DataPreparatorDialogueController {
         int countOfValues = 0;
         for (int i = 0; i < tokens; i++) {
             String tempStr = stringTokenizer.nextToken();
-            if(i == 0){
-                if(!containsHeadersCheckBox.isSelected()){
-                    tempStr = tempStr.replaceAll(decimalDelimetr, ".");
-                }
-            } else {
+            if(i != 0 || !containsHeadersCheckBox.isSelected()){
                 tempStr = tempStr.replaceAll(decimalSeparatorTextField.getText(), decimalDelimetr);
             }
             elementTokenizer = new StringTokenizer(tempStr, valueDelimetr);
@@ -396,11 +393,7 @@ public class DataPreparatorDialogueController {
                     }
                     valuesList.add(row);
                     row = new ArrayList<>(countOfValues);
-                    /*for (int j = 0; j < countOfValues; j++) {
-                        row.add(Double.parseDouble(elementTokenizer.nextToken()));
-                    }
-                    valuesList.add(row);
-                    continue;*/
+
                 } else {
                     for (int j = 0; j < countOfValues; j++) {
                         row.add(elementTokenizer.nextToken());
@@ -849,8 +842,18 @@ public class DataPreparatorDialogueController {
                         dataScaler = new NonLinearScaler(new SigmoidFunction());
                         normalisedUsedData = dataScaler.normalize(usedData);
                         break;
-                    case "th(x)":
-                        dataScaler = new NonLinearScaler(new TanhFunction());
+                    case "sin(x*1.5)/2+0.5":
+                        dataScaler = new NonLinearScaler(new ActivationFunctionImpl() {
+                            @Override
+                            public double activate(double neuronIp) {
+                                return Math.sin(neuronIp*1.5)/2+0.5;
+                            }
+
+                            @Override
+                            public double derivative(double neuronIp) {
+                                return 0;
+                            }
+                        });
                         normalisedUsedData = dataScaler.normalize(usedData);
                         break;
                     case "arctg(x)":

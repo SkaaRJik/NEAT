@@ -61,13 +61,8 @@
     -fx-spacing: 5;
 }
 
-#menu .button {
-    -fx-pref-height: 30;
-    -fx-pref-width: 200;
-    -fx-background-color: #66F;
-}
 
-#menu .button:hover {
-    -fx-background-color: #F6F;
+.text-field-with-tooltip {
+    -fx-text-fill: #88F;
+    -fx-underline: true;
 }
-

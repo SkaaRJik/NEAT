@@ -10,6 +10,7 @@ import com.jfoenix.validation.RequiredFieldValidator;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
 import javafx.animation.*;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -18,7 +19,12 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -27,6 +33,8 @@ import javafx.stage.FileChooser;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import org.apache.log4j.Logger;
+import org.gillius.jfxutils.chart.ChartPanManager;
+import org.gillius.jfxutils.chart.JFXChartUtil;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.applications.train.NEATTrainingForJavaFX;
@@ -36,7 +44,9 @@ import ru.filippov.GUI.windows.DataPreparatorDialogue;
 import ru.filippov.utils.CsControl;
 import ru.filippov.GUI.windows.AlertWindow;
 import ru.filippov.GUI.windows.NewProjectDialogue;
+import ru.filippov.utils.TooltipConfigurator;
 
+import javax.tools.Tool;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.*;
@@ -136,17 +146,21 @@ public class MainController {
     private Tab trainigTab;
     @FXML private BorderPane trainBorderPane;
     @FXML private ProgressBar trainingProgressBar;
-    @FXML private ProgressBar testingProgressBar;
+
+    @FXML
+    private LineChart<Integer, Integer> hitsMissedChart;
 
 
     @FXML
     private Tab testingTab;
-
+    @FXML private ProgressBar testingProgressBar;
     @FXML
     private Button startTrainingButton;
 
     @FXML
     private MaterialDesignIconView openMenuIcon;
+
+
 
 
     private AIConfig originalProjectConfig;
@@ -169,9 +183,20 @@ public class MainController {
         this.parametresScrollPane.setFitToWidth(true);
         this.titlesPaneContainer = new VBox();
 
+
+
         VBox tempVbox = new VBox();
         tempVbox.setSpacing(25);
         this.GASettingsTitledPane = new TitledPane();
+
+        this.generatorSeedTextField = new JFXTextField();
+        this.generateSeedButton = new JFXButton();
+        this.generateSeedButton.setGraphic(new MaterialDesignIconView(MaterialDesignIcon.REFRESH));
+        this.generateSeedButton.setOnAction(event -> {
+            this.generateNewSeed();
+        });
+        HBox hBox = new HBox(20, this.generatorSeedTextField, generateSeedButton);
+
         this.mutationProbabilityTextField = new JFXTextField();
         this.crossoverProbabilityTextField = new JFXTextField();
         this.addLinkProbabilityTextField = new JFXTextField();
@@ -187,6 +212,7 @@ public class MainController {
         this.toggleLinkProbabilityTextField.setLabelFloat(true);
         this.weightReplaceProbabilityTextField.setLabelFloat(true);
         tempVbox.getChildren().addAll(
+                hBox,
             this.mutationProbabilityTextField,
             this.crossoverProbabilityTextField,
             this.addLinkProbabilityTextField,
@@ -201,29 +227,31 @@ public class MainController {
         tempVbox.setSpacing(25);
         this.neatSpecificTitledPane = new TitledPane();
 
-        this.generatorSeedTextField = new JFXTextField();
-        this.generateSeedButton = new JFXButton();
-        this.generateSeedButton.setGraphic(new MaterialDesignIconView(MaterialDesignIcon.REFRESH));
-        this.generateSeedButton.setOnAction(event -> {
-            this.generateNewSeed();
-        });
-        HBox hBox = new HBox(20, this.generatorSeedTextField, generateSeedButton);
+
         this.excessCoefficientTextField = new JFXTextField();
         this.disjointCoefficientTextField = new JFXTextField();
         this.weightCoefficientTextField = new JFXTextField();
-        
+        /*this.excessCoefficientTextField.getStyleClass().add("text-field-with-tooltip");
+        this.disjointCoefficientTextField.getStyleClass().add("text-field-with-tooltip");
+        this.weightCoefficientTextField.getStyleClass().add("text-field-with-tooltip");*/
+        /*this.excessCoefficientTextField.promptTextProperty().sty*/
+
         this.generatorSeedTextField.setLabelFloat(true);
         this.excessCoefficientTextField.setLabelFloat(true);
         this.disjointCoefficientTextField.setLabelFloat(true);
         this.weightCoefficientTextField.setLabelFloat(true);
-
+        Tooltip tempTooltip = new Tooltip();
+        TooltipConfigurator.hackTooltipStartTiming(tempTooltip, 100);
+        this.excessCoefficientTextField.setTooltip(tempTooltip);
+        this.disjointCoefficientTextField.setTooltip(tempTooltip);
+        this.weightCoefficientTextField.setTooltip(tempTooltip);
         tempVbox.getChildren().addAll(
-                hBox,
                 this.excessCoefficientTextField,
                 this.disjointCoefficientTextField,
                 this.weightCoefficientTextField
         );
         this.neatSpecificTitledPane.setContent(tempVbox);
+        this.neatSpecificTitledPane.setTooltip(new Tooltip(""));
 
         tempVbox = new VBox();
         tempVbox.setSpacing(25);
@@ -466,6 +494,25 @@ public class MainController {
         trainigTab.setGraphic(new BorderPane(trainingProgressBar,null,null,null, null));
         testingTab.setGraphic(new BorderPane(testingProgressBar,null,null,null, null));
 
+        /*Adding ability to zoom linechart*/
+        ChartPanManager panner = new ChartPanManager(this.hitsMissedChart);
+        panner.start();
+        //while presssing the left mouse button, you can drag to navigate
+        panner.setMouseFilter(mouseEvent -> {
+            if (mouseEvent.getButton() == MouseButton.PRIMARY) {//set your custom combination to trigger navigation
+                // let it through
+            } else {
+                mouseEvent.consume();
+            }
+        });
+
+
+        //holding the right mouse button will draw a rectangle to zoom to desired location
+        JFXChartUtil.setupZooming(this.hitsMissedChart, mouseEvent -> {
+            if (mouseEvent.getButton() != MouseButton.SECONDARY)//set your custom combination to trigger rectangle zooming
+                mouseEvent.consume();
+        });
+        /*Zooming END*/
 
 
 
@@ -592,6 +639,25 @@ public class MainController {
         toggleLinkProbabilityTextField.setPromptText(resourceBundle.getString("TOGGLE_LINK_PROBABILITY"));
         weightReplaceProbabilityTextField.setPromptText(resourceBundle.getString("WEIGHT_REPLACED_PROBABILITY"));
 
+        this.neatSpecificTitledPane.setText(resourceBundle.getString("NEAT_SPECIFIC"));
+        this.neatSpecificTitledPane.getTooltip().setText(resourceBundle.getString("NICHING_DESCRIPTION"));
+        this.generatorSeedTextField.setPromptText(resourceBundle.getString("GENERATOR_SEED"));
+        this.excessCoefficientTextField.setPromptText(resourceBundle.getString("EXCESS_COEFFICIENT"));
+        this.disjointCoefficientTextField.setPromptText(resourceBundle.getString("DISJOINT_COEFFICIENT"));
+        this.weightCoefficientTextField.setPromptText(resourceBundle.getString("WEIGHT_COEFFICIENT"));
+        this.excessCoefficientTextField.getTooltip().setText(resourceBundle.getString("NICHING_TOOLTIP"));
+
+        this.speciationControlTitledPane.setText(resourceBundle.getString("SPECIATION_CONTROL"));
+        this.thresholdCompabilityTextField.setPromptText(resourceBundle.getString("THRESHOLD_COMPABILITY"));
+        this.changeCompabilityTextField.setPromptText(resourceBundle.getString("CHANGE_COMPABILITY"));
+        this.specieCountTextField.setPromptText(resourceBundle.getString("SPECIE_COUNT"));
+        this.survivalThresholdTextField.setPromptText(resourceBundle.getString("SURVIVAL_THRESHOLD"));
+        this.specieAgeThresholdTextField.setPromptText(resourceBundle.getString("SPECIE_AGE_THRESHOLD"));
+        this.specieYouthThresholdTextField.setPromptText(resourceBundle.getString("SPECIE_YOUTH_THRESHOLD"));
+        this.specieOldPenaltyTextField.setPromptText(resourceBundle.getString("SPECIE_OLD_PENALTY"));
+        this.specieYouthBoostTextField.setPromptText(resourceBundle.getString("SPECIE_YOUTH_BOOST"));
+        this.specieFitnessMaxTextField.setPromptText(resourceBundle.getString("FITNESS_MAX"));
+        
 
         AlertWindow.setLanguage(resourceBundle);
         NewProjectDialogue.getInstance(this.scene).setLanguage(resourceBundle);
@@ -796,7 +862,13 @@ public class MainController {
         //trainigTab.setContent(new SideBar(30, new TextField()));
         initRunnableConfigUsingGUI();
         this.runnableProjectConfig.updateConfig("TRAINING.SET", this.currentProjectTextField.getText()+"\\datasets\\"+this.datasetChoiceBox.getValue()+"\\"+this.datasetChoiceBox.getValue()+"@train_temp.dataset");
+        this.hitsMissedChart.getData().clear();
+        XYChart.Series hits = new XYChart.Series();
+        hits.setName("Fitness of the best");
 
+        /*XYChart.Series misses = new XYChart.Series();
+        misses.setName("totalMisses");*/
+        this.hitsMissedChart.getData().addAll(hits);
         try {
             this.saveTempDataSet(this.runnableProjectConfig.configElement("TRAINING.SET"));
             logger.debug(this.runnableProjectConfig.configElement("TRAINING.SET"));
@@ -807,7 +879,20 @@ public class MainController {
             NEATTrainingForJavaFX neatTrainingForJavaFX = new NEATTrainingForJavaFX();
             //TODO refresh SpecieCounter
             neatTrainingForJavaFX.initialise(runnableProjectConfig);
-            neatTrainingForJavaFX.statusProperty().addListener(observable -> {});
+            neatTrainingForJavaFX.statusProperty().addListener(observable -> {
+                Platform.runLater(new Runnable() {
+                    @Override public void run() {
+                        int n = neatTrainingForJavaFX.getBestEverChromosomes().size();
+                        double fitnessValue = neatTrainingForJavaFX.getBestEverChromosomes().get(n-1).fitness();
+                        XYChart.Data<Number, Number> xyData = new XYChart.Data<>(n, fitnessValue);
+                        xyData.setNode(new StackPane());
+
+                        Tooltip.install(xyData.getNode(), new Tooltip(String.valueOf(fitnessValue)));
+                        hits.getData().add(xyData);
+                    }
+                });
+
+            });
             this.trainingProgressBar.progressProperty().bind(neatTrainingForJavaFX.statusProperty());
             final Thread thread = new Thread(neatTrainingForJavaFX);
             thread.start();
@@ -866,4 +951,6 @@ public class MainController {
         bufferedWriter.close();
         return file;
     }
+
+
 }
