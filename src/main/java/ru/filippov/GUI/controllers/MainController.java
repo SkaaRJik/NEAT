@@ -430,7 +430,6 @@ public class MainController {
 
 
 
-
         this.inputNodesTextField.setDisable(true);
         this.outputNodesTextField.setDisable(true);
 
@@ -490,9 +489,24 @@ public class MainController {
         trainigTab.setDisable(true);
         testingTab.setDisable(true);
         this.trainingProgressBar = new ProgressBar(0);
+        this.trainingProgressBar.setOnMouseClicked(event -> {
+            if(event.getButton() == MouseButton.PRIMARY){
+                if(!this.trainigTab.isDisable())
+                    this.infoTabPane.getSelectionModel().select(this.trainigTab);
+            }
+        });
+
         this.testingProgressBar = new ProgressBar(0);
+        this.testingProgressBar.setOnMouseClicked(event -> {
+            if(event.getButton() == MouseButton.PRIMARY){
+                if(!this.testingTab.isDisable())
+                    this.infoTabPane.getSelectionModel().select(this.testingTab);
+            }
+        });
+
         trainigTab.setGraphic(new BorderPane(trainingProgressBar,null,null,null, null));
         testingTab.setGraphic(new BorderPane(testingProgressBar,null,null,null, null));
+
 
         /*Adding ability to zoom linechart*/
         ChartPanManager panner = new ChartPanManager(this.hitsMissedChart);
