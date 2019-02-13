@@ -14,6 +14,8 @@ public class MSENEATFitnessFunction extends NEATFitnessFunction {
 	 */
 	private static final long serialVersionUID = 1L;
 
+
+
 	public MSENEATFitnessFunction(NeuralNet net, NetworkDataSet dataSet) {
 		super(net, dataSet);
 	}
@@ -36,6 +38,7 @@ public class MSENEATFitnessFunction extends NEATFitnessFunction {
 		for (i = 0; i < eOpSet.size(); i++) {
 			ip = this.evaluationData().inputSet().nextInput();
 			opSet = this.net().execute(ip);
+			genoType.setOutputValues(opSet);
 			op = opSet.nextOutput().values();
 			eOp = eOpSet.nextOutput().values();
 			for (j = 0; j < op.length; j++) {

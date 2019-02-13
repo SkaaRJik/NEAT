@@ -11,4 +11,5 @@ public interface NetworkOutputSet extends Serializable {
 	public void addNetworkOutput(NetworkOutput op);
 	public void removeNetworkOutput(int idx);
 	public NetworkOutput nextOutput();
+	void refresh();
 }

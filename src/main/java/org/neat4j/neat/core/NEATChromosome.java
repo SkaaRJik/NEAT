@@ -6,6 +6,7 @@
  */
 package org.neat4j.neat.core;
 
+import org.neat4j.neat.data.core.NetworkOutputSet;
 import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.ga.core.Gene;
 
@@ -19,7 +20,7 @@ public class NEATChromosome implements Chromosome {
 	private double fitness;
 	private int specieId = -1;
 	private boolean nOrder = false;
-	
+	private NetworkOutputSet outputValues;
 	
 	public NEATChromosome(Gene[] genes) {
 		this.updateChromosome(genes);
@@ -60,7 +61,17 @@ public class NEATChromosome implements Chromosome {
 	public double fitness() {
 		return (this.fitness);
 	}
-	
+
+	@Override
+	public void setOutputValues(NetworkOutputSet opSet) {
+		this.outputValues = opSet;
+	}
+
+	@Override
+	public NetworkOutputSet getOutputValues() {
+		return outputValues;
+	}
+
 	public void setNaturalOrder(boolean nOrder) {
 		this.nOrder = nOrder;
 	}

@@ -38,6 +38,11 @@ public class NEATNetOutputSet implements NetworkOutputSet {
 		return ((NetworkOutput)this.outputSet.get(this.idx++));		
 	}
 
+	@Override
+	public void refresh() {
+		this.idx = 0;
+	}
+
 	/**
 	 * @see org.neat4j.ailibrary.nn.data.NetworkOutputSet#addNetworkOutput(org.neat4j.ailibrary.nn.core.NetworkOutput)
 	 */

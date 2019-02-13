@@ -4,6 +4,8 @@
  */
 package org.neat4j.neat.ga.core;
 
+import org.neat4j.neat.data.core.NetworkOutputSet;
+
 import java.io.Serializable;
 
 /**
@@ -11,9 +13,12 @@ import java.io.Serializable;
  *
  */
 public interface Chromosome extends Comparable, Serializable {
-	public Gene[] genes();
-	public int size();
-	public void updateChromosome(Gene[] newGenes);
-	public void updateFitness(double fitness);
-	public double fitness();
+	Gene[] genes();
+	int size();
+	void updateChromosome(Gene[] newGenes);
+	void updateFitness(double fitness);
+	double fitness();
+
+	void setOutputValues(NetworkOutputSet opSet);
+	NetworkOutputSet getOutputValues();
 }

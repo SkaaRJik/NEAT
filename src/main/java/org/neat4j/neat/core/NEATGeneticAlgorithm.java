@@ -156,6 +156,8 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 	private Chromosome cloneBest(Chromosome best) {
 		Chromosome cloneBest = new NEATChromosome(best.genes());
 		cloneBest.updateFitness(best.fitness());
+		cloneBest.setOutputValues(best.getOutputValues());
+		cloneBest.getOutputValues().refresh();
 		((NEATChromosome)cloneBest).setSpecieId(((NEATChromosome)best).getSpecieId());
 		
 		return (cloneBest);

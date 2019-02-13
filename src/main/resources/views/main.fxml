@@ -26,7 +26,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
    <top>
       <AnchorPane prefHeight="0.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <children>
@@ -107,7 +107,7 @@
                <right>
                   <BorderPane prefHeight="529.0" prefWidth="32.0" BorderPane.alignment="CENTER">
                      <center>
-                        <MaterialDesignIconView fx:id="iconView" glyphName="CHEVRON_DOUBLE_RIGHT" size="20" BorderPane.alignment="CENTER" />
+                        <MaterialDesignIconView fx:id="openMenuIcon" glyphName="CHEVRON_DOUBLE_RIGHT" size="20" BorderPane.alignment="CENTER" />
                      </center>
                      <top>
                         <AnchorPane prefHeight="21.0" prefWidth="145.0" rotate="270.0" BorderPane.alignment="CENTER">
@@ -115,13 +115,16 @@
                               <Insets top="15.0" />
                            </BorderPane.margin>
                            <children>
-                              <HBox layoutX="-231.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="-231.0" AnchorPane.rightAnchor="-5.0" AnchorPane.topAnchor="0.0">
+                              <HBox layoutX="-231.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="-231.0" AnchorPane.rightAnchor="-15.0" AnchorPane.topAnchor="0.0">
                                  <children>
                                     <Label fx:id="neatOptionsLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" prefHeight="21.0" prefWidth="268.0" text="Параметры алгоритма" wrapText="true" />
-                                    <JFXButton fx:id="pinButton" prefHeight="14.0" prefWidth="12.0" rotate="90.0" style="-fx-border-color: WHITE;">
+                                    <JFXButton fx:id="pinButton" alignment="CENTER" maxHeight="12.0" maxWidth="12.0" prefHeight="0.0" prefWidth="0.0" rotate="90.0" style="-fx-border-color: transparent;" text=" " HBox.hgrow="NEVER">
                                        <HBox.margin>
-                                          <Insets left="5.0" right="5.0" />
+                                          <Insets left="5.0" />
                                        </HBox.margin>
+                                       <graphic>
+                                          <MaterialDesignIconView fx:id="pinIcon" glyphName="PIN" size="18" wrappingWidth="10.0" />
+                                       </graphic>
                                     </JFXButton>
                                  </children>
                               </HBox>
@@ -263,7 +266,7 @@
                                           </AnchorPane>
                                           <HBox alignment="CENTER">
                                              <children>
-                                                <LineChart fx:id="hitsMissedChart">
+                                                <LineChart fx:id="errorChart">
                                                   <xAxis>
                                                     <NumberAxis label="Epochs" side="BOTTOM" />
                                                   </xAxis>

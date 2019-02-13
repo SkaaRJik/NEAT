@@ -75,7 +75,7 @@ public class MainController {
     private Timeline openMenu, closeMenu;
     private static final double SPEED = 2;
 
-    @FXML private MaterialDesignIconView iconView;
+    @FXML private MaterialDesignIconView openMenuIcon;
     @FXML private BorderPane menuBorderPane;
     private ScrollPane parametresScrollPane;
     private VBox titlesPaneContainer;
@@ -145,7 +145,7 @@ public class MainController {
 
     private Thread trainThread;
     @FXML
-    private LineChart<Integer, Integer> hitsMissedChart;
+    private LineChart<Integer, Integer> errorChart;
     @FXML
     private LineChart<Integer, Integer> valueGraphicChart;
 
@@ -156,8 +156,9 @@ public class MainController {
     @FXML private Button startTrainingButton;
     @FXML private JFXButton pinButton;
 
+
     @FXML
-    private MaterialDesignIconView openMenuIcon;
+    private MaterialDesignIconView pinIcon;
 
 
 
@@ -416,10 +417,12 @@ public class MainController {
                                       if(isAlwaysOpened) {
                                           menuBorderPane.setPrefWidth(300);
                                           menuBorderPane.setMaxWidth(300);
+                                          pinIcon.setRotate(45);
                                           menuBorderPane.setOnMouseEntered(null);
                                           menuBorderPane.setOnMouseExited(null);
 
                                       } else {
+                                          pinIcon.setRotate(0);
                                           menuBorderPane.setPrefWidth(20);
                                           menuBorderPane.setMaxWidth(20);
                                           enableSlideMenu();
@@ -460,7 +463,7 @@ public class MainController {
             if(newValue != null){
                 loadDataset(newValue);
                 this.dataSetsScrollPane.setVisible(true);
-                hitsMissedChart.getData().clear();
+                errorChart.getData().clear();
                 valueGraphicChart.getData().clear();
                 trainingCount = 0;
                 //this.originalProjectConfig.updateConfig("AI.SOURCE", newValue+"BestNetwork_temp.ser");
@@ -514,12 +517,12 @@ public class MainController {
         testingTab.setGraphic(new BorderPane(testingProgressBar,null,null,null, null));
 
         errorChartRefreshButton.setOnAction(event -> {
-            this.hitsMissedChart.getData().clear();
+            this.errorChart.getData().clear();
             this.trainingCount = 0;
         });
 
         /*Adding ability to zoom linechart*/
-        ChartPanManager panner = new ChartPanManager(this.hitsMissedChart);
+        ChartPanManager panner = new ChartPanManager(this.errorChart);
         panner.start();
         //while presssing the left mouse button, you can drag to navigate
         panner.setMouseFilter(mouseEvent -> {
@@ -533,7 +536,7 @@ public class MainController {
 
 
         //holding the right mouse button will draw a rectangle to zoom to desired location
-        JFXChartUtil.setupZooming(this.hitsMissedChart, mouseEvent -> {
+        JFXChartUtil.setupZooming(this.errorChart, mouseEvent -> {
             if (mouseEvent.getButton() != MouseButton.SECONDARY)//set your custom combination to trigger rectangle zooming
                 mouseEvent.consume();
         });
@@ -564,7 +567,7 @@ public class MainController {
     }
 
     private void enableSlideMenu() {
-        RotateTransition iconRotateTransition = new RotateTransition(Duration.millis(500), iconView);
+        RotateTransition iconRotateTransition = new RotateTransition(Duration.millis(500), openMenuIcon);
         iconRotateTransition.setFromAngle(0);
         iconRotateTransition.setToAngle(180);
         iconRotateTransition.setAutoReverse(true);
@@ -754,6 +757,15 @@ public class MainController {
 
     private void openProject(File projectFile) {
         if(projectFile != null){
+
+            this.infoTabPane.getTabs().stream().forEach(tab -> tab.setDisable(true));
+            this.infoTabPane.getSelectionModel().select(datasetsTab);
+            this.infoTabPane.getSelectionModel().getSelectedItem().setDisable(false);
+            startTrainingButton.setDisable(true);
+
+            dataSetsScrollPane.setVisible(false);
+            this.clearAllInfoElements();
+
             this.originalProjectConfig = this.loadConfig(projectFile.getPath());
             this.runnableProjectConfig = new NEATConfig((NEATConfig) this.originalProjectConfig);
             this.currentProjectTextField.setText(projectFile.getParent());
@@ -763,7 +775,21 @@ public class MainController {
             this.projectFile = projectFile;
             fillDataSetChoiceBox(originalProjectConfig);
             fillFieldsUsingOriginalConfig();
+
+
+
         }
+    }
+
+    private void clearAllInfoElements() {
+        trainTableView.getItems().clear();
+        trainTableView.getColumns().clear();
+        testTableView.getItems().clear();
+        testTableView.getColumns().clear();
+        errorChart.getData().clear();
+        valueGraphicChart.getData().clear();
+        this.trainingProgressBar.progressProperty().setValue(0);
+        this.testingProgressBar.progressProperty().setValue(0);
     }
 
     private void fillDataSetChoiceBox(AIConfig sourceConfig) {
@@ -956,9 +982,8 @@ public class MainController {
                 for (int i = 0; i < Integer.parseInt(this.outputNodesTextField.getText()); i++) {
                     TableColumn tableColumn = this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1-i);
                     outputDataXYChart = new XYChart.Series();
-
                     this.valueGraphicChart.getData().add(outputDataXYChart);
-                    outputDataXYChart.setName(tableColumn.getText());
+                    outputDataXYChart.setName(tableColumn.getText() + " (Факт)");
                     for (int j = 0; j < this.trainTableView.getItems().size(); j++) {
                         XYChart.Data integerObjectData = new XYChart.Data<>(j + 1, tableColumn.getCellData(j));
                         integerObjectData.setNode(new StackPane());
@@ -969,10 +994,16 @@ public class MainController {
             }
 
 
+
             NEATTrainingForJavaFX neatTrainingForJavaFX = new NEATTrainingForJavaFX();
             XYChart.Series hits = new XYChart.Series();
             hits.setName("Fitness of the " + ++this.trainingCount + " run");
-            this.hitsMissedChart.getData().add(hits);
+            this.errorChart.getData().add(hits);
+
+            XYChart.Series outputValues = new XYChart.Series();
+            outputValues.setName(this.trainingCount + ". " + this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1-1).getText());
+            this.valueGraphicChart.getData().add(outputValues);
+
             //TODO refresh SpecieCounter
             neatTrainingForJavaFX.initialise(runnableProjectConfig);
             neatTrainingForJavaFX.statusProperty().addListener(observable -> {
@@ -985,6 +1016,10 @@ public class MainController {
                         lastErrorTextField.setText(String.valueOf(fitnessValue));
                         Tooltip.install(xyData.getNode(), new Tooltip(String.valueOf(fitnessValue)));
                         hits.getData().add(xyData);
+                        //TODO Think about parsing that stuff
+                        neatTrainingForJavaFX.getBestEverChromosomes().get(n-1).getOutputValues().nextOutput();
+
+
                     }
                 });
             });
