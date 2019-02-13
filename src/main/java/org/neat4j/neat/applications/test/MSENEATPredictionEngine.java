@@ -30,12 +30,7 @@ public class MSENEATPredictionEngine extends NEATApplicationEngine {
 	}
 
 	public void initialise(AIConfig config) throws InitialisationFailedException {
-		String aiSource= "";
-		if(!config.configElement("AI.SOURCE").matches("\\\\")) {
-			aiSource = config.configElement("CONFIGURATION.FILEPATH") + "/" + config.configElement("AI.SOURCE");
-		}
-		else
-			aiSource = config.configElement("AI.SOURCE");
+		String aiSource= config.configElement("AI.SOURCE");
 		// what type is the AI?
 		String aiType = config.configElement("AI.TYPE");
 		try {
@@ -51,11 +46,7 @@ public class MSENEATPredictionEngine extends NEATApplicationEngine {
 			}
 			
 			// now setup the input data
-			String dataFile;
-			if(!config.configElement("INPUT.DATA").matches("/"))
-				dataFile = config.configElement("CONFIGURATION.FILEPATH")+"/"+config.configElement("INPUT.DATA");
-			else
-				dataFile = config.configElement("INPUT.DATA");
+			String dataFile = config.configElement("INPUT.DATA");
 			if (dataFile != null) {
 				this.setNetData(new CSVDataLoader(dataFile, 0).loadData());
 			}
@@ -89,7 +80,7 @@ public class MSENEATPredictionEngine extends NEATApplicationEngine {
 		NetworkInput ip;
 		NetworkOutputSet opSet = null;
 		int i;
-		 this.outs = new double[ipSet.size()];
+		this.outs = new double[ipSet.size()];
 		for (i = 0; i < ipSet.size(); i++) {
 			ip = ipSet.inputAt(i);
 			opSet = this.net().execute(ip);
@@ -113,7 +104,7 @@ public class MSENEATPredictionEngine extends NEATApplicationEngine {
 
 	public static void main(String[] args) {
 		ApplicationEngine fpe = new MSENEATPredictionEngine();
-		AIConfig config = new NEATLoader().loadConfig("F:\\JavaProjects\\NEAT4JONERANDOM\\src\\main\\resources\\new\\new_neat.ga");
+		AIConfig config = new NEATLoader().loadConfig("E:\\Java Programs\\IdeaProjects\\NEAT\\projects\\new_neat\\new_neat.neat");
 		try {
 			fpe.initialise(config);
 			fpe.runApplication();

@@ -16,19 +16,15 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.util.Callback;
 import javafx.util.Duration;
@@ -46,7 +42,6 @@ import ru.filippov.GUI.windows.AlertWindow;
 import ru.filippov.GUI.windows.NewProjectDialogue;
 import ru.filippov.utils.TooltipConfigurator;
 
-import javax.tools.Tool;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.*;
@@ -69,8 +64,7 @@ public class MainController {
     @FXML private Label currentProjectLabel;
     @FXML private TextField currentProjectTextField;
 
-    @FXML
-    private SplitPane splitPane;
+    @FXML private SplitPane splitPane;
     
     
     @FXML private Label neatOptionsLabel;
@@ -142,20 +136,25 @@ public class MainController {
     @FXML
     private TableView<List<Double>> testTableView;
 
-    @FXML
-    private Tab trainigTab;
-    @FXML private BorderPane trainBorderPane;
+    @FXML private Tab trainigTab;
+    @FXML private JFXTextField lastErrorTextField;
+    @FXML private VBox trainVBox;
     @FXML private ProgressBar trainingProgressBar;
+    @FXML private JFXButton errorChartRefreshButton;
 
+
+    private Thread trainThread;
     @FXML
     private LineChart<Integer, Integer> hitsMissedChart;
+    @FXML
+    private LineChart<Integer, Integer> valueGraphicChart;
 
 
     @FXML
     private Tab testingTab;
     @FXML private ProgressBar testingProgressBar;
-    @FXML
-    private Button startTrainingButton;
+    @FXML private Button startTrainingButton;
+    @FXML private JFXButton pinButton;
 
     @FXML
     private MaterialDesignIconView openMenuIcon;
@@ -173,9 +172,12 @@ public class MainController {
     List<List<Double>> testDataSet;
     private File projectFile;
 
+    int trainingCount = 0;
+
     public void init() {
         this.scene = this.currentProjectLabel.getParent().getScene();
 
+        this.trainingCount = 0;
 
         this.noActiveProjectLabel = new Label();
 
@@ -402,29 +404,30 @@ public class MainController {
 
 
 
-        RotateTransition iconRotateTransition = new RotateTransition(Duration.millis(500), iconView);
-        iconRotateTransition.setFromAngle(0);
-        iconRotateTransition.setToAngle(180);
-        iconRotateTransition.setAutoReverse(true);
 
-        menuBorderPane.setOnMouseEntered(evt -> {
-            menuBorderPane.setMinWidth(menuBorderPane.getMinWidth()-0.1);
-            menuBorderPane.setMaxWidth(300);
-            menuBorderPane.getCenter().setVisible(true);
-            //neatOptionsLabel.setVisible(true);
-            iconRotateTransition.setRate(1);
-            iconRotateTransition.play();
-            closeMenu.stop(); openMenu.play();
-        });
-        menuBorderPane.setOnMouseExited(evt -> {
-            menuBorderPane.setMinWidth(menuBorderPane.getMinWidth()+0.1);
-            menuBorderPane.setMaxWidth(menuBorderPane.getMinWidth()+0.2);
-            menuBorderPane.getCenter().setVisible(false);
-            menuBorderPane.getCenter().setVisible(false);
-            iconRotateTransition.setRate(-1);
-            iconRotateTransition.play();
-            openMenu.stop(); closeMenu.play();
-        });
+
+        this.enableSlideMenu();
+
+        pinButton.setOnAction(new EventHandler<ActionEvent>() {
+                                  boolean isAlwaysOpened = false;
+                                  @Override
+                                  public void handle(ActionEvent event) {
+                                      isAlwaysOpened = !isAlwaysOpened;
+                                      if(isAlwaysOpened) {
+                                          menuBorderPane.setPrefWidth(300);
+                                          menuBorderPane.setMaxWidth(300);
+                                          menuBorderPane.setOnMouseEntered(null);
+                                          menuBorderPane.setOnMouseExited(null);
+
+                                      } else {
+                                          menuBorderPane.setPrefWidth(20);
+                                          menuBorderPane.setMaxWidth(20);
+                                          enableSlideMenu();
+                                      }
+                                  }
+                              }
+        );
+
 
 
 
@@ -457,6 +460,9 @@ public class MainController {
             if(newValue != null){
                 loadDataset(newValue);
                 this.dataSetsScrollPane.setVisible(true);
+                hitsMissedChart.getData().clear();
+                valueGraphicChart.getData().clear();
+                trainingCount = 0;
                 //this.originalProjectConfig.updateConfig("AI.SOURCE", newValue+"BestNetwork_temp.ser");
                 //this.originalProjectConfig.updateConfig("SAVE.LOCATION", newValue+"BestNetwork_temp.ser");
 
@@ -507,6 +513,10 @@ public class MainController {
         trainigTab.setGraphic(new BorderPane(trainingProgressBar,null,null,null, null));
         testingTab.setGraphic(new BorderPane(testingProgressBar,null,null,null, null));
 
+        errorChartRefreshButton.setOnAction(event -> {
+            this.hitsMissedChart.getData().clear();
+            this.trainingCount = 0;
+        });
 
         /*Adding ability to zoom linechart*/
         ChartPanManager panner = new ChartPanManager(this.hitsMissedChart);
@@ -521,6 +531,7 @@ public class MainController {
         });
 
 
+
         //holding the right mouse button will draw a rectangle to zoom to desired location
         JFXChartUtil.setupZooming(this.hitsMissedChart, mouseEvent -> {
             if (mouseEvent.getButton() != MouseButton.SECONDARY)//set your custom combination to trigger rectangle zooming
@@ -528,8 +539,54 @@ public class MainController {
         });
         /*Zooming END*/
 
+        panner = new ChartPanManager(this.valueGraphicChart);
+        panner.start();
+        //while presssing the left mouse button, you can drag to navigate
+        panner.setMouseFilter(mouseEvent -> {
+            if (mouseEvent.getButton() == MouseButton.PRIMARY) {//set your custom combination to trigger navigation
+                // let it through
+            } else {
+                mouseEvent.consume();
+            }
+        });
 
 
+
+        //holding the right mouse button will draw a rectangle to zoom to desired location
+        JFXChartUtil.setupZooming(this.valueGraphicChart, mouseEvent -> {
+            if (mouseEvent.getButton() != MouseButton.SECONDARY)//set your custom combination to trigger rectangle zooming
+                mouseEvent.consume();
+        });
+        /*Zooming END*/
+
+
+
+    }
+
+    private void enableSlideMenu() {
+        RotateTransition iconRotateTransition = new RotateTransition(Duration.millis(500), iconView);
+        iconRotateTransition.setFromAngle(0);
+        iconRotateTransition.setToAngle(180);
+        iconRotateTransition.setAutoReverse(true);
+
+        menuBorderPane.setOnMouseEntered(evt -> {
+            menuBorderPane.setMinWidth(menuBorderPane.getMinWidth()-0.1);
+            menuBorderPane.setMaxWidth(300);
+            menuBorderPane.getCenter().setVisible(true);
+            //neatOptionsLabel.setVisible(true);
+            iconRotateTransition.setRate(1);
+            iconRotateTransition.play();
+            closeMenu.stop(); openMenu.play();
+        });
+        menuBorderPane.setOnMouseExited(evt -> {
+            menuBorderPane.setMinWidth(menuBorderPane.getMinWidth()+0.1);
+            menuBorderPane.setMaxWidth(menuBorderPane.getMinWidth()+0.2);
+            menuBorderPane.getCenter().setVisible(false);
+            menuBorderPane.getCenter().setVisible(false);
+            iconRotateTransition.setRate(-1);
+            iconRotateTransition.play();
+            openMenu.stop(); closeMenu.play();
+        });
     }
 
     private void loadDataset(String datasetName){
@@ -711,6 +768,7 @@ public class MainController {
 
     private void fillDataSetChoiceBox(AIConfig sourceConfig) {
         this.datasetChoiceBox.getItems().clear();
+        if(sourceConfig.configElement("ALLOWED.DATASETS") == null) return;
         StringTokenizer stringTokenizer = new StringTokenizer(sourceConfig.configElement("ALLOWED.DATASETS"),";");
         while (stringTokenizer.hasMoreTokens()) {
             this.datasetChoiceBox.getItems().add(stringTokenizer.nextToken());
@@ -874,15 +932,17 @@ public class MainController {
 
     public void trainModel(ActionEvent actionEvent) {
         //trainigTab.setContent(new SideBar(30, new TextField()));
+        if(trainThread != null)
+        if(trainThread.isAlive()){
+            trainThread.interrupt();
+        }
         initRunnableConfigUsingGUI();
         this.runnableProjectConfig.updateConfig("TRAINING.SET", this.currentProjectTextField.getText()+"\\datasets\\"+this.datasetChoiceBox.getValue()+"\\"+this.datasetChoiceBox.getValue()+"@train_temp.dataset");
-        this.hitsMissedChart.getData().clear();
-        XYChart.Series hits = new XYChart.Series();
-        hits.setName("Fitness of the best");
+
+
 
         /*XYChart.Series misses = new XYChart.Series();
         misses.setName("totalMisses");*/
-        this.hitsMissedChart.getData().addAll(hits);
         try {
             this.saveTempDataSet(this.runnableProjectConfig.configElement("TRAINING.SET"));
             logger.debug(this.runnableProjectConfig.configElement("TRAINING.SET"));
@@ -890,7 +950,29 @@ public class MainController {
             this.runnableProjectConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+this.datasetChoiceBox.getValue()+"\\"+this.datasetChoiceBox.getValue()+"@test_temp.dataset");
             trainigTab.setDisable(false);
             infoTabPane.getSelectionModel().select(trainigTab);
+
+            if(this.valueGraphicChart.getData().isEmpty()){
+                XYChart.Series outputDataXYChart = null;
+                for (int i = 0; i < Integer.parseInt(this.outputNodesTextField.getText()); i++) {
+                    TableColumn tableColumn = this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1-i);
+                    outputDataXYChart = new XYChart.Series();
+
+                    this.valueGraphicChart.getData().add(outputDataXYChart);
+                    outputDataXYChart.setName(tableColumn.getText());
+                    for (int j = 0; j < this.trainTableView.getItems().size(); j++) {
+                        XYChart.Data integerObjectData = new XYChart.Data<>(j + 1, tableColumn.getCellData(j));
+                        integerObjectData.setNode(new StackPane());
+                        outputDataXYChart.getData().add(integerObjectData);
+                        Tooltip.install(integerObjectData.getNode(), new Tooltip(String.valueOf(tableColumn.getCellData(j))));
+                    }
+                }
+            }
+
+
             NEATTrainingForJavaFX neatTrainingForJavaFX = new NEATTrainingForJavaFX();
+            XYChart.Series hits = new XYChart.Series();
+            hits.setName("Fitness of the " + ++this.trainingCount + " run");
+            this.hitsMissedChart.getData().add(hits);
             //TODO refresh SpecieCounter
             neatTrainingForJavaFX.initialise(runnableProjectConfig);
             neatTrainingForJavaFX.statusProperty().addListener(observable -> {
@@ -900,16 +982,15 @@ public class MainController {
                         double fitnessValue = neatTrainingForJavaFX.getBestEverChromosomes().get(n-1).fitness();
                         XYChart.Data<Number, Number> xyData = new XYChart.Data<>(n, fitnessValue);
                         xyData.setNode(new StackPane());
-
+                        lastErrorTextField.setText(String.valueOf(fitnessValue));
                         Tooltip.install(xyData.getNode(), new Tooltip(String.valueOf(fitnessValue)));
                         hits.getData().add(xyData);
                     }
                 });
-
             });
             this.trainingProgressBar.progressProperty().bind(neatTrainingForJavaFX.statusProperty());
-            final Thread thread = new Thread(neatTrainingForJavaFX);
-            thread.start();
+            Thread trainThread = new Thread(neatTrainingForJavaFX);
+            trainThread.start();
 
         } catch (IOException e) {
             e.printStackTrace();
