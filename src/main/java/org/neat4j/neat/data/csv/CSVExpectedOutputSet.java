@@ -63,4 +63,9 @@ public class CSVExpectedOutputSet implements ExpectedOutputSet {
 			this.ops.remove(idx);
 		}
 	}
+
+	@Override
+	public boolean hasNext() {
+		return this.idx < size();
+	}
 }

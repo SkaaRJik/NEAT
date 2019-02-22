@@ -19,6 +19,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
@@ -45,6 +46,7 @@ import ru.filippov.utils.TooltipConfigurator;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainController {
 
@@ -140,14 +142,15 @@ public class MainController {
     @FXML private JFXTextField lastErrorTextField;
     @FXML private VBox trainVBox;
     @FXML private ProgressBar trainingProgressBar;
-    @FXML private JFXButton errorChartRefreshButton;
+
 
 
     private Thread trainThread;
     @FXML
     private LineChart<Integer, Integer> errorChart;
-    @FXML
-    private LineChart<Integer, Integer> valueGraphicChart;
+    @FXML private JFXButton errorChartRefreshButton;
+    @FXML private LineChart<Integer, Integer> valueGraphicChart;
+    @FXML private JFXButton valueGraphicChartButton;
 
 
     @FXML
@@ -521,6 +524,10 @@ public class MainController {
             this.trainingCount = 0;
         });
 
+        valueGraphicChartButton.setOnAction(event -> {
+            this.valueGraphicChart.getData().clear();
+        });
+
         /*Adding ability to zoom linechart*/
         ChartPanManager panner = new ChartPanManager(this.errorChart);
         panner.start();
@@ -562,6 +569,14 @@ public class MainController {
         });
         /*Zooming END*/
 
+
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                splitPane.lookupAll(".split-pane-divider").stream()
+                        .forEach(div ->  div.setMouseTransparent(true) );
+            }
+        });
 
 
     }
@@ -967,8 +982,6 @@ public class MainController {
 
 
 
-        /*XYChart.Series misses = new XYChart.Series();
-        misses.setName("totalMisses");*/
         try {
             this.saveTempDataSet(this.runnableProjectConfig.configElement("TRAINING.SET"));
             logger.debug(this.runnableProjectConfig.configElement("TRAINING.SET"));
@@ -977,17 +990,19 @@ public class MainController {
             trainigTab.setDisable(false);
             infoTabPane.getSelectionModel().select(trainigTab);
 
+
+
             if(this.valueGraphicChart.getData().isEmpty()){
-                XYChart.Series outputDataXYChart = null;
+                XYChart.Series expectedOutputDataXYChart = null;
                 for (int i = 0; i < Integer.parseInt(this.outputNodesTextField.getText()); i++) {
                     TableColumn tableColumn = this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1-i);
-                    outputDataXYChart = new XYChart.Series();
-                    this.valueGraphicChart.getData().add(outputDataXYChart);
-                    outputDataXYChart.setName(tableColumn.getText() + " (Факт)");
+                    expectedOutputDataXYChart = new XYChart.Series();
+                    this.valueGraphicChart.getData().add(expectedOutputDataXYChart);
+                    expectedOutputDataXYChart.setName(tableColumn.getText() + " (Факт)");
                     for (int j = 0; j < this.trainTableView.getItems().size(); j++) {
                         XYChart.Data integerObjectData = new XYChart.Data<>(j + 1, tableColumn.getCellData(j));
                         integerObjectData.setNode(new StackPane());
-                        outputDataXYChart.getData().add(integerObjectData);
+                        expectedOutputDataXYChart.getData().add(integerObjectData);
                         Tooltip.install(integerObjectData.getNode(), new Tooltip(String.valueOf(tableColumn.getCellData(j))));
                     }
                 }
@@ -996,15 +1011,42 @@ public class MainController {
 
 
             NEATTrainingForJavaFX neatTrainingForJavaFX = new NEATTrainingForJavaFX();
-            XYChart.Series hits = new XYChart.Series();
-            hits.setName("Fitness of the " + ++this.trainingCount + " run");
-            this.errorChart.getData().add(hits);
+            XYChart.Series errorSeries = new XYChart.Series();
+            errorSeries.setName("Fitness of the " + ++this.trainingCount + " run");
+            this.errorChart.getData().add(errorSeries);
 
-            XYChart.Series outputValues = new XYChart.Series();
-            outputValues.setName(this.trainingCount + ". " + this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1-1).getText());
-            this.valueGraphicChart.getData().add(outputValues);
+            /*String[] colour = new String[Integer.parseInt(this.outputNodesTextField.getText())];
+            XYChart.Series[] outputValuesSeries = new XYChart.Series[Integer.parseInt(this.outputNodesTextField.getText())];
+            for (int i = 0; i < outputValuesSeries.length; i++) {
+                outputValuesSeries[i] = new XYChart.Series();
+                outputValuesSeries[i].setName(this.trainingCount + ". " + this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1-i).getText());
+                this.valueGraphicChart.getData().add(outputValuesSeries[i]);
+                colour[i] = "rgb("+ Math.round(Math.random()*255)+","+ Math.round(Math.random()*255)+","+ Math.round(Math.random()*255)+")";
+            }*/
+            String colour = "rgb("+ Math.round(Math.random()*255)+","+ Math.round(Math.random()*255)+","+ Math.round(Math.random()*255)+")";
+            XYChart.Series outputValuesSeries = new XYChart.Series();
+            outputValuesSeries.setName(this.trainingCount + ". " + this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1).getText());
+            this.valueGraphicChart.getData().add(outputValuesSeries);
 
-            //TODO refresh SpecieCounter
+            Platform.runLater(() -> {
+                /*errorSeries.getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour[0]+";");
+                Node[] nodes = errorChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
+                nodes[nodes.length-1].setStyle("-fx-background-color: "+ colour[0] +", white;");
+                for (int i = 0; i <outputValuesSeries.length ; i++) {
+                    outputValuesSeries[i].getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour[i]+";");
+                    nodes = valueGraphicChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
+                    nodes[nodes.length-1].setStyle("-fx-background-color: "+ colour[i] +", white;");
+                }*/
+                errorSeries.getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour+";");
+                Node[] nodes = errorChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
+                nodes[nodes.length-1].setStyle("-fx-background-color: "+ colour +", white;");
+                outputValuesSeries.getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour+";");
+                nodes = valueGraphicChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
+                nodes[nodes.length-1].setStyle("-fx-background-color: "+ colour +", white;");
+
+
+
+            });
             neatTrainingForJavaFX.initialise(runnableProjectConfig);
             neatTrainingForJavaFX.statusProperty().addListener(observable -> {
                 Platform.runLater(new Runnable() {
@@ -1015,11 +1057,36 @@ public class MainController {
                         xyData.setNode(new StackPane());
                         lastErrorTextField.setText(String.valueOf(fitnessValue));
                         Tooltip.install(xyData.getNode(), new Tooltip(String.valueOf(fitnessValue)));
-                        hits.getData().add(xyData);
-                        //TODO Think about parsing that stuff
-                        neatTrainingForJavaFX.getBestEverChromosomes().get(n-1).getOutputValues().nextOutput();
+
+                        /*xyData.getNode().setStyle("-fx-background-color: "+colour[0]+", white;");
+                        errorSeries.getData().add(xyData);
+                        for (int i = 0; i < outputValuesSeries.length; i++) {
+                            outputValuesSeries[i].getData().clear();
+                        }*/
+
+                        xyData.getNode().setStyle("-fx-background-color: "+colour+", white;");
+                        errorSeries.getData().add(xyData);
+                        outputValuesSeries.getData().clear();
 
 
+                        List<List<Double>> outputs = neatTrainingForJavaFX.getBestEverChromosomes().get(n - 1).getOutputValues();
+                        AtomicInteger counter = new AtomicInteger();
+                        for(List<Double> output : outputs) {
+                           output.stream().forEach(value -> {
+                               XYChart.Data<Number, Number> data = new XYChart.Data<>(counter.incrementAndGet(), value);
+                               data.setNode(new StackPane());
+                               Tooltip.install(data.getNode(), new Tooltip(String.valueOf(value)));
+                               data.getNode().setStyle("-fx-background-color: "+colour+", white;");
+                               outputValuesSeries.getData().add(data);
+                               /*for (int i = 0; i < outputValuesSeries.length; i++) {
+                                   XYChart.Data<Number, Number> data = new XYChart.Data<>(counter.incrementAndGet(), value);
+                                   data.setNode(new StackPane());
+                                   Tooltip.install(data.getNode(), new Tooltip(String.valueOf(value)));
+                                   data.getNode().setStyle("-fx-background-color: "+colour[i]+", white;");
+                                   outputValuesSeries[i].getData().add(data);
+                               }*/
+                            });
+                        }
                     }
                 });
             });
@@ -1060,10 +1127,7 @@ public class MainController {
         else splitPane.setDividerPositions(pos +  ((double)i)/100);
     }
 
-    public void initVisibleElements() {
-        splitPane.lookupAll(".split-pane-divider").stream()
-                .forEach(div ->  div.setMouseTransparent(true) );
-    }
+
 
     public File saveTempDataSet(String dataSetPath) throws IOException {
         File file = new File(dataSetPath);

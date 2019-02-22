@@ -26,7 +26,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
    <top>
       <AnchorPane prefHeight="0.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <children>
@@ -291,7 +291,7 @@
                                                       <NumberAxis label="Errors" side="LEFT" />
                                                    </yAxis>
                                                 </LineChart>
-                                                <JFXButton fx:id="errorChartRefreshButton1" mnemonicParsing="false">
+                                                <JFXButton fx:id="valueGraphicChartButton" mnemonicParsing="false">
                                                    <graphic>
                                                       <MaterialDesignIconView glyphName="REFRESH" size="20.0" />
                                                    </graphic>

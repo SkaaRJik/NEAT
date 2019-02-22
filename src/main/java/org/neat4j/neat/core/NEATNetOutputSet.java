@@ -39,6 +39,11 @@ public class NEATNetOutputSet implements NetworkOutputSet {
 	}
 
 	@Override
+	public boolean hasNext() {
+		return this.idx < size();
+	}
+
+	@Override
 	public void refresh() {
 		this.idx = 0;
 	}

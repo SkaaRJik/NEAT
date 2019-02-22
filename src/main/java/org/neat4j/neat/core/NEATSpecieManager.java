@@ -49,7 +49,7 @@ public class NEATSpecieManager {
 		N = specieApplicant.size() > specieRepresentative.size() ? specieApplicant.size() : specieRepresentative.size();
 		int counter = 0;
 		while (genesToProcess) {
-			logger.debug(counter++);
+			//logger.debug(counter++);
 			// find disjoints and excess
 			if (((NEATGene)applicantGenes[applicantIdx]).getInnovationNumber() == ((NEATGene)repGenes[repIdx]).getInnovationNumber()) {
 				// find average weight diff

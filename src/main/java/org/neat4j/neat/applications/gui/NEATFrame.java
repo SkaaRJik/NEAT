@@ -7,6 +7,7 @@
 package org.neat4j.neat.applications.gui;
 
 import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 import org.neat4j.neat.core.NEATNeuralNet;
 import org.neat4j.neat.core.NEATNeuron;
 import org.neat4j.neat.core.NEATNodeGene;
@@ -49,7 +50,7 @@ import java.util.ArrayList;
 }
 
 class NEATCanvas extends Canvas {
-	private static final Category cat = Category.getInstance(NEATCanvas.class); 
+	private static final Logger cat = Logger.getLogger(NEATCanvas.class);
 	private NEATNeuralNet net;
 	private int canvasH;
 	private int canvasW;

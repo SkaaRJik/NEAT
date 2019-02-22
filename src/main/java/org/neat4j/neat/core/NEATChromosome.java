@@ -10,6 +10,8 @@ import org.neat4j.neat.data.core.NetworkOutputSet;
 import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.ga.core.Gene;
 
+import java.util.List;
+
 /**
  * NEAT specific chromosome
  * @author MSimmerson
@@ -20,7 +22,7 @@ public class NEATChromosome implements Chromosome {
 	private double fitness;
 	private int specieId = -1;
 	private boolean nOrder = false;
-	private NetworkOutputSet outputValues;
+	private List<List<Double>> outputValues;
 	
 	public NEATChromosome(Gene[] genes) {
 		this.updateChromosome(genes);
@@ -63,12 +65,12 @@ public class NEATChromosome implements Chromosome {
 	}
 
 	@Override
-	public void setOutputValues(NetworkOutputSet opSet) {
+	public void setOutputValues(List<List<Double>> opSet) {
 		this.outputValues = opSet;
 	}
 
 	@Override
-	public NetworkOutputSet getOutputValues() {
+	public List<List<Double>> getOutputValues() {
 		return outputValues;
 	}
 
