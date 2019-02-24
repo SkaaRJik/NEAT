@@ -21,6 +21,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
@@ -37,6 +38,7 @@ import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.applications.train.NEATTrainingForJavaFX;
 import org.neat4j.neat.core.NEATConfig;
 import org.neat4j.neat.core.NEATLoader;
+import ru.filippov.GUI.customNodes.NetVisualisationNode;
 import ru.filippov.GUI.windows.DataPreparatorDialogue;
 import ru.filippov.utils.CsControl;
 import ru.filippov.GUI.windows.AlertWindow;
@@ -151,6 +153,10 @@ public class MainController {
     @FXML private JFXButton errorChartRefreshButton;
     @FXML private LineChart<Integer, Integer> valueGraphicChart;
     @FXML private JFXButton valueGraphicChartButton;
+    @FXML
+    private BorderPane netVisualizationBorderPane;
+    @FXML
+    private Canvas netVisualisationCanvas;
 
 
     @FXML
@@ -577,6 +583,8 @@ public class MainController {
                         .forEach(div ->  div.setMouseTransparent(true) );
             }
         });
+
+        trainVBox.getChildren().add(new NetVisualisationNode());
 
 
     }
@@ -1087,6 +1095,8 @@ public class MainController {
                                }*/
                             });
                         }
+
+                        System.out.println(((BorderPane)trainVBox.getChildren().get(3)).getHeight());
                     }
                 });
             });

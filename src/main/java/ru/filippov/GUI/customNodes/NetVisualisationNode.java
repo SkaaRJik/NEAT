@@ -1,7 +1,7 @@
-package ru;
+package ru.filippov.GUI.customNodes;
 
-import javafx.application.Application;
 import javafx.event.EventHandler;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -9,35 +9,27 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.stage.Stage;
-import ru.filippov.GUI.customNodes.AnimatedZoomOperator;
-import ru.filippov.GUI.customNodes.DragAndDropConfigurator;
+import org.neat4j.neat.ga.core.Chromosome;
 
 
-/**
- * An application with a zoomable and pannable canvas.
- */
-public class ZoomAndScrollApplication extends Application {
-    public static void main(String[] args) {
-        launch(args);
-    }
+public class NetVisualisationNode extends BorderPane {
 
-    @Override
-    public void start(Stage stage) {
+    Canvas canvas;
 
-        BorderPane root = new BorderPane();
-
+    public NetVisualisationNode(){
 
         // Create panel
-        Canvas canvas = new Canvas(200, 200);
+        this.canvas = new Canvas(this.getPrefWidth(), this.getPrefHeight());
+
         GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
 
         /*canvas.getChildren().add(new Circle(100, 100, 10));
         canvas.getChildren().add(new Circle(200, 200, 20));*/
+        this.setTop(new TextField("WOW"));
+        this.setCenter(canvas);
 
-        root.setCenter(canvas);
-        root.setTop(new TextField("WOW"));
 // Create operator
         AnimatedZoomOperator zoomOperator = new AnimatedZoomOperator();
 
@@ -54,27 +46,25 @@ public class ZoomAndScrollApplication extends Application {
             }
         });
 
+       /* canvas.widthProperty().bind(this.widthProperty());
+        canvas.heightProperty().bind(this.heightProperty());*/
 
 
-        // create scene which can be dragged and zoomed
-        Scene scene = new Scene(root, 1024, 768);
 
         DragAndDropConfigurator dragAndDropConfigurator = new DragAndDropConfigurator(canvas);
         /*scene.addEventFilter( MouseEvent.MOUSE_PRESSED, dragAndDropConfigurator.getOnMousePressedEventHandler());
         scene.addEventFilter( MouseEvent.MOUSE_DRAGGED, dragAndDropConfigurator.getOnMouseDraggedEventHandler());*/
-        root.addEventFilter( MouseEvent.MOUSE_PRESSED, dragAndDropConfigurator.getOnMousePressedEventHandler());
-        root.addEventFilter( MouseEvent.MOUSE_DRAGGED, dragAndDropConfigurator.getOnMouseDraggedEventHandler());
-
-        stage.setScene(scene);
-        stage.show();
+        this.addEventFilter( MouseEvent.MOUSE_PRESSED, dragAndDropConfigurator.getOnMousePressedEventHandler());
+        this.addEventFilter( MouseEvent.MOUSE_DRAGGED, dragAndDropConfigurator.getOnMouseDraggedEventHandler());
 
         this.draw(graphicsContext2D);
-
     }
 
     private void draw(GraphicsContext gc) {
         gc.setFill(Color.YELLOWGREEN);
         gc.setStroke(Color.YELLOW);
         gc.fillOval(10, 10, 10, 10);
+
     }
+
 }

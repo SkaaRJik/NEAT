@@ -5,6 +5,7 @@
 <?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <?import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
@@ -298,6 +299,11 @@
                                                 </JFXButton>
                                              </children>
                                           </HBox>
+                                          <BorderPane fx:id="netVisualizationBorderPane" prefHeight="200.0" prefWidth="200.0">
+                                             <center>
+                                                <Canvas fx:id="netVisualisationCanvas" height="200.0" width="200.0" BorderPane.alignment="CENTER" />
+                                             </center>
+                                          </BorderPane>
                                        </children>
                                        <padding>
                                           <Insets top="25.0" />

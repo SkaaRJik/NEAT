@@ -8,7 +8,7 @@ import javafx.scene.input.ScrollEvent;
 /**
  * Listeners for making the scene's canvas draggable and zoomable
  */
-public class SceneGestures {
+public class DragAndDropConfigurator {
 
     private static final double MAX_SCALE = 10.0d;
     private static final double MIN_SCALE = .1d;
@@ -17,7 +17,7 @@ public class SceneGestures {
 
     Node canvas;
 
-    public SceneGestures( Node canvas) {
+    public DragAndDropConfigurator(Node canvas) {
         this.canvas = canvas;
     }
 

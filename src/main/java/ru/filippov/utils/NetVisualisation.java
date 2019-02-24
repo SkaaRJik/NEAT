@@ -8,7 +8,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import ru.filippov.GUI.customNodes.AnimatedZoomOperator;
-import ru.filippov.GUI.customNodes.SceneGestures;
+import ru.filippov.GUI.customNodes.DragAndDropConfigurator;
 
 public class NetVisualisation extends Pane {
 
@@ -33,9 +33,9 @@ public class NetVisualisation extends Pane {
             }
         });
 
-        SceneGestures sceneGestures = new SceneGestures(canvas);
-        parent.addEventFilter( MouseEvent.MOUSE_PRESSED, sceneGestures.getOnMousePressedEventHandler());
-        parent.addEventFilter( MouseEvent.MOUSE_DRAGGED, sceneGestures.getOnMouseDraggedEventHandler());
+        DragAndDropConfigurator dragAndDropConfigurator = new DragAndDropConfigurator(canvas);
+        parent.addEventFilter( MouseEvent.MOUSE_PRESSED, dragAndDropConfigurator.getOnMousePressedEventHandler());
+        parent.addEventFilter( MouseEvent.MOUSE_DRAGGED, dragAndDropConfigurator.getOnMouseDraggedEventHandler());
 
 
     }
