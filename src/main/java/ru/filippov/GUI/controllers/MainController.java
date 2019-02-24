@@ -9,7 +9,9 @@ import com.jfoenix.skins.ValidationPane;
 import com.jfoenix.validation.RequiredFieldValidator;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
-import javafx.animation.*;
+import javafx.animation.KeyFrame;
+import javafx.animation.RotateTransition;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
@@ -21,12 +23,15 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.util.Callback;
 import javafx.util.Duration;
@@ -38,12 +43,15 @@ import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.applications.train.NEATTrainingForJavaFX;
 import org.neat4j.neat.core.NEATConfig;
 import org.neat4j.neat.core.NEATLoader;
-import ru.filippov.GUI.customNodes.NetVisualisationNode;
-import ru.filippov.GUI.windows.DataPreparatorDialogue;
-import ru.filippov.utils.CsControl;
+import org.neat4j.neat.ga.core.Chromosome;
+
+import ru.filippov.GUI.customNodes.ZoomableCanvas;
 import ru.filippov.GUI.windows.AlertWindow;
+import ru.filippov.GUI.windows.DataPreparatorDialogue;
 import ru.filippov.GUI.windows.NewProjectDialogue;
-import ru.filippov.utils.TooltipConfigurator;
+import ru.filippov.utils.CsControl;
+import ru.filippov.utils.JFXUtils;
+import ru.filippov.utils.NetVisualisator;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -155,8 +163,10 @@ public class MainController {
     @FXML private JFXButton valueGraphicChartButton;
     @FXML
     private BorderPane netVisualizationBorderPane;
-    @FXML
-    private Canvas netVisualisationCanvas;
+    /*@FXML
+    private Canvas netVisualisationCanvas;*/
+    private ZoomableCanvas netVisualisationCanvas;
+    private NetVisualisator netVisualisator;
 
 
     @FXML
@@ -253,7 +263,7 @@ public class MainController {
         this.disjointCoefficientTextField.setLabelFloat(true);
         this.weightCoefficientTextField.setLabelFloat(true);
         Tooltip tempTooltip = new Tooltip();
-        TooltipConfigurator.hackTooltipStartTiming(tempTooltip, 100);
+        JFXUtils.TooltipConfigurator.setDelay(tempTooltip, 100);
         this.excessCoefficientTextField.setTooltip(tempTooltip);
         this.disjointCoefficientTextField.setTooltip(tempTooltip);
         this.weightCoefficientTextField.setTooltip(tempTooltip);
@@ -584,8 +594,25 @@ public class MainController {
             }
         });
 
-        trainVBox.getChildren().add(new NetVisualisationNode());
 
+
+        this.netVisualisationCanvas = new ZoomableCanvas(300, 300) {
+            @Override
+            public void paint(GraphicsContext gc) {
+                netVisualisator.visualiseNet(netVisualisationCanvas);
+            }
+        };
+        this.netVisualisator = new NetVisualisator(this.netVisualisationCanvas);
+        this.netVisualizationBorderPane.setCenter(this.netVisualisationCanvas);
+
+        this.netVisualisationCanvas.widthProperty().bind(this.netVisualizationBorderPane.widthProperty());
+        this.netVisualisationCanvas.heightProperty().bind(this.netVisualizationBorderPane.heightProperty());
+
+       /* JFXUtils.CanvasConfigurator.setNetVisualisator(netVisualisator);
+        JFXUtils.CanvasConfigurator.setZoomOnCanvas(this.netVisualisationCanvas);
+        JFXUtils.CanvasConfigurator.setDragableCanvas(this.netVisualisationCanvas, this.netVisualizationBorderPane);
+
+*/
 
     }
 
@@ -1076,8 +1103,8 @@ public class MainController {
                         errorSeries.getData().add(xyData);
                         outputValuesSeries.getData().clear();
 
-
-                        List<List<Double>> outputs = neatTrainingForJavaFX.getBestEverChromosomes().get(n - 1).getOutputValues();
+                        Chromosome bestChromo = neatTrainingForJavaFX.getBestEverChromosomes().get(n - 1);
+                        List<List<Double>> outputs = bestChromo.getOutputValues();
                         AtomicInteger counter = new AtomicInteger();
                         for(List<Double> output : outputs) {
                            output.stream().forEach(value -> {
@@ -1096,7 +1123,15 @@ public class MainController {
                             });
                         }
 
-                        System.out.println(((BorderPane)trainVBox.getChildren().get(3)).getHeight());
+                        if(neatTrainingForJavaFX.statusProperty().get() == 1.0){
+                            try {
+                                netVisualisator.setNetToVisualise(bestChromo, runnableProjectConfig);
+                                netVisualisator.visualiseNet(netVisualisationCanvas);
+                            } catch (InitialisationFailedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
                     }
                 });
             });

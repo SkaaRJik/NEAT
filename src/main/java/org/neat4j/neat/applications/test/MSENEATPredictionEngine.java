@@ -40,7 +40,7 @@ public class MSENEATPredictionEngine extends NEATApplicationEngine {
 				this.setNet(this.createNet(config));
 				((NEATNetDescriptor)(this.net().netDescriptor())).updateStructure(chromo);
 				((NEATNeuralNet)this.net()).updateNetStructure();
-				this.showNet();
+				//this.showNet();
 			} else {
 				throw new InitialisationFailedException("Illegal AI Type:" + aiType);
 			}

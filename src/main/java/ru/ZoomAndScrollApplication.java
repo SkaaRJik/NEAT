@@ -1,18 +1,23 @@
 package ru;
 
+import com.jfoenix.validation.DoubleValidator;
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import ru.filippov.GUI.customNodes.AnimatedZoomOperator;
-import ru.filippov.GUI.customNodes.DragAndDropConfigurator;
+import ru.filippov.GUI.customNodes.ZoomableCanvas;
+import ru.filippov.utils.JFXUtils;
 
 
 /**
@@ -23,52 +28,108 @@ public class ZoomAndScrollApplication extends Application {
         launch(args);
     }
 
+    private void draw(GraphicsContext gc) {
+        gc.setFill(Color.LIGHTGREEN);
+        gc.fillOval(60, 10, 180, 180);
+        gc.setFill(Color.WHITE);
+        gc.fillOval(100, 50, 100, 100);
+    }
+
     @Override
-    public void start(Stage stage) {
-
-        BorderPane root = new BorderPane();
+    public void start(Stage stage) throws Exception {
 
 
-        // Create panel
-        Canvas canvas = new Canvas(200, 200);
-        GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
-
-        /*canvas.getChildren().add(new Circle(100, 100, 10));
-        canvas.getChildren().add(new Circle(200, 200, 20));*/
-
-        root.setCenter(canvas);
-        root.setTop(new TextField("WOW"));
-// Create operator
-        AnimatedZoomOperator zoomOperator = new AnimatedZoomOperator();
-
-// Listen to scroll events (similarly you could listen to a button click, slider, ...)
-        canvas.setOnScroll(new EventHandler<ScrollEvent>() {
+        ZoomableCanvas zoomableCanvas1 = new ZoomableCanvas(300, 400) {
             @Override
-            public void handle(ScrollEvent event) {
-                double zoomFactor = 1.5;
-                if (event.getDeltaY() <= 0) {
-                    // zoom out
-                    zoomFactor = 1 / zoomFactor;
-                }
-                zoomOperator.zoom(canvas, zoomFactor, event.getSceneX(), event.getSceneY());
+            public void paint(GraphicsContext gc) {
+                draw(gc);
             }
-        });
+        };
+        draw(zoomableCanvas1.getGraphicsContext2D());
 
+        ZoomableCanvas zoomableCanvas2 = new ZoomableCanvas(300, 400) {
+            @Override
+            public void paint(GraphicsContext gc) {
+                draw(gc);
+            }
+        };
+        draw(zoomableCanvas2.getGraphicsContext2D());
 
+        ZoomableCanvas zoomableCanvas3 = new ZoomableCanvas(300, 400) {
+            @Override
+            public void paint(GraphicsContext gc) {
+                draw(gc);
+            }
+        };
+        draw(zoomableCanvas3.getGraphicsContext2D());
 
-        // create scene which can be dragged and zoomed
+        VBox canvasContainer = new VBox(zoomableCanvas1, zoomableCanvas2, zoomableCanvas3);
+        ScrollPane root =  new ScrollPane(canvasContainer);
+
         Scene scene = new Scene(root, 1024, 768);
-
-        DragAndDropConfigurator dragAndDropConfigurator = new DragAndDropConfigurator(canvas);
-        /*scene.addEventFilter( MouseEvent.MOUSE_PRESSED, dragAndDropConfigurator.getOnMousePressedEventHandler());
-        scene.addEventFilter( MouseEvent.MOUSE_DRAGGED, dragAndDropConfigurator.getOnMouseDraggedEventHandler());*/
-        root.addEventFilter( MouseEvent.MOUSE_PRESSED, dragAndDropConfigurator.getOnMousePressedEventHandler());
-        root.addEventFilter( MouseEvent.MOUSE_DRAGGED, dragAndDropConfigurator.getOnMouseDraggedEventHandler());
 
         stage.setScene(scene);
         stage.show();
 
-        this.draw(graphicsContext2D);
+
+    }
+}
+
+
+/*
+    @Override
+    public void start(Stage stage) {
+        VBox root = new VBox();
+        BorderPane borderPane2 = new BorderPane();
+        BorderPane borderPane1 = new BorderPane();
+
+
+        // Create panel
+        ZoomableCanvas canvas = new ZoomableCanvas (300, 200){
+            @Override
+            public void paint(GraphicsContext gc) {
+                // Рисуем:
+                gc.setFill(Color.LIGHTGREEN);
+                gc.fillOval(60, 10, 180, 180);
+                gc.setFill(Color.WHITE);
+                gc.fillOval(100, 50, 100, 100);
+            }
+        };
+        canvas.paint(canvas.getGraphicsContext2D());
+        //GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
+       */
+/* JFXUtils.CanvasConfigurator.setDragableCanvas(canvas, borderPane2);
+        JFXUtils.CanvasConfigurator.setZoomOnCanvas(canvas);
+        *//*
+*/
+/*canvas.getChildren().add(new Circle(100, 100, 10));
+        canvas.getChildren().add(new Circle(200, 200, 20));*//*
+
+
+        Label zoomLabel = new Label();
+        zoomLabel.textProperty().bind(canvas.zoomProperty().asString());
+
+        Slider slider = new Slider(0.8, 2.0, 1.0);
+        slider.valueProperty().bindBidirectional(canvas.zoomProperty());
+
+
+        borderPane1.setCenter(new LineChart<Number, Number>(new NumberAxis(), new NumberAxis()));
+
+        borderPane2.setCenter(canvas);
+        borderPane2.setTop(new TextField("WOW"));
+        borderPane2.setBottom(new HBox(slider, zoomLabel));
+
+        root.getChildren().addAll(borderPane1, borderPane2);
+
+        // create scene which can be dragged and zoomed
+        Scene scene = new Scene(root, 1024, 768);
+
+
+
+        stage.setScene(scene);
+        stage.show();
+
+       // this.draw(graphicsContext2D);
 
     }
 
@@ -77,4 +138,4 @@ public class ZoomAndScrollApplication extends Application {
         gc.setStroke(Color.YELLOW);
         gc.fillOval(10, 10, 10, 10);
     }
-}
+}*/

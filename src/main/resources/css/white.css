@@ -66,3 +66,8 @@
     -fx-text-fill: #88F;
     -fx-underline: true;
 }
+
+
+.visualisation-container{
+    -fx-border-color: black;
+}
