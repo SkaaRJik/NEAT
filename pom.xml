@@ -42,11 +42,11 @@
             <artifactId>fontawesomefx</artifactId>
             <version>8.9</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>org.gillius</groupId>
             <artifactId>jfxutils</artifactId>
             <version>1.0</version>
-        </dependency>
+        </dependency>-->
 
     </dependencies>
 

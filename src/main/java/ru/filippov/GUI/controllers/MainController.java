@@ -28,6 +28,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -36,6 +37,9 @@ import javafx.stage.FileChooser;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import org.apache.log4j.Logger;
+/*import org.gillius.jfxutils.chart.ChartPanManager;
+import org.gillius.jfxutils.chart.ChartZoomManager;
+import org.gillius.jfxutils.chart.JFXChartUtil;*/
 import org.gillius.jfxutils.chart.ChartPanManager;
 import org.gillius.jfxutils.chart.JFXChartUtil;
 import org.neat4j.core.AIConfig;
@@ -547,22 +551,24 @@ public class MainController {
         /*Adding ability to zoom linechart*/
         ChartPanManager panner = new ChartPanManager(this.errorChart);
         panner.start();
+
         //while presssing the left mouse button, you can drag to navigate
-        panner.setMouseFilter(mouseEvent -> {
+        /*panner.setMouseFilter(mouseEvent -> {
             if (mouseEvent.getButton() == MouseButton.PRIMARY) {//set your custom combination to trigger navigation
                 // let it through
             } else {
                 mouseEvent.consume();
             }
-        });
-
-
+        });*/
 
         //holding the right mouse button will draw a rectangle to zoom to desired location
         JFXChartUtil.setupZooming(this.errorChart, mouseEvent -> {
             if (mouseEvent.getButton() != MouseButton.SECONDARY)//set your custom combination to trigger rectangle zooming
                 mouseEvent.consume();
+
         });
+
+
         /*Zooming END*/
 
         panner = new ChartPanManager(this.valueGraphicChart);

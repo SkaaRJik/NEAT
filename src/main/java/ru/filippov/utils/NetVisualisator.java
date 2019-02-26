@@ -167,7 +167,7 @@ public class NetVisualisator {
         int j;
         NEATNeuron[][] structure = this.analyseNeuronStructure();
         NEATNeuron neuron;
-        int a = 0;
+
         displayNeurons = new DisplayNeuron[structure.length * structure[0].length];
 
         DisplayNeuron from;
