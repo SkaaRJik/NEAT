@@ -9,6 +9,8 @@ package org.neat4j.neat.core;
 import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.ga.core.Gene;
 import org.neat4j.neat.ga.core.Population;
+import org.neat4j.neat.nn.core.ActivationFunction;
+import org.neat4j.neat.nn.core.functions.ActivationFunctionContainer;
 import org.neat4j.neat.utils.MathUtils;
 
 import java.util.Random;
@@ -71,7 +73,15 @@ public class NEATPopulation implements Population {
 		for (i = 0; i < templateGenes.length; i++) {
 			if (templateGenes[i] instanceof NEATNodeGene) {
 				nodeGene = (NEATNodeGene)templateGenes[i];
-				individualGenes[i] = new NEATNodeGene(nodeGene.getInnovationNumber(), nodeGene.id(), MathUtils.nextPlusMinusOne(), nodeGene.getType(), MathUtils.nextDouble());				
+
+				ActivationFunction activationFunction = null;
+				if(nodeGene.getType() == NEATNodeGene.INPUT) activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(random);
+				else if(nodeGene.getType() == NEATNodeGene.HIDDEN) activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(random);
+				else if(nodeGene.getType() == NEATNodeGene.OUTPUT) activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(random);
+
+
+
+				individualGenes[i] = new NEATNodeGene(nodeGene.getInnovationNumber(), nodeGene.id(), MathUtils.nextPlusMinusOne(), nodeGene.getType(), MathUtils.nextDouble(), activationFunction);
 			} else if (templateGenes[i] instanceof NEATLinkGene) {
 				linkGene = (NEATLinkGene)templateGenes[i];
 				individualGenes[i] = new NEATLinkGene(linkGene.getInnovationNumber(), true, linkGene.getFromId(), linkGene.getToId(), MathUtils.nextPlusMinusOne());

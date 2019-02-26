@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import org.neat4j.neat.data.normaliser.DataScaler;
 import org.neat4j.neat.data.normaliser.LinearScaler;
 import org.neat4j.neat.data.normaliser.NonLinearScaler;
+import org.neat4j.neat.nn.core.ActivationFunction;
 import org.neat4j.neat.nn.core.functions.ActivationFunctionImpl;
 import org.neat4j.neat.nn.core.functions.ArctgFunction;
 import org.neat4j.neat.nn.core.functions.SigmoidFunction;
@@ -852,6 +853,11 @@ public class DataPreparatorDialogueController {
                             @Override
                             public double derivative(double neuronIp) {
                                 return 0;
+                            }
+
+                            @Override
+                            public ActivationFunction newInstance() {
+                                return null;
                             }
                         });
                         normalisedUsedData = dataScaler.normalize(usedData);

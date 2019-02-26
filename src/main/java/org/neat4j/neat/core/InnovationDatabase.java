@@ -8,6 +8,8 @@ package org.neat4j.neat.core;
 
 import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.ga.core.Gene;
+import org.neat4j.neat.nn.core.ActivationFunction;
+import org.neat4j.neat.nn.core.functions.ActivationFunctionContainer;
 import org.neat4j.neat.utils.MathUtils;
 
 import java.util.HashMap;
@@ -159,7 +161,17 @@ public class InnovationDatabase {
 		databaseEntry.setInnovationId(innovationNumber);
 		((NEATNodeInnovation)databaseEntry).setNodeId(this.nextNodeNumber());
 		this.innovations.put(new Integer(innovationNumber), databaseEntry);
-		NEATNodeGene nodeGene = new NEATNodeGene(innovationNumber, ((NEATNodeInnovation)databaseEntry).getNodeId(), MathUtils.nextDouble(), type, MathUtils.nextPlusMinusOne());
+		ActivationFunction activationFunction = null;
+
+		if (type == NEATNodeGene.HIDDEN){
+			activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(ran);
+		} else if (type == NEATNodeGene.INPUT) {
+			activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(ran);
+		} else if(type == NEATNodeGene.OUTPUT) {
+			activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(ran);
+		}
+
+		NEATNodeGene nodeGene = new NEATNodeGene(innovationNumber, ((NEATNodeInnovation)databaseEntry).getNodeId(), MathUtils.nextDouble(), type, MathUtils.nextPlusMinusOne(), activationFunction);
 		
 		return (nodeGene);
 	}
@@ -214,7 +226,7 @@ public class InnovationDatabase {
 			totalHits++;
 		}
 
-		gene = new NEATNodeGene(databaseEntry.innovationId(), ((NEATNodeInnovation)databaseEntry).getNodeId(), MathUtils.nextDouble(), NEATNodeGene.HIDDEN, MathUtils.nextPlusMinusOne());
+		gene = new NEATNodeGene(databaseEntry.innovationId(), ((NEATNodeInnovation)databaseEntry).getNodeId(), MathUtils.nextDouble(), NEATNodeGene.HIDDEN, MathUtils.nextPlusMinusOne(), ActivationFunctionContainer.getRandomHiddenActivationFunction(ran));
 
 		return (gene);
 	}

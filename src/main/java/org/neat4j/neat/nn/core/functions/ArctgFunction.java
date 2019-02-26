@@ -22,4 +22,9 @@ public class ArctgFunction extends ActivationFunctionImpl {
     public double derivative(double neuronIp) {
         return 0;
     }
+
+    @Override
+    public ActivationFunction newInstance() {
+        return new ArctgFunction(this.factor);
+    }
 }

@@ -14,8 +14,7 @@ public abstract class ActivationFunctionImpl implements ActivationFunction {
         this.factor = factor;
     }
 
-    public ActivationFunctionImpl() {
-    }
+    public ActivationFunctionImpl() { }
 
 
 }

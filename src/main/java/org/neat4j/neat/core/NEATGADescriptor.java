@@ -15,6 +15,7 @@ import org.neat4j.neat.ga.core.GADescriptor;
  */
 public class NEATGADescriptor implements GADescriptor {
 	private static final long serialVersionUID = 1L;
+	public double pNewActivationFunction;
 	private double pXover;
 	private double pAddLink;
 	private double pAddNode;
@@ -414,5 +415,13 @@ public class NEATGADescriptor implements GADescriptor {
 	}
 	public void setMaxPerturb(double maxPerturb) {
 		this.maxPerturb = maxPerturb;
+	}
+
+	public double getPNewActivationFunction() {
+		return pNewActivationFunction;
+	}
+
+	public void setPNewActivationFunction(double getPNewActivationFunction) {
+		this.pNewActivationFunction = getPNewActivationFunction;
 	}
 }

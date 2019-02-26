@@ -47,4 +47,9 @@ public class TanhFunction extends ActivationFunctionImpl {
 		deriv = 1 - Math.pow(th(neuronIp/this.factor), 2);
 		return (deriv);
 	}
+
+	@Override
+	public ActivationFunction newInstance() {
+		return new TanhFunction(this.factor);
+	}
 }

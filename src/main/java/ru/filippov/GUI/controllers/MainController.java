@@ -548,9 +548,15 @@ public class MainController {
             this.valueGraphicChart.getData().clear();
         });
 
+
+
+
         /*Adding ability to zoom linechart*/
         ChartPanManager panner = new ChartPanManager(this.errorChart);
         panner.start();
+
+
+
 
         //while presssing the left mouse button, you can drag to navigate
         /*panner.setMouseFilter(mouseEvent -> {

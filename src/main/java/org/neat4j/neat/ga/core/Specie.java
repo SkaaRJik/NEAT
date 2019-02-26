@@ -225,7 +225,8 @@ public abstract class Specie implements Comparable {
 											 ((NEATNodeGene)clonee[i]).id(), 
 											 ((NEATNodeGene)clonee[i]).sigmoidFactor(), 
 											 ((NEATNodeGene)clonee[i]).getType(),
-											 ((NEATNodeGene)clonee[i]).bias()
+											 ((NEATNodeGene)clonee[i]).bias(),
+											 ((NEATNodeGene)clonee[i]).getActivationFunction()
 											);
 			} else if (clonee[i] instanceof NEATFeatureGene) {
 				cloned[i] = new NEATFeatureGene(((NEATGene)clonee[i]).getInnovationNumber(),

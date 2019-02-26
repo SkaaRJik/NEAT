@@ -167,6 +167,7 @@ public class NEATNeuralNet implements NeuralNet {
 		for (i = 0; i < neurons.length; i++) {
 			gene = (NEATNodeGene)nodes.get(i);
 			this.neurons[i] = new NEATNeuron(this.createActivationFunction(gene), gene.id(), gene.getType());
+			this.neurons[i].setActivationFunction(gene.getActivationFunction());
 			this.neurons[i].modifyBias(gene.bias(), 0, true);
 		}
 

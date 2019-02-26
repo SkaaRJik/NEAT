@@ -17,4 +17,9 @@ public class LinearFunction extends ActivationFunctionImpl {
 		return (this.factor);
 	}
 
+	@Override
+	public ActivationFunction newInstance() {
+		return new LinearFunction(this.factor);
+	}
+
 }

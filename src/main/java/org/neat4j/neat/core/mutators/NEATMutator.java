@@ -11,6 +11,8 @@ import org.neat4j.neat.core.*;
 import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.ga.core.Gene;
 import org.neat4j.neat.ga.core.Mutator;
+import org.neat4j.neat.nn.core.ActivationFunction;
+import org.neat4j.neat.nn.core.functions.ActivationFunctionContainer;
 import org.neat4j.neat.utils.MathUtils;
 
 import java.util.ArrayList;
@@ -33,6 +35,17 @@ public class NEATMutator implements Mutator {
 	private boolean recurrencyAllowed = true;
 	private double perturb = 5;
 	private double biasPerturb = 0.1;
+	private double pNewActivationFunction;
+
+	public double getpNewActivationFunction() {
+		return pNewActivationFunction;
+	}
+
+	public void setpNewActivationFunction(double pNewActivationFunction) {
+		this.pNewActivationFunction = pNewActivationFunction;
+	}
+
+
 
 	private static final int MAX_LINK_ATTEMPTS = 5;
 	private final Random random;
@@ -41,11 +54,12 @@ public class NEATMutator implements Mutator {
 		this.random = random;
 	}
 	
-	public NEATMutator(double pAddNode, double pAddLink, double pDisable, Random random) {
+	public NEATMutator(double pAddNode, double pAddLink, double pDisable, double pNewActivationFunction, Random random) {
 		this.random = random;
 		this.pAddNode = pAddNode;
 		this.pAddLink = pAddLink;
 		this.pToggle = pDisable;
+		this.pNewActivationFunction = pNewActivationFunction;
 	}
 	
 	public void setRecurrencyAllowed(boolean allowed) {
@@ -131,18 +145,29 @@ public class NEATMutator implements Mutator {
 	private Gene mutateNode(NEATNodeGene mutatee) {
 		double perturbRandVal = random.nextDouble();
 		double mutateBias = random.nextDouble();
+		double mutateFunctionRandVal = random.nextDouble();
 		NEATNodeGene mutated = mutatee;
 		double newSF = mutatee.sigmoidFactor();
 		double newBias = mutatee.bias();
 
+		if (mutateFunctionRandVal < this.pNewActivationFunction){
+			ActivationFunction activationFunction = null;
+			if(mutated.getType() == NEATNodeGene.INPUT) activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(random);
+			else if(mutated.getType() == NEATNodeGene.HIDDEN) activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(random);
+			else if(mutated.getType() == NEATNodeGene.OUTPUT) activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(random);
+
+
+			mutated = new NEATNodeGene(mutated.getInnovationNumber(), mutated.id(), mutated.sigmoidFactor(), mutated.getType(), mutated.bias(), activationFunction);
+		}
+
 		if (perturbRandVal < this.pPerturb) {
 			newSF = mutatee.sigmoidFactor() + MathUtils.nextClampedDouble(-perturb, perturb);
-			mutated = new NEATNodeGene(mutated.getInnovationNumber(), mutated.id(), newSF, mutated.getType(), mutated.bias());
+			mutated = new NEATNodeGene(mutated.getInnovationNumber(), mutated.id(), newSF, mutated.getType(), mutated.bias(), mutated.getActivationFunction());
 		}
 		
 		if (mutateBias < this.pMutateBias) {
 			newBias += MathUtils.nextClampedDouble(-biasPerturb, biasPerturb);
-			mutated = new NEATNodeGene(mutated.getInnovationNumber(), mutated.id(), mutated.sigmoidFactor(), mutated.getType(), newBias);
+			mutated = new NEATNodeGene(mutated.getInnovationNumber(), mutated.id(), mutated.sigmoidFactor(), mutated.getType(), newBias, mutated.getActivationFunction());
 		}
 		
 		return (mutated);

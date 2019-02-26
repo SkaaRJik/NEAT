@@ -4,6 +4,8 @@
  */
 package org.neat4j.neat.nn.core.functions;
 
+import org.neat4j.neat.nn.core.ActivationFunction;
+
 /**
  * @author MSimmerson
  * @fixed Filippov
@@ -30,7 +32,12 @@ public class SigmoidFunction extends ActivationFunctionImpl {
 		else
 			return (this.factor * Math.exp(-this.factor * neuronIp))/Math.pow(1.0 + Math.exp(-this.factor * neuronIp),2);
 	}
-	
+
+	@Override
+	public ActivationFunction newInstance() {
+		return new SigmoidFunction(this.factor);
+	}
+
 	public void setFactor(double mod) {
 		this.factor = mod;
 	}

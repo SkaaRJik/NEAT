@@ -138,4 +138,8 @@ public class NEATNeuron implements Neuron {
 	public void setNeuronDepth(int depth) {
 		this.depth = depth;
 	}
+
+	public void setActivationFunction(ActivationFunction activationFunction) {
+		this.activationFunction = activationFunction;
+	}
 }

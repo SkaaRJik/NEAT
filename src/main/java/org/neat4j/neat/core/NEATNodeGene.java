@@ -7,6 +7,8 @@
 package org.neat4j.neat.core;
 
 
+import org.neat4j.neat.nn.core.ActivationFunction;
+
 /**
  * @author MSImmerson
  *
@@ -22,14 +24,16 @@ public class NEATNodeGene implements NEATGene {
 	public static final int HIDDEN = 0;
 	public static final int OUTPUT = 1;
 	public static final int INPUT = 2;
-	
-	public NEATNodeGene(int innovationNumber, int id, double sigmoidF, int type, double bias) {
+	private ActivationFunction activationFunction;
+
+	public NEATNodeGene(int innovationNumber, int id, double sigmoidF, int type, double bias, ActivationFunction activationFunction) {
 		this.innovationNumber = innovationNumber;
 		this.id = id;
 		this.sigmoidFactor = sigmoidF;
 		this.type = type;
 		this.bias = bias;
 		this.initialiseDepth();
+		this.activationFunction = activationFunction;
 	}
 	
 	private void initialiseDepth() {
@@ -64,7 +68,7 @@ public class NEATNodeGene implements NEATGene {
 	public int getInnovationNumber() {
 		return (this.innovationNumber);
 	}
-	
+
 	public int id() {
 		return (this.id);
 	}
@@ -89,4 +93,11 @@ public class NEATNodeGene implements NEATGene {
 		this.bias = bias;
 	}
 
+	public ActivationFunction getActivationFunction() {
+		return activationFunction;
+	}
+
+	public void setActivationFunction(ActivationFunction activationFunction) {
+		this.activationFunction = activationFunction;
+	}
 }
