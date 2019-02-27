@@ -47,6 +47,7 @@ public class NEATGATrainingManager {
 		this.assigGA(this.createGeneticAlgorithm(gaDescriptor));
 		try {
 			this.assignConfig(config);
+			this.ga.pluginAllowedActivationFunctions(config);
 			this.ga.pluginFitnessFunction(this.createFunction(config));
 			this.ga.pluginCrossOver(this.createCrossOver(config));
 			this.ga.pluginMutator(new NEATMutator(this.random));
@@ -75,7 +76,7 @@ public class NEATGATrainingManager {
 	 */
 	public void evolve() {
 		int epochs = Integer.parseInt(config.configElement("NUMBER.EPOCHS"));
-		double terminateVal = ((NEATGADescriptor)this.ga.getDescriptor()).getTerminationValue();
+		double errorValueToTerminate = ((NEATGADescriptor)this.ga.getDescriptor()).getErrorTerminationValue();
 		boolean nOrder = this.ga.getDescriptor().isNaturalOrder();
 		boolean terminate = false;
 		int i = 0;
@@ -84,7 +85,7 @@ public class NEATGATrainingManager {
 			cat.info("Running Epoch[" + i + "]\r");
 			this.ga.runEpoch();
 			this.saveBest();
-			if ((this.ga.discoverdBestMember().fitness() >= terminateVal && !nOrder) || (this.ga.discoverdBestMember().fitness() <= terminateVal && nOrder)) {
+			if ((this.ga.discoverdBestMember().fitness() >= errorValueToTerminate && !nOrder) || (this.ga.discoverdBestMember().fitness() <= errorValueToTerminate && nOrder)) {
 				terminate = true;
 			}
 			i++;
@@ -140,13 +141,14 @@ public class NEATGATrainingManager {
 		double terminationValue = Double.parseDouble(config.configElement("TERMINATION.VALUE"));
 		double maxPerturb = Double.parseDouble(config.configElement("MAX.PERTURB"));
 		double maxBiasPerturb = Double.parseDouble(config.configElement("MAX.BIAS.PERTURB"));
-
+		double pNewActivationFunction = Double.parseDouble(config.configElement("PROBABILITY.NEWACTIVATIONFUNCTION"));
 		
 		NEATGADescriptor descriptor = new NEATGADescriptor();
 		descriptor.setPAddLink(pAddLink);
 		descriptor.setPAddNode(pAddNode);
 		descriptor.setPToggleLink(pToggleLink);
 		descriptor.setPMutateBias(pMutateBias);
+		descriptor.setPNewActivationFunction(pNewActivationFunction);
 		descriptor.setPXover(pXover);
 		descriptor.setPMutation(pMutation);
 		descriptor.setInputNodes(inputNodes);
@@ -173,7 +175,7 @@ public class NEATGATrainingManager {
 		descriptor.setEleEventTime(eleEventTime);
 		descriptor.setRecurrencyAllowed(recurrencyAllowed);
 		descriptor.setKeepBestEver(keepBestEver);
-		descriptor.setTerminationValue(terminationValue);
+		descriptor.setErrorTerminationValue(terminationValue);
 		descriptor.setMaxPerturb(maxPerturb);
 		descriptor.setMaxBiasPerturb(maxBiasPerturb);
 		

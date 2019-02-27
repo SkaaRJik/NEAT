@@ -2,9 +2,7 @@ package org.neat4j.neat.applications.train;
 
 
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import org.apache.log4j.Logger;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
@@ -35,7 +33,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
 
     public void evolve() {
         int epochs = Integer.parseInt(config.configElement("NUMBER.EPOCHS"));
-        double terminateVal = ((NEATGADescriptor)this.ga.getDescriptor()).getTerminationValue();
+        double terminateVal = ((NEATGADescriptor)this.ga.getDescriptor()).getErrorTerminationValue();
         boolean nOrder = ((NEATGADescriptor)this.ga.getDescriptor()).isNaturalOrder();
         boolean terminate = false;
         int i = 0;

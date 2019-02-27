@@ -142,4 +142,8 @@ public class NEATNeuron implements Neuron {
 	public void setActivationFunction(ActivationFunction activationFunction) {
 		this.activationFunction = activationFunction;
 	}
+
+	public ActivationFunction getActivationFunction() {
+		return activationFunction;
+	}
 }

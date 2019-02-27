@@ -151,10 +151,19 @@ public class NEATMutator implements Mutator {
 		double newBias = mutatee.bias();
 
 		if (mutateFunctionRandVal < this.pNewActivationFunction){
-			ActivationFunction activationFunction = null;
-			if(mutated.getType() == NEATNodeGene.INPUT) activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(random);
-			else if(mutated.getType() == NEATNodeGene.HIDDEN) activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(random);
-			else if(mutated.getType() == NEATNodeGene.OUTPUT) activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(random);
+			ActivationFunction activationFunction = mutated.getActivationFunction();
+			if(mutated.getType() == NEATNodeGene.INPUT) {
+				if(ActivationFunctionContainer.getInputActivationFunctions().size() > 1)
+					activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(random);
+			}
+			else if(mutated.getType() == NEATNodeGene.HIDDEN){
+				if(ActivationFunctionContainer.getHiddenActivationFunctions().size() > 1)
+					activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(random);
+			}
+			else if(mutated.getType() == NEATNodeGene.OUTPUT){
+				if(ActivationFunctionContainer.getOutputActivationFunctions().size() > 1)
+					activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(random);
+			}
 
 
 			mutated = new NEATNodeGene(mutated.getInnovationNumber(), mutated.id(), mutated.sigmoidFactor(), mutated.getType(), mutated.bias(), activationFunction);

@@ -39,6 +39,7 @@ public class NetVisualisator {
         if (this.net == null ) return;
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
+
         if (canvas instanceof ZoomableCanvas) ((ZoomableCanvas) canvas).clean();
         DisplayNeuron from;
         DisplayNeuron to;
@@ -163,15 +164,11 @@ public class NetVisualisator {
     private void prepareNet(){
         int row = 0;
         int col = 0;
-        int i;
-        int j;
         NEATNeuron[][] structure = this.analyseNeuronStructure();
         NEATNeuron neuron;
 
         displayNeurons = new DisplayNeuron[structure.length * structure[0].length];
 
-        DisplayNeuron from;
-        DisplayNeuron to;
         ArrayList structureList = new ArrayList();
         ArrayList rowList;
 
@@ -256,7 +253,7 @@ public class NetVisualisator {
         }
         g.fillRoundRect(neuron.x(), neuron.y(), N_SIZE, N_SIZE,5,5);
         g.setFill(Color.WHITE);
-        g.strokeText("id=" + neuron.neuron().id(), neuron.x(), neuron.y());
+        g.strokeText("id=" + neuron.neuron().id() + "("+neuron.neuron.getActivationFunction().getFunctionName()+")", neuron.x(), neuron.y());
     }
 
     private void drawLink(DisplayNeuron from, DisplayNeuron to, GraphicsContext g) {

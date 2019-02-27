@@ -3,7 +3,9 @@ package ru;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -28,7 +30,7 @@ public class ZoomAndScrollApplication extends Application {
     @Override
     public void start(Stage stage) throws Exception {
 
-
+        VBox canvasContainer = new VBox();
         ZoomableCanvas zoomableCanvas1 = new ZoomableCanvas(300, 400) {
             @Override
             public void paint(GraphicsContext gc) {
@@ -36,6 +38,13 @@ public class ZoomAndScrollApplication extends Application {
             }
         };
         draw(zoomableCanvas1.getGraphicsContext2D());
+        Button buttonClear = new Button("Clear");
+        buttonClear.setOnAction(event -> {
+            zoomableCanvas1.clean();
+        });
+        Button buttonPaint = new Button("Paint");
+        newPaint(zoomableCanvas1, buttonPaint);
+        canvasContainer.getChildren().addAll(zoomableCanvas1, new HBox(buttonClear, buttonPaint));
 
         ZoomableCanvas zoomableCanvas2 = new ZoomableCanvas(300, 400) {
             @Override
@@ -44,6 +53,14 @@ public class ZoomAndScrollApplication extends Application {
             }
         };
         draw(zoomableCanvas2.getGraphicsContext2D());
+        buttonClear = new Button("Clear");
+        buttonClear.setOnAction(event -> {
+            zoomableCanvas2.clean();
+        });
+        buttonPaint = new Button("Paint");
+        newPaint(zoomableCanvas2, buttonPaint);
+        canvasContainer.getChildren().addAll(zoomableCanvas2, new HBox(buttonClear, buttonPaint));
+
 
         ZoomableCanvas zoomableCanvas3 = new ZoomableCanvas(300, 400) {
             @Override
@@ -53,7 +70,14 @@ public class ZoomAndScrollApplication extends Application {
         };
         draw(zoomableCanvas3.getGraphicsContext2D());
 
-        VBox canvasContainer = new VBox(zoomableCanvas1, zoomableCanvas2, zoomableCanvas3);
+        buttonClear = new Button("Clear");
+        buttonClear.setOnAction(event -> {
+            zoomableCanvas3.clean();
+        });
+        buttonPaint = new Button("Paint");
+        newPaint(zoomableCanvas3, buttonPaint);
+        canvasContainer.getChildren().addAll(zoomableCanvas3, new HBox(buttonClear, buttonPaint));
+
         ScrollPane root =  new ScrollPane(canvasContainer);
 
         Scene scene = new Scene(root, 1024, 768);
@@ -62,6 +86,18 @@ public class ZoomAndScrollApplication extends Application {
         stage.show();
 
 
+    }
+
+    private void newPaint(ZoomableCanvas zoomableCanvas, Button buttonPaint) {
+        buttonPaint.setOnAction(event -> {
+            GraphicsContext gc = zoomableCanvas.getGraphicsContext2D();
+            zoomableCanvas.clean();
+
+            gc.setFill(Color.rgb((int)(Math.random()*255), (int)(Math.random()*255), (int)(Math.random()*255)));
+            gc.fillOval(60, 10, 180, 180);
+            gc.setFill(Color.WHITE);
+            gc.fillOval(100, 50, 100, 100);
+        });
     }
 }
 

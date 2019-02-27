@@ -45,7 +45,7 @@ public class NEATGADescriptor implements GADescriptor {
 	private int eleEventTime;
 	private boolean recurrencyAllowed;
 	private boolean keepBestEver;
-	private double terminationValue;
+	private double errorTerminationValue;
 	private boolean naturalOrder;
 	private double maxPerturb;
 	private double maxBiasPerturb;
@@ -395,11 +395,11 @@ public class NEATGADescriptor implements GADescriptor {
 	public void setPMutateBias(double mutateBias) {
 		pMutateBias = mutateBias;
 	}
-	public double getTerminationValue() {
-		return terminationValue;
+	public double getErrorTerminationValue() {
+		return errorTerminationValue;
 	}
-	public void setTerminationValue(double terminationValue) {
-		this.terminationValue = terminationValue;
+	public void setErrorTerminationValue(double errorTerminationValue) {
+		this.errorTerminationValue = errorTerminationValue;
 	}
 	public void setNaturalOrder(boolean naturalOrder) {
 		this.naturalOrder = naturalOrder;

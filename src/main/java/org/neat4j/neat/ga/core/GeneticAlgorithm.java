@@ -4,6 +4,8 @@
  */
 package org.neat4j.neat.ga.core;
 
+import org.neat4j.core.AIConfig;
+
 import java.io.Serializable;
 
 /**
@@ -21,4 +23,6 @@ public interface GeneticAlgorithm extends Serializable {
 	public void pluginCrossOver(CrossOver xOver);
 	public void savePopulationState(String file);
 	public Population population();
+
+    void pluginAllowedActivationFunctions(AIConfig config);
 }

@@ -7,13 +7,18 @@
 package org.neat4j.neat.core;
 
 import org.apache.log4j.Category;
+import org.neat4j.core.AIConfig;
 import org.neat4j.neat.core.mutators.NEATMutator;
 import org.neat4j.neat.ga.core.*;
+import org.neat4j.neat.nn.core.ActivationFunction;
+import org.neat4j.neat.nn.core.functions.ActivationFunctionContainer;
+import org.neat4j.neat.nn.core.functions.ActivationFunctionImpl;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -414,7 +419,33 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 	public Population population() {
 		return (this.pop);
 	}
-	
+
+	@Override
+	public void pluginAllowedActivationFunctions(AIConfig config) {
+		ActivationFunctionContainer.refresh();
+		try {
+
+			List<String> functions = ((NEATConfig)config).getActivationFunctionsByElementKey("INPUT.ACTIVATIONFUNCTIONS");
+			for(String function : functions){
+				ActivationFunctionContainer.getInputActivationFunctions().add((ActivationFunctionImpl)(Class.forName(function).newInstance()));
+			}
+			functions = ((NEATConfig)config).getActivationFunctionsByElementKey("HIDDEN.ACTIVATIONFUNCTIONS");
+			for(String function : functions){
+				ActivationFunctionContainer.getHiddenActivationFunctions().add((ActivationFunctionImpl)(Class.forName(function).newInstance()));
+			}
+			functions = ((NEATConfig)config).getActivationFunctionsByElementKey("OUTPUT.ACTIVATIONFUNCTIONS");
+			for(String function : functions){
+				ActivationFunctionContainer.getOutputActivationFunctions().add((ActivationFunctionImpl)(Class.forName(function).newInstance()));
+			}
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public Chromosome generationBest() {
 		return (this.genBest);
 	}

@@ -49,6 +49,7 @@ import org.neat4j.neat.core.NEATLoader;
 import org.neat4j.neat.ga.core.Chromosome;
 
 import org.neat4j.neat.nn.core.ActivationFunction;
+import org.neat4j.neat.nn.core.functions.ActivationFunctionFinder;
 import org.neat4j.neat.nn.core.functions.LinearFunction;
 import org.neat4j.neat.nn.core.functions.SigmoidFunction;
 import org.neat4j.neat.nn.core.functions.TanhFunction;
@@ -505,25 +506,25 @@ public class MainController {
         this.enableSlideMenu();
 
         pinButton.setOnAction(new EventHandler<ActionEvent>() {
-                                  boolean isAlwaysOpened = false;
-                                  @Override
-                                  public void handle(ActionEvent event) {
-                                      isAlwaysOpened = !isAlwaysOpened;
-                                      if(isAlwaysOpened) {
-                                          menuBorderPane.setPrefWidth(300);
-                                          menuBorderPane.setMaxWidth(300);
-                                          pinIcon.setRotate(45);
-                                          menuBorderPane.setOnMouseEntered(null);
-                                          menuBorderPane.setOnMouseExited(null);
+              boolean isAlwaysOpened = false;
+              @Override
+              public void handle(ActionEvent event) {
+                  isAlwaysOpened = !isAlwaysOpened;
+                  if(isAlwaysOpened) {
+                      menuBorderPane.setPrefWidth(300);
+                      menuBorderPane.setMaxWidth(300);
+                      pinIcon.setRotate(45);
+                      menuBorderPane.setOnMouseEntered(null);
+                      menuBorderPane.setOnMouseExited(null);
 
-                                      } else {
-                                          pinIcon.setRotate(0);
-                                          menuBorderPane.setPrefWidth(20);
-                                          menuBorderPane.setMaxWidth(20);
-                                          enableSlideMenu();
-                                      }
-                                  }
-                              }
+                  } else {
+                      pinIcon.setRotate(0);
+                      menuBorderPane.setPrefWidth(20);
+                      menuBorderPane.setMaxWidth(20);
+                      enableSlideMenu();
+                  }
+              }
+          }
         );
 
 
@@ -1013,6 +1014,7 @@ public class MainController {
          runnableProjectConfig.updateConfig("PROBABILITY.ADDNODE", addNodeProbabilityTextField.getText());
          runnableProjectConfig.updateConfig("PROBABILITY.MUTATEBIAS", mutateBiasProbabilityTextField.getText());
          runnableProjectConfig.updateConfig("PROBABILITY.TOGGLELINK", toggleLinkProbabilityTextField.getText());
+         runnableProjectConfig.updateConfig("PROBABILITY.NEWACTIVATIONFUNCTION", newActivationFunctionProbabilityTextField.getText());
          runnableProjectConfig.updateConfig("PROBABILITY.WEIGHT.REPLACED", weightReplaceProbabilityTextField.getText());
          runnableProjectConfig.updateConfig("GENERATOR.SEED", generatorSeedTextField.getText());
          runnableProjectConfig.updateConfig("EXCESS.COEFFICIENT", excessCoefficientTextField.getText());
@@ -1040,6 +1042,42 @@ public class MainController {
          runnableProjectConfig.updateConfig("EXTRA.FEATURE.COUNT", extraFeatureCountTextField.getText());
          runnableProjectConfig.updateConfig("POP.SIZE", popSizeTextField.getText());
          runnableProjectConfig.updateConfig("NUMBER.EPOCHS", numberEpochsTextField.getText());
+        TitledPane titledPane = null;
+        JFXToggleButton jfxToggleButton = null;
+        for (int i = 0; i < activationFunctionAccordion.getPanes().size(); i++) {
+            titledPane = activationFunctionAccordion.getPanes().get(i);
+
+
+            VBox vBox = (VBox)titledPane.getContent();
+            List<String> functions = null;
+
+            StringBuilder stringBuilder = new StringBuilder();
+
+            for (int j = 0; j < vBox.getChildren().size(); j++) {
+                jfxToggleButton = ((JFXToggleButton) vBox.getChildren().get(j));
+                if(j!=0) stringBuilder.append(";");
+                if(jfxToggleButton.isSelected())
+                    stringBuilder.append(ActivationFunctionFinder.getFunctionClassNameByName(jfxToggleButton.getText()));
+            }
+            switch (i){
+                case 0:
+                    runnableProjectConfig.updateConfig("INPUT.ACTIVATIONFUNCTIONS", stringBuilder.toString());
+                    break;
+                case 1:
+                    runnableProjectConfig.updateConfig("HIDDEN.ACTIVATIONFUNCTIONS", stringBuilder.toString());
+                    break;
+                case 2:
+                    runnableProjectConfig.updateConfig("OUTPUT.ACTIVATIONFUNCTIONS", stringBuilder.toString());
+                    break;
+            }
+
+
+
+
+
+        }
+
+         //runnableProjectConfig.updateConfig("");
     }
     
     private void fillFieldsUsingOriginalConfig(){
@@ -1075,6 +1113,7 @@ public class MainController {
         extraFeatureCountTextField.setText(originalProjectConfig.configElement("EXTRA.FEATURE.COUNT"));
         popSizeTextField.setText(originalProjectConfig.configElement("POP.SIZE"));
         numberEpochsTextField.setText(originalProjectConfig.configElement("NUMBER.EPOCHS"));
+
         int i = 0;
         for(TitledPane titledPane : activationFunctionAccordion.getPanes()){
             VBox vBox = (VBox)titledPane.getContent();
