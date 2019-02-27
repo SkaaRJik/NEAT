@@ -28,7 +28,11 @@ public class ArctgFunction extends ActivationFunctionImpl {
         return new ArctgFunction(this.factor);
     }
 
-    public static String getFunctionName(){
+    public static String getStaticFunctionName(){
+        return "arctg(x)";
+    }
+
+    public String getFunctionName(){
         return "arctg(x)";
     }
 }

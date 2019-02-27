@@ -53,7 +53,10 @@ public class TanhFunction extends ActivationFunctionImpl {
 		return new TanhFunction(this.factor);
 	}
 
-	public static String getFunctionName(){
+	public static String getStaticFunctionName(){
+		return "tanh(x)";
+	}
+	public  String getFunctionName(){
 		return "tanh(x)";
 	}
 }

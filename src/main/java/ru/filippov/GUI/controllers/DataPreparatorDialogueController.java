@@ -859,6 +859,11 @@ public class DataPreparatorDialogueController {
                             public ActivationFunction newInstance() {
                                 return null;
                             }
+
+                            @Override
+                            public String getFunctionName() {
+                                return null;
+                            }
                         });
                         normalisedUsedData = dataScaler.normalize(usedData);
                         break;

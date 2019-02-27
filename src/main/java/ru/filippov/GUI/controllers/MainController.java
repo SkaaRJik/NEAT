@@ -48,6 +48,7 @@ import org.neat4j.neat.core.NEATConfig;
 import org.neat4j.neat.core.NEATLoader;
 import org.neat4j.neat.ga.core.Chromosome;
 
+import org.neat4j.neat.nn.core.ActivationFunction;
 import org.neat4j.neat.nn.core.functions.LinearFunction;
 import org.neat4j.neat.nn.core.functions.SigmoidFunction;
 import org.neat4j.neat.nn.core.functions.TanhFunction;
@@ -269,39 +270,39 @@ public class MainController {
         this.inputActivationFunctionsChooser = new TitledPane();
         tempVbox=new VBox();
         tempTButton = new JFXToggleButton();
-        tempTButton.setText(SigmoidFunction.getFunctionName());
+        tempTButton.setText(SigmoidFunction.getStaticFunctionName());
         tempVbox.getChildren().add(tempTButton);
         tempTButton = new JFXToggleButton();
-        tempTButton.setText(TanhFunction.getFunctionName());
+        tempTButton.setText(TanhFunction.getStaticFunctionName());
         tempVbox.getChildren().add(tempTButton);
         tempTButton = new JFXToggleButton();
-        tempTButton.setText(LinearFunction.getFunctionName());
+        tempTButton.setText(LinearFunction.getStaticFunctionName());
         tempVbox.getChildren().add(tempTButton);
         this.inputActivationFunctionsChooser.setContent(tempVbox);
 
         this.hiddenActivationFunctionsChooser = new TitledPane();
         tempVbox=new VBox();
         tempTButton = new JFXToggleButton();
-        tempTButton.setText(SigmoidFunction.getFunctionName());
+        tempTButton.setText(SigmoidFunction.getStaticFunctionName());
         tempVbox.getChildren().add(tempTButton);
         tempTButton = new JFXToggleButton();
-        tempTButton.setText(TanhFunction.getFunctionName());
+        tempTButton.setText(TanhFunction.getStaticFunctionName());
         tempVbox.getChildren().add(tempTButton);
         tempTButton = new JFXToggleButton();
-        tempTButton.setText(LinearFunction.getFunctionName());
+        tempTButton.setText(LinearFunction.getStaticFunctionName());
         tempVbox.getChildren().add(tempTButton);
         this.hiddenActivationFunctionsChooser.setContent(tempVbox);
 
         this.outputActivationFunctionsChooser = new TitledPane();
         tempVbox=new VBox();
         tempTButton = new JFXToggleButton();
-        tempTButton.setText(SigmoidFunction.getFunctionName());
+        tempTButton.setText(SigmoidFunction.getStaticFunctionName());
         tempVbox.getChildren().add(tempTButton);
         tempTButton = new JFXToggleButton();
-        tempTButton.setText(TanhFunction.getFunctionName());
+        tempTButton.setText(TanhFunction.getStaticFunctionName());
         tempVbox.getChildren().add(tempTButton);
         tempTButton = new JFXToggleButton();
-        tempTButton.setText(LinearFunction.getFunctionName());
+        tempTButton.setText(LinearFunction.getStaticFunctionName());
         tempVbox.getChildren().add(tempTButton);
         this.outputActivationFunctionsChooser.setContent(tempVbox);
 
@@ -630,13 +631,14 @@ public class MainController {
 
 
         //while presssing the left mouse button, you can drag to navigate
-        /*panner.setMouseFilter(mouseEvent -> {
+        panner.setMouseFilter(mouseEvent -> {
             if (mouseEvent.getButton() == MouseButton.PRIMARY) {//set your custom combination to trigger navigation
                 // let it through
+                mouseEvent.consume();
             } else {
                 mouseEvent.consume();
             }
-        });*/
+        });
 
         //holding the right mouse button will draw a rectangle to zoom to desired location
         JFXChartUtil.setupZooming(this.errorChart, mouseEvent -> {
@@ -842,6 +844,7 @@ public class MainController {
         crossoverProbabilityTextField.setPromptText(resourceBundle.getString("CROSSOVER_PROBABILITY"));
         addLinkProbabilityTextField.setPromptText(resourceBundle.getString("ADD_LINK_PROBABILITY"));
         addNodeProbabilityTextField.setPromptText(resourceBundle.getString("ADD_NODE_PROBABILITY"));
+        this.newActivationFunctionProbabilityTextField.setPromptText(resourceBundle.getString("NEW_ACTIVATION_FUNCTION_PROBABILITY"));
         mutateBiasProbabilityTextField.setPromptText(resourceBundle.getString("MUTATE_BIAS_PROBABILITY"));
         toggleLinkProbabilityTextField.setPromptText(resourceBundle.getString("TOGGLE_LINK_PROBABILITY"));
         weightReplaceProbabilityTextField.setPromptText(resourceBundle.getString("WEIGHT_REPLACED_PROBABILITY"));
@@ -864,7 +867,14 @@ public class MainController {
         this.specieOldPenaltyTextField.setPromptText(resourceBundle.getString("SPECIE_OLD_PENALTY"));
         this.specieYouthBoostTextField.setPromptText(resourceBundle.getString("SPECIE_YOUTH_BOOST"));
         this.specieFitnessMaxTextField.setPromptText(resourceBundle.getString("FITNESS_MAX"));
-        
+
+
+        this.activationFunctionsChooser.setText(resourceBundle.getString("ACTIVATION_FUNCTION"));
+        ((Label)((VBox)this.activationFunctionsChooser.getContent()).getChildren().get(0)).setText((resourceBundle.getString("ALLOWED_TO_USE")));
+        this.outputActivationFunctionsChooser.setText(resourceBundle.getString("OUTPUT_ACTIVATION_FUNCTIONS"));
+        this.inputActivationFunctionsChooser.setText(resourceBundle.getString("INPUT_ACTIVATION_FUNCTIONS"));
+        this.hiddenActivationFunctionsChooser.setText(resourceBundle.getString("HIDDEN_ACTIVATION_FUNCTIONS"));
+
 
         AlertWindow.setLanguage(resourceBundle);
         NewProjectDialogue.getInstance(this.scene).setLanguage(resourceBundle);
@@ -1065,12 +1075,39 @@ public class MainController {
         extraFeatureCountTextField.setText(originalProjectConfig.configElement("EXTRA.FEATURE.COUNT"));
         popSizeTextField.setText(originalProjectConfig.configElement("POP.SIZE"));
         numberEpochsTextField.setText(originalProjectConfig.configElement("NUMBER.EPOCHS"));
-
+        int i = 0;
         for(TitledPane titledPane : activationFunctionAccordion.getPanes()){
             VBox vBox = (VBox)titledPane.getContent();
+            List<String> functions = null;
+            switch (i){
+                case 0:
+                    functions = ((NEATConfig)originalProjectConfig).getActivationFunctionsByElementKey("INPUT.ACTIVATIONFUNCTIONS");
+                    break;
+                case 1:
+                    functions = ((NEATConfig)originalProjectConfig).getActivationFunctionsByElementKey("HIDDEN.ACTIVATIONFUNCTIONS");
+                    break;
+                case 2:
+                    functions = ((NEATConfig)originalProjectConfig).getActivationFunctionsByElementKey("OUTPUT.ACTIVATIONFUNCTIONS");
+                    break;
+            }
+
             for (Node toggleButton : vBox.getChildren()){
                 JFXToggleButton jfxToggleButton = ((JFXToggleButton) toggleButton);
+                for (String classFunction : functions){
+                    try {
+                        if(jfxToggleButton.getText().equalsIgnoreCase(((ActivationFunction)Class.forName(classFunction).newInstance()).getFunctionName())){
+                         jfxToggleButton.setSelected(true);
+                        }
+                    } catch (InstantiationException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
+            i++;
 
         }
 

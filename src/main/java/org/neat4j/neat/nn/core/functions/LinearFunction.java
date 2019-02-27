@@ -22,7 +22,10 @@ public class LinearFunction extends ActivationFunctionImpl {
 		return new LinearFunction(this.factor);
 	}
 
-	public static String getFunctionName(){
+	public static String getStaticFunctionName(){
+		return "y=x";
+	}
+	public String getFunctionName(){
 		return "y=x";
 	}
 }
