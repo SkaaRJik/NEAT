@@ -23,5 +23,7 @@ public class SinFunction extends ActivationFunctionImpl {
         return new SinFunction(this.factor);
     }
 
-
+    public static String getFunctionName(){
+        return "sin(x)";
+    }
 }

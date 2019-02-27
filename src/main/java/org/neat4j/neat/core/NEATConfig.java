@@ -11,10 +11,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Holds an object representation of the NEAT config
@@ -74,5 +71,15 @@ public class NEATConfig implements AIConfig {
 		} else {
 			return false;
 		}
+	}
+
+	public List<String> getActivationFunctionsByElementKey(String elementKey){
+		StringTokenizer stringTokenizer = new StringTokenizer(this.configElement(elementKey), ";");
+		List<String> activationFunctions = new ArrayList<>(stringTokenizer.countTokens());
+		while (stringTokenizer.hasMoreTokens()){
+			activationFunctions.add(stringTokenizer.nextToken());
+		}
+		return activationFunctions;
+
 	}
 }

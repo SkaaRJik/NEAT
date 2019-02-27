@@ -45,4 +45,8 @@ public class SigmoidFunction extends ActivationFunctionImpl {
 	public double getFactor(){
 		return this.factor;
 	}
+
+	public static String getFunctionName(){
+		return "sigmoid(x)";
+	}
 }

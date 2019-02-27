@@ -28,7 +28,6 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -49,6 +48,9 @@ import org.neat4j.neat.core.NEATConfig;
 import org.neat4j.neat.core.NEATLoader;
 import org.neat4j.neat.ga.core.Chromosome;
 
+import org.neat4j.neat.nn.core.functions.LinearFunction;
+import org.neat4j.neat.nn.core.functions.SigmoidFunction;
+import org.neat4j.neat.nn.core.functions.TanhFunction;
 import ru.filippov.GUI.customNodes.ZoomableCanvas;
 import ru.filippov.GUI.windows.AlertWindow;
 import ru.filippov.GUI.windows.DataPreparatorDialogue;
@@ -101,6 +103,7 @@ public class MainController {
     private JFXTextField addLinkProbabilityTextField;
     private JFXTextField addNodeProbabilityTextField;
     private JFXTextField mutateBiasProbabilityTextField;
+    private JFXTextField newActivationFunctionProbabilityTextField;
     private JFXTextField toggleLinkProbabilityTextField;
     private JFXTextField weightReplaceProbabilityTextField;
     private TitledPane neatSpecificTitledPane;
@@ -109,6 +112,15 @@ public class MainController {
     private JFXTextField excessCoefficientTextField;
     private JFXTextField disjointCoefficientTextField;
     private JFXTextField weightCoefficientTextField;
+
+    private TitledPane activationFunctionsChooser;
+    private Accordion activationFunctionAccordion;
+    private TitledPane inputActivationFunctionsChooser;
+    private TitledPane hiddenActivationFunctionsChooser;
+    private TitledPane outputActivationFunctionsChooser;
+
+
+
     private TitledPane speciationControlTitledPane;
     private JFXTextField thresholdCompabilityTextField;
     private JFXTextField changeCompabilityTextField;
@@ -228,6 +240,7 @@ public class MainController {
         this.addLinkProbabilityTextField = new JFXTextField();
         this.addNodeProbabilityTextField = new JFXTextField();
         this.mutateBiasProbabilityTextField = new JFXTextField();
+        this.newActivationFunctionProbabilityTextField = new JFXTextField();
         this.toggleLinkProbabilityTextField = new JFXTextField();
         this.weightReplaceProbabilityTextField = new JFXTextField();
         this.mutationProbabilityTextField.setLabelFloat(true);
@@ -235,6 +248,7 @@ public class MainController {
         this.addLinkProbabilityTextField.setLabelFloat(true);
         this.addNodeProbabilityTextField.setLabelFloat(true);
         this.mutateBiasProbabilityTextField.setLabelFloat(true);
+        this.newActivationFunctionProbabilityTextField.setLabelFloat(true);
         this.toggleLinkProbabilityTextField.setLabelFloat(true);
         this.weightReplaceProbabilityTextField.setLabelFloat(true);
         tempVbox.getChildren().addAll(
@@ -244,12 +258,68 @@ public class MainController {
             this.addLinkProbabilityTextField,
             this.addNodeProbabilityTextField,
             this.mutateBiasProbabilityTextField,
+            this.newActivationFunctionProbabilityTextField,
             this.toggleLinkProbabilityTextField,
             this.weightReplaceProbabilityTextField
         );
         GASettingsTitledPane.setContent(tempVbox);
 
-        tempVbox = new VBox();
+        JFXToggleButton tempTButton;
+        this.activationFunctionsChooser = new TitledPane();
+        this.inputActivationFunctionsChooser = new TitledPane();
+        tempVbox=new VBox();
+        tempTButton = new JFXToggleButton();
+        tempTButton.setText(SigmoidFunction.getFunctionName());
+        tempVbox.getChildren().add(tempTButton);
+        tempTButton = new JFXToggleButton();
+        tempTButton.setText(TanhFunction.getFunctionName());
+        tempVbox.getChildren().add(tempTButton);
+        tempTButton = new JFXToggleButton();
+        tempTButton.setText(LinearFunction.getFunctionName());
+        tempVbox.getChildren().add(tempTButton);
+        this.inputActivationFunctionsChooser.setContent(tempVbox);
+
+        this.hiddenActivationFunctionsChooser = new TitledPane();
+        tempVbox=new VBox();
+        tempTButton = new JFXToggleButton();
+        tempTButton.setText(SigmoidFunction.getFunctionName());
+        tempVbox.getChildren().add(tempTButton);
+        tempTButton = new JFXToggleButton();
+        tempTButton.setText(TanhFunction.getFunctionName());
+        tempVbox.getChildren().add(tempTButton);
+        tempTButton = new JFXToggleButton();
+        tempTButton.setText(LinearFunction.getFunctionName());
+        tempVbox.getChildren().add(tempTButton);
+        this.hiddenActivationFunctionsChooser.setContent(tempVbox);
+
+        this.outputActivationFunctionsChooser = new TitledPane();
+        tempVbox=new VBox();
+        tempTButton = new JFXToggleButton();
+        tempTButton.setText(SigmoidFunction.getFunctionName());
+        tempVbox.getChildren().add(tempTButton);
+        tempTButton = new JFXToggleButton();
+        tempTButton.setText(TanhFunction.getFunctionName());
+        tempVbox.getChildren().add(tempTButton);
+        tempTButton = new JFXToggleButton();
+        tempTButton.setText(LinearFunction.getFunctionName());
+        tempVbox.getChildren().add(tempTButton);
+        this.outputActivationFunctionsChooser.setContent(tempVbox);
+
+        this.activationFunctionAccordion = new Accordion(this.inputActivationFunctionsChooser,
+                this.hiddenActivationFunctionsChooser,
+                this.outputActivationFunctionsChooser);
+        tempVbox = new VBox(new Label("Разрешить использовать:"), this.activationFunctionAccordion);
+        this.activationFunctionsChooser.setContent(tempVbox);
+
+
+
+
+
+
+
+
+
+                tempVbox = new VBox();
         tempVbox.setSpacing(25);
         this.neatSpecificTitledPane = new TitledPane();
 
@@ -371,6 +441,7 @@ public class MainController {
                 this.neatSpecificTitledPane,
                 this.speciationControlTitledPane,
                 this.networkControlTitledPane,
+                this.activationFunctionsChooser,
                 this.extinctionControlTitledPane,
                 this.epochControlTitledPane
         );
@@ -967,6 +1038,7 @@ public class MainController {
         addLinkProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.ADDLINK"));
         addNodeProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.ADDNODE"));
         mutateBiasProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.MUTATEBIAS"));
+        newActivationFunctionProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.NEWACTIVATIONFUNCTION"));
         toggleLinkProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.TOGGLELINK"));
         weightReplaceProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.WEIGHT.REPLACED"));
         generatorSeedTextField.setText(originalProjectConfig.configElement("GENERATOR.SEED"));
@@ -993,6 +1065,16 @@ public class MainController {
         extraFeatureCountTextField.setText(originalProjectConfig.configElement("EXTRA.FEATURE.COUNT"));
         popSizeTextField.setText(originalProjectConfig.configElement("POP.SIZE"));
         numberEpochsTextField.setText(originalProjectConfig.configElement("NUMBER.EPOCHS"));
+
+        for(TitledPane titledPane : activationFunctionAccordion.getPanes()){
+            VBox vBox = (VBox)titledPane.getContent();
+            for (Node toggleButton : vBox.getChildren()){
+                JFXToggleButton jfxToggleButton = ((JFXToggleButton) toggleButton);
+            }
+
+        }
+
+
     }
     
     @FXML
