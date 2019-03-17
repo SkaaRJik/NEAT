@@ -253,6 +253,16 @@ public class MainController {
         this.newActivationFunctionProbabilityTextField.setLabelFloat(true);
         this.toggleLinkProbabilityTextField.setLabelFloat(true);
         this.weightReplaceProbabilityTextField.setLabelFloat(true);
+
+        this.mutationProbabilityTextField.setAlignment(Pos.CENTER);
+        this.crossoverProbabilityTextField.setAlignment(Pos.CENTER);
+        this.addLinkProbabilityTextField.setAlignment(Pos.CENTER);
+        this.addNodeProbabilityTextField.setAlignment(Pos.CENTER);
+        this.mutateBiasProbabilityTextField.setAlignment(Pos.CENTER);
+        this.newActivationFunctionProbabilityTextField.setAlignment(Pos.CENTER);
+        this.toggleLinkProbabilityTextField.setAlignment(Pos.CENTER);
+        this.weightReplaceProbabilityTextField.setAlignment(Pos.CENTER);
+        
         tempVbox.getChildren().addAll(
                 hBox,
             this.mutationProbabilityTextField,
@@ -677,6 +687,9 @@ public class MainController {
             public void run() {
                 splitPane.lookupAll(".split-pane-divider").stream()
                         .forEach(div ->  div.setMouseTransparent(true) );
+
+                netVisualisationCanvas.setWidth(netVisualizationBorderPane.getWidth()-2);
+                netVisualisationCanvas.setHeight(netVisualizationBorderPane.getHeight());
             }
         });
 
@@ -691,8 +704,10 @@ public class MainController {
         this.netVisualisator = new NetVisualisator(this.netVisualisationCanvas);
         this.netVisualizationBorderPane.setCenter(this.netVisualisationCanvas);
 
-        this.netVisualisationCanvas.widthProperty().bind(this.netVisualizationBorderPane.widthProperty());
-        this.netVisualisationCanvas.heightProperty().bind(this.netVisualizationBorderPane.heightProperty());
+       /* this.netVisualisationCanvas.widthProperty().bind(this.netVisualizationBorderPane.widthProperty());
+        this.netVisualisationCanvas.heightProperty().bind(this.netVisualizationBorderPane.heightProperty());*/
+
+
 
        /* JFXUtils.CanvasConfigurator.setNetVisualisator(netVisualisator);
         JFXUtils.CanvasConfigurator.setZoomOnCanvas(this.netVisualisationCanvas);
@@ -1220,15 +1235,7 @@ public class MainController {
             errorSeries.setName("Fitness of the " + ++this.trainingCount + " run");
             this.errorChart.getData().add(errorSeries);
 
-            /*String[] colour = new String[Integer.parseInt(this.outputNodesTextField.getText())];
-            XYChart.Series[] outputValuesSeries = new XYChart.Series[Integer.parseInt(this.outputNodesTextField.getText())];
-            for (int i = 0; i < outputValuesSeries.length; i++) {
-                outputValuesSeries[i] = new XYChart.Series();
-                outputValuesSeries[i].setName(this.trainingCount + ". " + this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1-i).getText());
-                this.valueGraphicChart.getData().add(outputValuesSeries[i]);
-                colour[i] = "rgb("+ Math.round(Math.random()*255)+","+ Math.round(Math.random()*255)+","+ Math.round(Math.random()*255)+")";
-            }*/
-            String colour = "rgb("+ Math.round(Math.random()*255)+","+ Math.round(Math.random()*255)+","+ Math.round(Math.random()*255)+")";
+
             XYChart.Series outputValuesSeries = new XYChart.Series();
             outputValuesSeries.setName(this.trainingCount + ". " + this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1).getText());
             this.valueGraphicChart.getData().add(outputValuesSeries);
@@ -1242,14 +1249,6 @@ public class MainController {
                     nodes = valueGraphicChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
                     nodes[nodes.length-1].setStyle("-fx-background-color: "+ colour[i] +", white;");
                 }*/
-                errorSeries.getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour+";");
-                Node[] nodes = errorChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
-                nodes[nodes.length-1].setStyle("-fx-background-color: "+ colour +", white;");
-                outputValuesSeries.getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour+";");
-                nodes = valueGraphicChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
-                nodes[nodes.length-1].setStyle("-fx-background-color: "+ colour +", white;");
-
-
 
             });
             neatTrainingForJavaFX.initialise(runnableProjectConfig);
@@ -1269,7 +1268,7 @@ public class MainController {
                             outputValuesSeries[i].getData().clear();
                         }*/
 
-                        xyData.getNode().setStyle("-fx-background-color: "+colour+", white;");
+
                         errorSeries.getData().add(xyData);
                         outputValuesSeries.getData().clear();
 
@@ -1281,7 +1280,6 @@ public class MainController {
                                XYChart.Data<Number, Number> data = new XYChart.Data<>(counter.incrementAndGet(), value);
                                data.setNode(new StackPane());
                                Tooltip.install(data.getNode(), new Tooltip(String.valueOf(value)));
-                               data.getNode().setStyle("-fx-background-color: "+colour+", white;");
                                outputValuesSeries.getData().add(data);
                                /*for (int i = 0; i < outputValuesSeries.length; i++) {
                                    XYChart.Data<Number, Number> data = new XYChart.Data<>(counter.incrementAndGet(), value);
