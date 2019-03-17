@@ -71,12 +71,12 @@ public class NewProjectDialogueController {
 
     public void finish() {
         if (this.projectNameTextField.getText().length() == 0) {
-            AlertWindow.getAlert("\"" + this.projectNameLabel.getText() + "\"" + " - " + this.resourceBundle.getString("CANT_BE_EMPTY")).show();
+            AlertWindow.createAlertWindow("\"" + this.projectNameLabel.getText() + "\"" + " - " + this.resourceBundle.getString("CANT_BE_EMPTY")).show();
             return;
         }
         File file = new File(this.projectLocationTextField.getText() + "\\" + this.projectNameTextField.getText());
         if (file.exists()) {
-            AlertWindow.getAlert(this.resourceBundle.getString("ALREADY_EXISTS")).show();
+            AlertWindow.createAlertWindow(this.resourceBundle.getString("ALREADY_EXISTS")).show();
         } else {
             file.mkdir();
             File defaultFile = new File(getClass().getClassLoader().getResource("NEATfiles/default.neat").getPath());

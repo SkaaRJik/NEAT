@@ -41,4 +41,27 @@ public class NonLinearScaler implements DataScaler {
 
         return normalised;
     }
+
+    @Override
+    public List<List<Double>> normalize(List<List<Double>> dataToNormalize, double minRange, double maxRange) {
+        int n = dataToNormalize.size() * dataToNormalize.get(0).size();
+        double averrage = dataToNormalize.stream()
+                .flatMap(List::stream)
+                .mapToDouble(Double::doubleValue)
+                .sum() / (n);
+
+        double disp = Math.sqrt(dataToNormalize.stream().flatMap(List::stream).mapToDouble(aDouble -> Math.pow((aDouble - averrage), 2)).sum() / (n-1));
+
+        List<List<Double>> normalised = new ArrayList<>(dataToNormalize.size());
+        List<Double> row;
+        for (int i = 0; i < dataToNormalize.size(); i++) {
+            row = new ArrayList<Double>(dataToNormalize.get(i).size());
+            for(int j = 0 ; j < dataToNormalize.get(i).size(); j++){
+                row.add(activationFunction.activate((dataToNormalize.get(i).get(j)-averrage)/disp) * (maxRange - minRange) + minRange);
+            }
+            normalised.add(row);
+        }
+
+        return normalised;
+    }
 }

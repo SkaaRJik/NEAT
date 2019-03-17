@@ -15,12 +15,13 @@ public class ArctgFunction extends ActivationFunctionImpl {
 
     @Override
     public double activate(double neuronIp) {
-        return 0;
+        return Math.atan(neuronIp*this.factor);
     }
 
     @Override
     public double derivative(double neuronIp) {
-        return 0;
+
+        return this.factor / (Math.pow(this.factor, 2)*Math.pow(neuronIp,2)+1);
     }
 
     @Override

@@ -3,7 +3,7 @@ package ru.filippov.GUI.controllers;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTextField;
-import com.sun.xml.internal.ws.util.StringUtils;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -20,6 +20,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.log4j.Logger;
 import org.neat4j.neat.data.normaliser.DataScaler;
 import org.neat4j.neat.data.normaliser.LinearScaler;
@@ -62,6 +63,8 @@ public class DataPreparatorDialogueController {
     @FXML    private ChoiceBox<String> chooseNormaliseMethodChoiceBox;
     @FXML    private Label chooseActivationFunctionLabel;
     @FXML    private ChoiceBox<String> chooseActivationFunctionChoiceBox;
+    @FXML    private JFXTextField minRangeTextField;
+    @FXML    private JFXTextField maxRangeTextField;
     @FXML    private Button runNormaliseButton;
     @FXML    private Accordion normaliseDataAccordion;
     @FXML    private TableView<List<Double>> normalisedDataTableView;
@@ -195,6 +198,7 @@ public class DataPreparatorDialogueController {
         });
 
 
+
         chooseNormaliseMethodChoiceBox.setItems(FXCollections.observableArrayList("Линейный", "Нелинейный", "Выбеливание входов"));
         chooseNormaliseMethodChoiceBox.getSelectionModel().selectFirst();
         chooseNormaliseMethodChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -208,7 +212,28 @@ public class DataPreparatorDialogueController {
             }
         });
 
-        chooseActivationFunctionChoiceBox.setItems(FXCollections.observableArrayList("sigmoid(x)", "sin(x*1.5)/2+0.5", "arctg(x)"));
+
+        chooseActivationFunctionChoiceBox.setItems(FXCollections.observableArrayList(SigmoidFunction.getStaticFunctionName(), TanhFunction.getStaticFunctionName(), ArctgFunction.getStaticFunctionName()));
+        this.minRangeTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            minRangeTextField.setText(newValue.replace(",","."));
+            if (newValue.isEmpty() || !NumberUtils.isCreatable(newValue)) {
+                runNormaliseButton.setDisable(true);
+                nextButton.setDisable(true);
+            } else {
+                runNormaliseButton.setDisable(false);
+            }
+        });
+
+        this.maxRangeTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            maxRangeTextField.setText(newValue.replace(",","."));
+            if (newValue.isEmpty() || !NumberUtils.isCreatable(newValue)) {
+                runNormaliseButton.setDisable(true);
+                nextButton.setDisable(true);
+            } else {
+                runNormaliseButton.setDisable(false);
+            }
+        });
+
 
         selectTrainingDataTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
@@ -227,7 +252,7 @@ public class DataPreparatorDialogueController {
                     this.pseudoClassStateChanged(train, trainSetIndexes.contains(index));
                     this.pseudoClassStateChanged(test, testSetIndexes.contains(index));
                     this.pseudoClassStateChanged(trainAndTest, trainSetIndexes.contains(index) && testSetIndexes.contains(index));
-                    if(trainSetIndexes.isEmpty() || testSetIndexes.isEmpty()){
+                    if(trainSetIndexes.isEmpty() && testSetIndexes.isEmpty()){
                         nextButton.setDisable(true);
                     } else {
                         nextButton.setDisable(false);
@@ -293,7 +318,7 @@ public class DataPreparatorDialogueController {
                 nextButton.setDisable(true);
                 return;
             }
-            if(!Validator.isOnlyNumbers(newValue)){
+            if(!NumberUtils.isCreatable(newValue)){
                 trainingSetPercentageTextField.setText(oldValue);
             } else {
                 newValue = newValue.replace(",",".");
@@ -302,8 +327,8 @@ public class DataPreparatorDialogueController {
                     if (tempVal.charAt(tempVal.length()-1) == '.') tempVal+='0';
                     double value = Double.valueOf(tempVal);
                     if (value>100) throw new NumberFormatException();
-
-                    String testingValue = (value >= 1) ? String.format("%.0f", 100 - value) : String.format("%.4f", 1.0 - value);
+                    String testingValue = String.format("%.2f", 100.0 - value);
+                    //String testingValue = (value >= 1) ? String.format("%.0f", 100 - value) : String.format("%.4f", 1.0 - value);
                     testingSetPercentageTextField.setText(testingValue);
                     confirmPercantageSetButton.setDisable(false);
                 } catch (NumberFormatException e){
@@ -318,7 +343,7 @@ public class DataPreparatorDialogueController {
                 nextButton.setDisable(true);
                 return;
             }
-            if(!Validator.isOnlyNumbers(newValue)){
+            if(!NumberUtils.isCreatable(newValue)){
                 testingSetPercentageTextField.setText(oldValue);
             } else {
                 newValue = newValue.replace(",",".");
@@ -423,17 +448,17 @@ public class DataPreparatorDialogueController {
             checkDecimalSeparator = "Не найден разделитель \"" + decimalSeparatorTextField.getText() + "\"!\nПожалуйста, перепроверрьте данные";
             if (!dataTextArea.getText().contains(decimalSeparatorTextField.getText())){
                 checkDatalSeparator = "Не найден разделитель \"" + dataSeparatorTextField.getText() + "\"!\nПожалуйста, перепроверрьте данные";;
-                AlertWindow.getAlert(checkDecimalSeparator).show();
+                AlertWindow.createAlertWindow(checkDecimalSeparator).show();
                 return;
             }
             if (!dataTextArea.getText().contains(dataSeparatorTextField.getText())){
-                AlertWindow.getAlert(checkDatalSeparator).show();
+                AlertWindow.createAlertWindow(checkDatalSeparator).show();
                 return;
             }
             try {
                 firstStep(getListDataFromTextArea());
             } catch (NumberFormatException e) {
-                AlertWindow.getAlert(cantProcessData).show();
+                AlertWindow.createAlertWindow(cantProcessData).show();
                 return;
             }
         }
@@ -460,7 +485,7 @@ public class DataPreparatorDialogueController {
     private void finishStep() {
         File file = new File(this.projectPath+this.dataSetNameTextField.getText());
         if(file.exists()){
-            AlertWindow.getAlert(dataSetAlreadyExists).show();
+            AlertWindow.createAlertWindow(dataSetAlreadyExists).show();
         } else {
             file.mkdir();
             File dataFile = new File(file.getAbsolutePath()+"\\"+this.dataSetNameTextField.getText()+"@train.dataset");
@@ -469,7 +494,7 @@ public class DataPreparatorDialogueController {
                 dataFile = new File(file.getAbsolutePath()+"\\"+this.dataSetNameTextField.getText()+"@test.dataset");
                 this.writeDataIntoFile(dataFile, this.normalisedTestDataTableView);
             } catch (IOException e) {
-                AlertWindow.getAlert(e.getMessage()).show();
+                AlertWindow.createAlertWindow(e.getMessage()).show();
             }
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle(success);
@@ -831,92 +856,107 @@ public class DataPreparatorDialogueController {
     @FXML    void normaliseData(ActionEvent event) {
         normaliseDataAccordion.setVisible(true);
         DataScaler dataScaler;
-        switch (chooseNormaliseMethodChoiceBox.getValue()){
-            case "Линейный":
-                dataScaler = new LinearScaler();
-                normalisedUsedData = dataScaler.normalize(usedData);
+        try {
+            switch (chooseNormaliseMethodChoiceBox.getValue()) {
+                case "Линейный":
+                    dataScaler = new LinearScaler();
+                    normalisedUsedData = dataScaler.normalize(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
 
-                break;
-            case "Нелинейный":
-                switch (chooseActivationFunctionChoiceBox.getValue()) {
-                    case "sigmoid(x)":
-                        dataScaler = new NonLinearScaler(new SigmoidFunction());
-                        normalisedUsedData = dataScaler.normalize(usedData);
-                        break;
-                    case "sin(x*1.5)/2+0.5":
-                        dataScaler = new NonLinearScaler(new ActivationFunctionImpl() {
-                            @Override
-                            public double activate(double neuronIp) {
-                                return Math.sin(neuronIp*1.5)/2+0.5;
-                            }
-
-                            @Override
-                            public double derivative(double neuronIp) {
-                                return 0;
-                            }
-
-                            @Override
-                            public ActivationFunction newInstance() {
-                                return null;
-                            }
-
-                            @Override
-                            public String getFunctionName() {
-                                return null;
-                            }
-                        });
-                        normalisedUsedData = dataScaler.normalize(usedData);
-                        break;
-                    case "arctg(x)":
-                        dataScaler = new NonLinearScaler(new ArctgFunction());
-                        normalisedUsedData = dataScaler.normalize(usedData);
-                        break;
-                }
-                break;
-            case "Выбеливание входов":
-                break;
-            default:
-                break;
-        }
-
-        //TODO Dynamical range
-        if(normalisedUsedData != null) {
-            normalisedDataTableView.setItems(FXCollections.observableArrayList(normalisedUsedData));
-            normaliseStatisticBarChart.getData().clear();
-            XYChart.Series dataSeries1 = new XYChart.Series();
-            dataSeries1.setName("Частота распределения");
-            float temp;
-            for (float i = 0.0f; i < 1.0f; i+=0.1f) {
-
-                if(i == 0.0f){
-                    temp = i;
-                } else {
-                    temp = i+0.01f;
-                }
-                dataSeries1.getData().add(new XYChart.Data<String, Float>(String.valueOf(String.format("%.2f",temp))+"-"+String.valueOf(String.format("%.2f",i+0.1f)), 0f));
-            }
-            XYChart.Data<String, Float> xychart;
-            temp = 0;
-            for (List<Double> list : normalisedUsedData){
-                for (Double val : list) {
-                    for (float i = 0.0f; i < 1.0f; i+=0.1f) {
-                        if(val >= i && val < i+0.1f){
-                            temp++;
-                            xychart = (XYChart.Data<String, Float>) dataSeries1.getData().get((int) (i*10));
-                            xychart.setYValue(xychart.getYValue()+1);
+                    break;
+                case "Нелинейный":
+                    switch (chooseActivationFunctionChoiceBox.getValue()) {
+                        case "sigmoid(x)":
+                            dataScaler = new NonLinearScaler(new SigmoidFunction());
+                            normalisedUsedData = dataScaler.normalize(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
                             break;
+                        case "tanh(x)":
+                            dataScaler = new NonLinearScaler(new ActivationFunctionImpl() {
+                                @Override
+                                public double activate(double neuronIp) {
+                                    return 0;
+                                }
+
+                                @Override
+                                public double derivative(double neuronIp) {
+                                    return th(neuronIp)/2+0.5;
+                                }
+
+                                public double th(double neuronIp){
+                                    return (Math.exp(neuronIp)-Math.exp(-neuronIp))/(Math.exp(neuronIp)+Math.exp(-neuronIp));
+                                }
+
+                                @Override
+                                public ActivationFunction newInstance() {
+                                    return null;
+                                }
+
+                                @Override
+                                public String getFunctionName() {
+                                    return null;
+                                }
+                            });
+                            normalisedUsedData = dataScaler.normalize(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
+                            break;
+                        case "arctg(x)":
+                            dataScaler = new NonLinearScaler(new ArctgFunction());
+                            normalisedUsedData = dataScaler.normalize(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
+                            break;
+                    }
+                    break;
+                case "Выбеливание входов":
+                    break;
+                default:
+                    break;
+            }
+
+
+            if (normalisedUsedData != null) {
+                normalisedDataTableView.setItems(FXCollections.observableArrayList(normalisedUsedData));
+                normaliseStatisticBarChart.getData().clear();
+                XYChart.Series dataSeries1 = new XYChart.Series();
+                dataSeries1.setName("Частота распределения");
+                XYChart.Data<String, Double> xychart;
+                float temp;
+                float minVal = Float.parseFloat(minRangeTextField.getText());
+                float maxVal = Float.parseFloat(maxRangeTextField.getText());
+                float step = (maxVal - minVal )/10;
+                Map<String, XYChart.Data<String, Double>> intervals = new HashMap<>(10);
+                for (float i = minVal; i < maxVal-step; i += step) {
+                    String intervalID = String.valueOf(String.format("%.2f", i)) + "-" + String.valueOf(String.format("%.2f", i + step));
+                    xychart = new XYChart.Data<>(intervalID, 0.0);
+                    dataSeries1.getData().add(xychart);
+                    intervals.put(intervalID, xychart);
+                }
+                normaliseStatisticBarChart.setBarGap(0);
+                normaliseStatisticBarChart.getData().add(dataSeries1);
+
+
+                temp = 0;
+                for (List<Double> list : normalisedUsedData) {
+                    for (Double val : list) {
+                        for (float i = minVal; i < maxVal-step; i += step) {
+                            if (val >= i && val < i + step) {
+                                String intervalID = String.valueOf(String.format("%.2f", i)) + "-" + String.valueOf(String.format("%.2f", i + step));
+                                xychart = intervals.get(intervalID);
+                                xychart.setYValue((xychart.getYValue()) + 1.0);
+                                temp++;
+                                break;
+                            }
                         }
                     }
                 }
+                for (Object chart : dataSeries1.getData()) {
+                    xychart = ((XYChart.Data<String, Double>) chart);
+                    xychart.setYValue(xychart.getYValue() / temp);
+                }
+
+                normaliseDataAccordion.getPanes().get(normaliseDataAccordion.getPanes().size() - 1).setExpanded(true);
+                nextButton.setDisable(false);
             }
-            for (Object chart : dataSeries1.getData()){
-                xychart = ((XYChart.Data<String, Float>) chart);
-                xychart.setYValue(xychart.getYValue()/temp);
-            }
-            normaliseStatisticBarChart.setBarGap(0);
-            normaliseStatisticBarChart.getData().add(dataSeries1);
-            normaliseDataAccordion.getPanes().get(normaliseDataAccordion.getPanes().size()-1).setExpanded(true);
-            nextButton.setDisable(false);
+
+
+        } catch (NumberFormatException ex) {
+            AlertWindow.createAlertWindow(ex.getMessage()).show();
         }
     }
 
@@ -927,11 +967,9 @@ public class DataPreparatorDialogueController {
 
 
         double percent = Double.parseDouble(trainingSetPercentage);
-        percent = percent >= 1 ? percent / 100 : percent;
-        trainSize = (int) (Math.round(usedData.size() * percent));
+        trainSize = (int) (Math.round(usedData.size() * (percent/100)));
         percent = Double.parseDouble(testSetPercentage);
-        percent = percent >= 1 ? percent / 100 : percent;
-        testSize = (int) (Math.round(usedData.size() * percent));
+        testSize = (int) (Math.round(usedData.size() * (percent/100)));
         //if(trainSize >= usedData.size()) trainSize = usedData.size()-1;
         //put indexes
         for (int i = 0 ; i < trainSize; i++){
@@ -941,7 +979,6 @@ public class DataPreparatorDialogueController {
 
 
         for (int i = 0 ; i < testSize; i++){
-
             testSetIndexes.add(usedData.size()-1-i);
         }
         this.selectTrainingDataTableView.refresh();

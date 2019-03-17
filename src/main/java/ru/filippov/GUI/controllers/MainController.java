@@ -968,7 +968,7 @@ public class MainController {
             try {
                 this.openProject(dialogue.getProjectFile());
             } catch (Exception ex){
-                AlertWindow.getAlert(ex.getMessage()).show();
+                AlertWindow.createAlertWindow(ex.getMessage()).show();
             }
         }
     }
@@ -1018,7 +1018,7 @@ public class MainController {
             initRunnableConfigUsingGUI();
             runnableProjectConfig.saveConfig(this.projectFile);
         } catch (IOException e) {
-            AlertWindow.getAlert("CANT_SAVE_FILE").show();
+            AlertWindow.createAlertWindow("CANT_SAVE_FILE").show();
         }
     }
 
@@ -1179,7 +1179,7 @@ public class MainController {
                 try {
                     this.originalProjectConfig.saveConfig(this.projectFile);
                 } catch (IOException e) {
-                    AlertWindow.getAlert("Не удалось сохранить новый конфиг");
+                    AlertWindow.createAlertWindow("Не удалось сохранить новый конфиг");
                 }
                 fillDataSetChoiceBox(this.runnableProjectConfig);
             }

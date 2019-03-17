@@ -39,4 +39,9 @@ public class WhitingScaler implements DataScaler {
 
 
     }
+
+    @Override
+    public List<List<Double>> normalize(List<List<Double>> dataToNormalize, double minRange, double maxRange) {
+        return null;
+    }
 }

@@ -8,7 +8,7 @@ public class AlertWindow {
     public static void setLanguage(ResourceBundle resourceBundle){
         error = resourceBundle.getString("ERROR");
     }
-    public static javafx.scene.control.Alert getAlert(String message){
+    public static javafx.scene.control.Alert createAlertWindow(String message){
         if(alert == null) {
             alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
             alert.setTitle(error);
