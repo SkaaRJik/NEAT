@@ -7,7 +7,6 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
@@ -17,16 +16,18 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
    <top>
       <AnchorPane prefHeight="0.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <children>
@@ -101,13 +102,13 @@
       </AnchorPane>
    </top>
    <center>
-      <SplitPane fx:id="splitPane" dividerPositions="0.5">
+      <SplitPane fx:id="projectSplitPane" dividerPositions="0.4" BorderPane.alignment="CENTER">
          <items>
-            <BorderPane fx:id="menuBorderPane" maxWidth="300.0" minWidth="10.0" prefWidth="300.0">
+            <BorderPane fx:id="projectBorderPane" maxWidth="270.0" minWidth="10.0" prefWidth="270.0">
                <right>
                   <BorderPane prefHeight="529.0" prefWidth="32.0" BorderPane.alignment="CENTER">
                      <center>
-                        <MaterialDesignIconView fx:id="openMenuIcon" glyphName="CHEVRON_DOUBLE_RIGHT" size="20" BorderPane.alignment="CENTER" />
+                        <MaterialDesignIconView fx:id="openProjectMenuIcon" glyphName="CHEVRON_DOUBLE_RIGHT" size="20" BorderPane.alignment="CENTER" />
                      </center>
                      <top>
                         <AnchorPane prefHeight="21.0" prefWidth="145.0" rotate="270.0" BorderPane.alignment="CENTER">
@@ -117,13 +118,13 @@
                            <children>
                               <HBox layoutX="-231.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="-231.0" AnchorPane.rightAnchor="-15.0" AnchorPane.topAnchor="0.0">
                                  <children>
-                                    <Label fx:id="neatOptionsLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" prefHeight="21.0" prefWidth="268.0" text="Параметры алгоритма" wrapText="true" />
-                                    <JFXButton fx:id="pinButton" alignment="CENTER" maxHeight="12.0" maxWidth="12.0" prefHeight="0.0" prefWidth="0.0" rotate="90.0" style="-fx-border-color: transparent;" text=" " HBox.hgrow="NEVER">
+                                    <Label fx:id="projectLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" prefHeight="32.0" prefWidth="232.0" text="Проект" wrapText="true" />
+                                    <JFXButton fx:id="pinProjectMenuButton" alignment="CENTER" maxHeight="12.0" maxWidth="12.0" prefHeight="0.0" prefWidth="0.0" rotate="90.0" style="-fx-border-color: transparent;" text=" " HBox.hgrow="NEVER">
                                        <HBox.margin>
                                           <Insets left="5.0" />
                                        </HBox.margin>
                                        <graphic>
-                                          <MaterialDesignIconView fx:id="pinIcon" glyphName="PIN" size="18" wrappingWidth="10.0" />
+                                          <MaterialDesignIconView fx:id="pinProjectMenuIcon" glyphName="PIN" size="18" wrappingWidth="10.0" />
                                        </graphic>
                                     </JFXButton>
                                  </children>
@@ -133,118 +134,89 @@
                      </top>
                   </BorderPane>
                </right>
+               <center>
+                  <TreeView fx:id="projectTreeView" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+               </center>
             </BorderPane>
             <TabPane fx:id="infoTabPane" tabClosingPolicy="UNAVAILABLE">
               <tabs>
-                <Tab fx:id="datasetsTab" text="Datasets">
-                  <content>
-                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                           <children>
-                              <BorderPane layoutX="5.0" layoutY="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0">
-                                 <center>
-                                    <AnchorPane>
-                                       <children>
-                                          <ScrollPane fx:id="dataSetsScrollPane" fitToHeight="true" fitToWidth="true" prefHeight="488.0" prefWidth="480.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                            <content>
-                                                <SplitPane dividerPositions="0.5" orientation="VERTICAL">
-                                                   <items>
-                                                    <AnchorPane minHeight="0.0" minWidth="0.0">
-                                                         <children>
-                                                            <TitledPane fx:id="trainTitledPane" animated="false" text="untitled" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                                              <content>
-                                                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                                                     <children>
-                                                                        <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                                                          <content>
-                                                                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0">
-                                                                                 <children>
-                                                                                    <TableView fx:id="trainTableView" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                                                                 </children>
-                                                                              </AnchorPane>
-                                                                          </content>
-                                                                        </ScrollPane>
-                                                                     </children>
-                                                                  </AnchorPane>
-                                                              </content>
-                                                            </TitledPane>
-                                                         </children>
-                                                      </AnchorPane>
-                                                      <AnchorPane minHeight="0.0" minWidth="0.0">
-                                                         <children>
-                                                            <TitledPane fx:id="testTitledPane" animated="false" text="untitled" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                                               <content>
-                                                                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                                                     <children>
-                                                                        <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                                                           <content>
-                                                                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0">
-                                                                                 <children>
-                                                                                    <TableView fx:id="testTableView" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                                                                 </children>
-                                                                              </AnchorPane>
-                                                                           </content>
-                                                                        </ScrollPane>
-                                                                     </children>
-                                                                  </AnchorPane>
-                                                               </content>
-                                                            </TitledPane>
-                                                         </children>
-                                                      </AnchorPane>
-                                                   </items>
-                                                </SplitPane>
-                                            </content>
-                                          </ScrollPane>
-                                       </children>
-                                       <BorderPane.margin>
-                                          <Insets top="5.0" />
-                                       </BorderPane.margin>
-                                    </AnchorPane>
-                                 </center>
-                                 <top>
-                                    <BorderPane BorderPane.alignment="CENTER">
-                                       <center>
-                                          <AnchorPane BorderPane.alignment="CENTER">
-                                             <children>
-                                                <ChoiceBox fx:id="datasetChoiceBox" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                             </children>
-                                          </AnchorPane>
-                                       </center>
-                                       <right>
-                                          <JFXButton fx:id="loadNewDataButton" onAction="#prepareNewData" text="Load new data" wrapText="true" BorderPane.alignment="CENTER">
-                                             <BorderPane.margin>
-                                                <Insets left="5.0" />
-                                             </BorderPane.margin>
-                                          </JFXButton>
-                                       </right>
-                                       <left>
-                                          <Label fx:id="chooseDatasetLavel" text="Label" BorderPane.alignment="CENTER">
-                                             <BorderPane.margin>
-                                                <Insets right="5.0" />
-                                             </BorderPane.margin>
-                                          </Label>
-                                       </left>
-                                    </BorderPane>
-                                 </top>
-                                 <bottom>
-                                    <Button fx:id="startTrainingButton" alignment="CENTER_RIGHT" disable="true" mnemonicParsing="false" onAction="#trainModel" text="Button" BorderPane.alignment="CENTER_RIGHT">
-                                       <BorderPane.margin>
-                                          <Insets bottom="5.0" right="5.0" top="5.0" />
-                                       </BorderPane.margin>
-                                    </Button>
-                                 </bottom>
-                              </BorderPane>
-                           </children>
-                        </AnchorPane>
-                  </content>
-                </Tab>
-                <Tab fx:id="trainigTab" disable="true" text="Training">
-                  <content>
-                    <AnchorPane>
-                           <children>
-                              <ScrollPane fitToWidth="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                <Tab fx:id="trainigTab" text="Training">
+                     <content>
+                        <SplitPane fx:id="neatSplitPane" dividerPositions="0.5">
+                           <items>
+                              <ScrollPane fitToWidth="true">
                                  <content>
                                     <VBox fx:id="trainVBox">
                                        <children>
+                                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                             <children>
+                                                <BorderPane layoutX="5.0" layoutY="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0">
+                                                   <center>
+                                                      <AnchorPane>
+                                                         <children>
+                                                            <ScrollPane fx:id="dataSetsScrollPane" fitToHeight="true" fitToWidth="true" prefHeight="488.0" prefWidth="480.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                               <content>
+                                                                <AnchorPane minHeight="0.0" minWidth="0.0">
+                                                                     <children>
+                                                                        <TitledPane fx:id="trainTitledPane" animated="false" expanded="false" text="untitled" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                                          <content>
+                                                                            <AnchorPane>
+                                                                                 <children>
+                                                                                    <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                                                       <content>
+                                                                                          <TableView fx:id="trainTableView">
+                                                                                            <columns>
+                                                                                              <TableColumn prefWidth="75.0" text="C1" />
+                                                                                              <TableColumn prefWidth="75.0" text="C2" />
+                                                                                            </columns>
+                                                                                          </TableView>
+                                                                                       </content>
+                                                                                    </ScrollPane>
+                                                                                 </children>
+                                                                              </AnchorPane>
+                                                                          </content>
+                                                                        </TitledPane>
+                                                                     </children>
+                                                                  </AnchorPane>
+                                                               </content>
+                                                            </ScrollPane>
+                                                         </children>
+                                                         <BorderPane.margin>
+                                                            <Insets top="5.0" />
+                                                         </BorderPane.margin>
+                                                      </AnchorPane>
+                                                   </center>
+                                                   <top>
+                                                      <BorderPane BorderPane.alignment="CENTER">
+                                                         <center>
+                                                            <AnchorPane BorderPane.alignment="CENTER">
+                                                               <children>
+                                                                  <ChoiceBox fx:id="datasetChoiceBox" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                               </children>
+                                                            </AnchorPane>
+                                                         </center>
+                                                         <right>
+                                                            <JFXButton fx:id="loadNewDataButton" onAction="#prepareNewData" text="Load new data" wrapText="true" BorderPane.alignment="CENTER">
+                                                               <BorderPane.margin>
+                                                                  <Insets left="5.0" />
+                                                               </BorderPane.margin>
+                                                            </JFXButton>
+                                                         </right>
+                                                         <left>
+                                                            <Label fx:id="chooseDatasetLavel" text="Label" BorderPane.alignment="CENTER">
+                                                               <BorderPane.margin>
+                                                                  <Insets right="5.0" />
+                                                               </BorderPane.margin>
+                                                            </Label>
+                                                         </left>
+                                                      </BorderPane>
+                                                   </top>
+                                                   <bottom>
+                                                      <JFXButton fx:id="startTrainingButton" onAction="#trainModel" BorderPane.alignment="CENTER" />
+                                                   </bottom>
+                                                </BorderPane>
+                                             </children>
+                                          </AnchorPane>
                                           <AnchorPane>
                                              <VBox.margin>
                                                 <Insets bottom="5.0" left="5.0" right="5.0" />
@@ -258,9 +230,6 @@
                                                          </BorderPane.margin>
                                                       </JFXTextField>
                                                    </center>
-                                                   <right>
-                                                      <JFXButton onAction="#trainModel" BorderPane.alignment="CENTER" />
-                                                   </right>
                                                 </BorderPane>
                                              </children>
                                           </AnchorPane>
@@ -310,12 +279,57 @@
                                     </VBox>
                                  </content>
                               </ScrollPane>
-                           </children></AnchorPane>
-                  </content>
+                              <BorderPane fx:id="neatMenuBorderPane" maxWidth="300.0" minWidth="10.0" prefWidth="300.0">
+                                 <left>
+                                    <BorderPane prefHeight="529.0" prefWidth="32.0" BorderPane.alignment="CENTER">
+                                       <center>
+                                          <MaterialDesignIconView fx:id="openMenuIcon" glyphName="CHEVRON_DOUBLE_LEFT" size="20" BorderPane.alignment="CENTER" />
+                                       </center>
+                                       <top>
+                                          <AnchorPane prefHeight="21.0" prefWidth="145.0" rotate="270.0" BorderPane.alignment="CENTER">
+                                             <BorderPane.margin>
+                                                <Insets top="15.0" />
+                                             </BorderPane.margin>
+                                             <children>
+                                                <HBox layoutX="-231.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="-231.0" AnchorPane.rightAnchor="-15.0" AnchorPane.topAnchor="0.0">
+                                                   <children>
+                                                      <Label fx:id="neatOptionsLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" prefHeight="25.0" prefWidth="232.0" text="Параметры алгоритма" wrapText="true" />
+                                                      <JFXButton fx:id="pinButton" alignment="CENTER" maxHeight="12.0" maxWidth="12.0" prefHeight="0.0" prefWidth="0.0" rotate="90.0" style="-fx-border-color: transparent;" text=" " HBox.hgrow="NEVER">
+                                                         <HBox.margin>
+                                                            <Insets left="5.0" />
+                                                         </HBox.margin>
+                                                         <graphic>
+                                                            <MaterialDesignIconView fx:id="pinIcon" glyphName="PIN" size="18" wrappingWidth="10.0" />
+                                                         </graphic>
+                                                      </JFXButton>
+                                                   </children>
+                                                </HBox>
+                                             </children>
+                                          </AnchorPane>
+                                       </top>
+                                    </BorderPane>
+                                 </left>
+                              </BorderPane>
+                           </items>
+                        </SplitPane>
+                     </content>
                 </Tab>
-                  <Tab fx:id="testingTab" disable="true" text="Testing">
+                  <Tab fx:id="testingTab" text="Testing">
                      <content>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                        <AnchorPane>
+                           <children>
+                              <BorderPane layoutX="170.0" layoutY="100.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <center>
+                                    <TableView fx:id="testTableView" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                                      <columns>
+                                        <TableColumn prefWidth="75.0" text="C1" />
+                                        <TableColumn prefWidth="75.0" text="C2" />
+                                      </columns>
+                                    </TableView>
+                                 </center>
+                              </BorderPane>
+                           </children>
+                        </AnchorPane>
                      </content>
                   </Tab>
               </tabs>

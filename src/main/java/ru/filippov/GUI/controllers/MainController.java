@@ -9,6 +9,10 @@ import com.jfoenix.skins.ValidationPane;
 import com.jfoenix.validation.RequiredFieldValidator;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
+import de.jensd.fx.glyphs.materialicons.MaterialIcon;
+import de.jensd.fx.glyphs.materialicons.MaterialIconView;
+import de.jensd.fx.glyphs.octicons.OctIcon;
+import de.jensd.fx.glyphs.octicons.OctIconView;
 import javafx.animation.KeyFrame;
 import javafx.animation.RotateTransition;
 import javafx.animation.Timeline;
@@ -70,6 +74,16 @@ public class MainController {
 
     Logger logger = Logger.getLogger(MainController.class);
 
+    private static final double SPEED_OF_SLIDE_MENU = 2;
+    private static final double MAX_WIDTH_NEAT_MENU = 300;
+    private static final double MIN_WIDTH_NEAT_MENU = 20;
+    private static final double MAX_WIDTH_PROJECT_MENU = 270;
+    private static final double MIN_WIDTH_PROJECT_MENU = 20;
+
+
+
+
+
     @FXML private Menu file;
     @FXML private MenuItem newProject;
     @FXML private MenuItem openProject;
@@ -84,7 +98,26 @@ public class MainController {
     @FXML private Label currentProjectLabel;
     @FXML private TextField currentProjectTextField;
 
-    @FXML private SplitPane splitPane;
+
+
+    @FXML
+    private SplitPane projectSplitPane;
+    @FXML
+    private BorderPane projectBorderPane;
+    @FXML
+    private MaterialDesignIconView openProjectMenuIcon;
+    @FXML
+    private Label projectLabel;
+    @FXML
+    private JFXButton pinProjectMenuButton;
+    @FXML
+    private MaterialDesignIconView pinProjectMenuIcon;
+    @FXML private TreeView<String> projectTreeView;
+
+
+
+
+    @FXML private SplitPane neatSplitPane;
     
     
     @FXML private Label neatOptionsLabel;
@@ -92,11 +125,12 @@ public class MainController {
 
 
 
-    private Timeline openMenu, closeMenu;
-    private static final double SPEED = 2;
+    private Timeline openNEATMenu, closeNEATMenu;
+    private Timeline openProjectMenu, closeProjectMenu;
+
 
     @FXML private MaterialDesignIconView openMenuIcon;
-    @FXML private BorderPane menuBorderPane;
+    @FXML private BorderPane neatMenuBorderPane;
     private ScrollPane parametresScrollPane;
     private VBox titlesPaneContainer;
     private TitledPane GASettingsTitledPane;
@@ -181,8 +215,7 @@ public class MainController {
     @FXML private JFXButton valueGraphicChartButton;
     @FXML
     private BorderPane netVisualizationBorderPane;
-    /*@FXML
-    private Canvas netVisualisationCanvas;*/
+
     private ZoomableCanvas netVisualisationCanvas;
     private NetVisualisator netVisualisator;
 
@@ -200,8 +233,8 @@ public class MainController {
 
 
 
-    private AIConfig originalProjectConfig;
-    private AIConfig runnableProjectConfig;
+    private AIConfig originalNEATConfig;
+    private AIConfig runnableNEATConfig;
 
     ResourceBundle resourceBundle;
     Locale locale;
@@ -459,23 +492,47 @@ public class MainController {
         );
         parametresScrollPane.setContent(this.titlesPaneContainer);
 
-        this.menuBorderPane.setCenter(noActiveProjectLabel);
-        this.menuBorderPane.setMinWidth(20);
-        this.menuBorderPane.setPrefWidth(300);
-        this.menuBorderPane.setMaxWidth(300);
+        this.neatMenuBorderPane.setCenter(noActiveProjectLabel);
+        this.neatMenuBorderPane.setMinWidth(MIN_WIDTH_NEAT_MENU);
+        this.neatMenuBorderPane.setPrefWidth(MIN_WIDTH_NEAT_MENU);
+        this.neatMenuBorderPane.setMaxWidth(MIN_WIDTH_NEAT_MENU);
 
-        this.splitPane.getDividers().get(0).positionProperty().setValue(0.02);
+        this.neatSplitPane.getDividers().get(0).positionProperty().setValue(1);
 
-        openMenu = new Timeline(
-                new KeyFrame(Duration.millis(SPEED), event -> menuSlide(openMenu,1))
+        openNEATMenu = new Timeline(
+                new KeyFrame(Duration.millis(SPEED_OF_SLIDE_MENU), event -> menuSlide(openNEATMenu,neatSplitPane, neatMenuBorderPane,1, -1))
         );
-        openMenu.setCycleCount(Timeline.INDEFINITE);
+        openNEATMenu.setCycleCount(Timeline.INDEFINITE);
 
-        closeMenu = new Timeline(
-                new KeyFrame(Duration.millis(SPEED), event -> menuSlide(closeMenu, -1))
+        closeNEATMenu = new Timeline(
+                new KeyFrame(Duration.millis(SPEED_OF_SLIDE_MENU), event -> menuSlide(closeNEATMenu, neatSplitPane, neatMenuBorderPane,-1, -1))
         );
-        closeMenu.setCycleCount(Timeline.INDEFINITE);
-        menuBorderPane.getCenter().setVisible(false);
+        closeNEATMenu.setCycleCount(Timeline.INDEFINITE);
+        neatMenuBorderPane.getCenter().setVisible(false);
+
+        enableSlideMenu(openMenuIcon, neatMenuBorderPane, MAX_WIDTH_NEAT_MENU, closeNEATMenu, openNEATMenu);
+        setPinButtonAction(pinButton, neatMenuBorderPane, MAX_WIDTH_NEAT_MENU, MIN_WIDTH_NEAT_MENU);
+
+        this.projectBorderPane.setCenter(noActiveProjectLabel);
+        this.projectBorderPane.setMinWidth(MIN_WIDTH_PROJECT_MENU);
+        this.projectBorderPane.setPrefWidth(MIN_WIDTH_PROJECT_MENU);
+        this.projectBorderPane.setMaxWidth(MIN_WIDTH_PROJECT_MENU);
+        
+        openProjectMenu = new Timeline(
+                new KeyFrame(Duration.millis(SPEED_OF_SLIDE_MENU), event -> menuSlide(openProjectMenu,projectSplitPane, projectBorderPane,1, 1))
+        );
+        openProjectMenu.setCycleCount(Timeline.INDEFINITE);
+
+        closeProjectMenu = new Timeline(
+                new KeyFrame(Duration.millis(SPEED_OF_SLIDE_MENU), event -> menuSlide(closeProjectMenu, projectSplitPane, projectBorderPane,-1, 1))
+        );
+        closeProjectMenu.setCycleCount(Timeline.INDEFINITE);
+        projectBorderPane.getCenter().setVisible(false);
+
+        enableSlideMenu(openProjectMenuIcon, projectBorderPane, MAX_WIDTH_PROJECT_MENU, closeProjectMenu, openProjectMenu);
+        setPinButtonAction(pinProjectMenuButton, projectBorderPane, MAX_WIDTH_PROJECT_MENU, MIN_WIDTH_PROJECT_MENU);
+
+
 
         loadLanguage(Locale.getDefault());
         RequiredFieldValidator requiredFieldValidator = new RequiredFieldValidator("It cant be empty");
@@ -513,31 +570,6 @@ public class MainController {
 
 
 
-        this.enableSlideMenu();
-
-        pinButton.setOnAction(new EventHandler<ActionEvent>() {
-              boolean isAlwaysOpened = false;
-              @Override
-              public void handle(ActionEvent event) {
-                  isAlwaysOpened = !isAlwaysOpened;
-                  if(isAlwaysOpened) {
-                      menuBorderPane.setPrefWidth(300);
-                      menuBorderPane.setMaxWidth(300);
-                      pinIcon.setRotate(45);
-                      menuBorderPane.setOnMouseEntered(null);
-                      menuBorderPane.setOnMouseExited(null);
-
-                  } else {
-                      pinIcon.setRotate(0);
-                      menuBorderPane.setPrefWidth(20);
-                      menuBorderPane.setMaxWidth(20);
-                      enableSlideMenu();
-                  }
-              }
-          }
-        );
-
-
 
 
 
@@ -558,7 +590,7 @@ public class MainController {
         eleEventTimeTextField.setVisible(false);
         eleSurvivalCountTextField.setVisible(false);
 
-        if (this.originalProjectConfig == null){
+        if (this.originalNEATConfig == null){
             this.parametresScrollPane.setVisible(false);
             this.infoTabPane.setVisible(false);
             this.dataSetsScrollPane.setVisible(false);
@@ -572,25 +604,25 @@ public class MainController {
                 errorChart.getData().clear();
                 valueGraphicChart.getData().clear();
                 trainingCount = 0;
-                //this.originalProjectConfig.updateConfig("AI.SOURCE", newValue+"BestNetwork_temp.ser");
-                //this.originalProjectConfig.updateConfig("SAVE.LOCATION", newValue+"BestNetwork_temp.ser");
+                //this.originalNEATConfig.updateConfig("AI.SOURCE", newValue+"BestNetwork_temp.ser");
+                //this.originalNEATConfig.updateConfig("SAVE.LOCATION", newValue+"BestNetwork_temp.ser");
 
-                this.runnableProjectConfig.updateConfig("SAVE.LOCATION", newValue+"BestNetwork_temp.ser");
+                this.runnableNEATConfig.updateConfig("SAVE.LOCATION", newValue+"BestNetwork_temp.ser");
                 if(new File(this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork.ser").exists()){
-                    this.runnableProjectConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork.ser");
-                    this.runnableProjectConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"@test.dataset");
-                    logger.debug(this.runnableProjectConfig.configElement("AI.SOURCE"));
-                    logger.debug(this.runnableProjectConfig.configElement("INPUT.DATA"));
+                    this.runnableNEATConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork.ser");
+                    this.runnableNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"@test.dataset");
+                    logger.debug(this.runnableNEATConfig.configElement("AI.SOURCE"));
+                    logger.debug(this.runnableNEATConfig.configElement("INPUT.DATA"));
                     this.testingTab.setDisable(false);
                 } else if(new File(this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork_temp.ser").exists()){
-                    this.runnableProjectConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"@test.dataset");
-                    this.runnableProjectConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork_temp.ser");
-                    logger.debug(this.runnableProjectConfig.configElement("AI.SOURCE"));
-                    logger.debug(this.runnableProjectConfig.configElement("INPUT.DATA"));
+                    this.runnableNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"@test.dataset");
+                    this.runnableNEATConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork_temp.ser");
+                    logger.debug(this.runnableNEATConfig.configElement("AI.SOURCE"));
+                    logger.debug(this.runnableNEATConfig.configElement("INPUT.DATA"));
                     this.testingTab.setDisable(false);
                 } else {
-                    this.runnableProjectConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork_temp.ser");
-                    logger.debug(this.runnableProjectConfig.configElement("AI.SOURCE"));
+                    this.runnableNEATConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork_temp.ser");
+                    logger.debug(this.runnableNEATConfig.configElement("AI.SOURCE"));
                     this.testingTab.setDisable(true);
                 }
                 /*trainigTab.setDisable(false);
@@ -685,7 +717,9 @@ public class MainController {
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
-                splitPane.lookupAll(".split-pane-divider").stream()
+                neatSplitPane.lookupAll(".split-pane-divider").stream()
+                        .forEach(div ->  div.setMouseTransparent(true) );
+                projectSplitPane.lookupAll(".split-pane-divider").stream()
                         .forEach(div ->  div.setMouseTransparent(true) );
 
                 netVisualisationCanvas.setWidth(netVisualizationBorderPane.getWidth()-2);
@@ -717,7 +751,32 @@ public class MainController {
 
     }
 
-    private void enableSlideMenu() {
+    private void setPinButtonAction(JFXButton pinMenuButton, BorderPane menuBorderPane, double maxWidthMenu, double minWidthMenu) {
+        pinMenuButton.setOnAction(new EventHandler<ActionEvent>() {
+                                  boolean isAlwaysOpened = false;
+                                  @Override
+                                  public void handle(ActionEvent event) {
+                                      isAlwaysOpened = !isAlwaysOpened;
+                                      if(isAlwaysOpened) {
+                                          menuBorderPane.setMaxWidth(maxWidthMenu);
+                                          menuBorderPane.setPrefWidth(maxWidthMenu);
+                                          pinMenuButton.getGraphic().setRotate(45);
+                                          menuBorderPane.setOnMouseEntered(null);
+                                          menuBorderPane.setOnMouseExited(null);
+
+                                      } else {
+                                          pinMenuButton.getGraphic().setRotate(0);
+                                          menuBorderPane.setMaxWidth(minWidthMenu);
+                                          menuBorderPane.setPrefWidth(minWidthMenu);
+                                          enableSlideMenu(openMenuIcon, menuBorderPane, maxWidthMenu, closeNEATMenu, openNEATMenu);
+                                      }
+                                  }
+                              }
+        );
+    }
+
+
+    private void enableSlideMenu(MaterialDesignIconView openMenuIcon, BorderPane menuBorderPane, double maxWidth, Timeline closeMenu, Timeline openMenu) {
         RotateTransition iconRotateTransition = new RotateTransition(Duration.millis(500), openMenuIcon);
         iconRotateTransition.setFromAngle(0);
         iconRotateTransition.setToAngle(180);
@@ -725,7 +784,7 @@ public class MainController {
 
         menuBorderPane.setOnMouseEntered(evt -> {
             menuBorderPane.setMinWidth(menuBorderPane.getMinWidth()-0.1);
-            menuBorderPane.setMaxWidth(300);
+            menuBorderPane.setMaxWidth(maxWidth);
             menuBorderPane.getCenter().setVisible(true);
             //neatOptionsLabel.setVisible(true);
             iconRotateTransition.setRate(1);
@@ -742,6 +801,7 @@ public class MainController {
             openMenu.stop(); closeMenu.play();
         });
     }
+
 
     private void loadDataset(String datasetName){
         String pathToDatasetDirectory = this.currentProjectTextField.getText() + "\\datasets\\" + datasetName;
@@ -907,32 +967,130 @@ public class MainController {
     private void openProject(){
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialDirectory(new File(Paths.get("").toAbsolutePath().toString()+"\\projects\\"));
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("NEAT file", "*.neat"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Project file", "*.prj"));
         fileChooser.setTitle(resourceBundle.getString("CHOOSE_PROJECT"));
         File projectFile = fileChooser.showOpenDialog(this.scene.getWindow());
-        openProject(projectFile);
+        if (projectFile != null){
+            try {
+                readProjectFile(projectFile);
+            } catch (FileNotFoundException e) {
+                AlertWindow.createAlertWindow("Can't open the file").show();
+            } catch (IOException e) {
+                AlertWindow.createAlertWindow("Can't read the file").show();
+            }
+        }
+
     }
 
+    private void readProjectFile(File projectFile) throws IOException {
 
-    private void openProject(File projectFile) {
+        BufferedReader reader = new BufferedReader(new FileReader(projectFile));
+        StringTokenizer stringTokenizer = new StringTokenizer(reader.readLine(),":");
+        String token;
+        TreeItem<String> rootProject = new TreeItem<>();
+
+        MaterialIcon projectIcon = MaterialIcon.FOLDER_OPEN;
+        OctIcon neatIcon = OctIcon.GEAR;
+        OctIcon trainIcon = OctIcon.BEAKER;
+        MaterialDesignIcon testDatasetIcon = MaterialDesignIcon.CHART_AREASPLINE;
+        MaterialDesignIcon datasetIcon = MaterialDesignIcon.FILE_CHART;
+        MaterialDesignIcon trainedModelIcon = MaterialDesignIcon.VECTOR_POLYGON;
+
+
+
+        if(stringTokenizer.hasMoreTokens()){
+            token = stringTokenizer.nextToken();
+            if(token.equals("PROJECT_NAME")){
+                token = stringTokenizer.nextToken();
+                rootProject.setValue(token);
+                rootProject.setGraphic(new MaterialIconView(projectIcon));
+            }
+            else {
+                throw new IOException();
+            }
+        }
+        this.projectTreeView.setRoot(rootProject);
+
+        String lastOpenedProject = "";
+        stringTokenizer = new StringTokenizer(reader.readLine(),":");
+
+        if(stringTokenizer.nextToken().equals("LAST_OPENED")){
+            if(stringTokenizer.hasMoreTokens()){
+                lastOpenedProject = stringTokenizer.nextToken();
+            }
+        } else {
+            throw new IOException();
+        }
+
+        this.projectBorderPane.setCenter(this.projectTreeView);
+
+        TreeItem<String> treeItem;
+        String line;
+
+
+
+
+
+        while((line=reader.readLine())!=null){
+            stringTokenizer = new StringTokenizer(line,":");
+            switch (stringTokenizer.nextToken()){
+                case "DATASET_NAME":
+                    if(stringTokenizer.hasMoreTokens()){
+                        treeItem = new TreeItem<>(stringTokenizer.nextToken());
+                        rootProject.getChildren().add(treeItem);
+                        treeItem.setGraphic(new MaterialDesignIconView(datasetIcon));
+                        if(lastOpenedProject.equals(treeItem.getValue())){
+                            projectTreeView.getSelectionModel().select(treeItem);
+                        }
+                    }
+                    break;
+                case "TRAIN_SET":
+                    if(stringTokenizer.hasMoreTokens()){
+                        treeItem = new TreeItem<>(stringTokenizer.nextToken());
+                        treeItem.setGraphic(new OctIconView(trainIcon));
+                        rootProject.getChildren().get(rootProject.getChildren().size()-1).getChildren().add(treeItem);
+                    }
+                    break;
+                case "NEAT_OPTIONS":
+                    if(stringTokenizer.hasMoreTokens()){
+                        treeItem = new TreeItem<>(stringTokenizer.nextToken());
+                        treeItem.setGraphic(new OctIconView(neatIcon));
+                        rootProject.getChildren().get(rootProject.getChildren().size()-1).getChildren().add(treeItem);
+                    }
+                    break;
+                case "TEST_SET":
+                    if(stringTokenizer.hasMoreTokens()){
+                        treeItem = new TreeItem<>(stringTokenizer.nextToken());
+                        treeItem.setGraphic(new MaterialDesignIconView(testDatasetIcon));
+                        rootProject.getChildren().get(rootProject.getChildren().size()-1).getChildren().add(treeItem);
+                    }
+                    break;
+                case "TRAINED_MODEL":
+                    if(stringTokenizer.hasMoreTokens()){
+                        treeItem = new TreeItem<>(stringTokenizer.nextToken());
+                        treeItem.setGraphic(new MaterialDesignIconView(trainedModelIcon));
+                        rootProject.getChildren().get(rootProject.getChildren().size()-1).getChildren().add(treeItem);
+                    }
+                    break;
+            }
+        }
+
+
+    }
+
+    private void openNEATFile(File projectFile) {
         if(projectFile != null){
 
-            this.infoTabPane.getTabs().stream().forEach(tab -> tab.setDisable(true));
-            this.infoTabPane.getSelectionModel().select(datasetsTab);
-            this.infoTabPane.getSelectionModel().getSelectedItem().setDisable(false);
-            startTrainingButton.setDisable(true);
-
-            dataSetsScrollPane.setVisible(false);
             this.clearAllInfoElements();
 
-            this.originalProjectConfig = this.loadConfig(projectFile.getPath());
-            this.runnableProjectConfig = new NEATConfig((NEATConfig) this.originalProjectConfig);
+            this.originalNEATConfig = this.loadConfig(projectFile.getPath());
+            this.runnableNEATConfig = new NEATConfig((NEATConfig) this.originalNEATConfig);
             this.currentProjectTextField.setText(projectFile.getParent());
             //this.neatOptionsLabel.setText(neatOptionGASettings);
-            this.menuBorderPane.setCenter(this.parametresScrollPane);
+            this.neatMenuBorderPane.setCenter(this.parametresScrollPane);
             this.infoTabPane.setVisible(true);
             this.projectFile = projectFile;
-            fillDataSetChoiceBox(originalProjectConfig);
+            fillDataSetChoiceBox(originalNEATConfig);
             fillFieldsUsingOriginalConfig();
 
 
@@ -966,7 +1124,7 @@ public class MainController {
         dialogue.show();
         if(dialogue.getProjectFile() != null ){
             try {
-                this.openProject(dialogue.getProjectFile());
+                this.openNEATFile(dialogue.getProjectFile());
             } catch (Exception ex){
                 AlertWindow.createAlertWindow(ex.getMessage()).show();
             }
@@ -1016,47 +1174,47 @@ public class MainController {
     private void saveConfig(){
         try {
             initRunnableConfigUsingGUI();
-            runnableProjectConfig.saveConfig(this.projectFile);
+            runnableNEATConfig.saveConfig(this.projectFile);
         } catch (IOException e) {
             AlertWindow.createAlertWindow("CANT_SAVE_FILE").show();
         }
     }
 
     private void initRunnableConfigUsingGUI() {
-         runnableProjectConfig.updateConfig("PROBABILITY.MUTATION", mutationProbabilityTextField.getText());
-         runnableProjectConfig.updateConfig("PROBABILITY.CROSSOVER", crossoverProbabilityTextField.getText());
-         runnableProjectConfig.updateConfig("PROBABILITY.ADDLINK", addLinkProbabilityTextField.getText());
-         runnableProjectConfig.updateConfig("PROBABILITY.ADDNODE", addNodeProbabilityTextField.getText());
-         runnableProjectConfig.updateConfig("PROBABILITY.MUTATEBIAS", mutateBiasProbabilityTextField.getText());
-         runnableProjectConfig.updateConfig("PROBABILITY.TOGGLELINK", toggleLinkProbabilityTextField.getText());
-         runnableProjectConfig.updateConfig("PROBABILITY.NEWACTIVATIONFUNCTION", newActivationFunctionProbabilityTextField.getText());
-         runnableProjectConfig.updateConfig("PROBABILITY.WEIGHT.REPLACED", weightReplaceProbabilityTextField.getText());
-         runnableProjectConfig.updateConfig("GENERATOR.SEED", generatorSeedTextField.getText());
-         runnableProjectConfig.updateConfig("EXCESS.COEFFICIENT", excessCoefficientTextField.getText());
-         runnableProjectConfig.updateConfig("DISJOINT.COEFFICIENT", disjointCoefficientTextField.getText());
-         runnableProjectConfig.updateConfig("WEIGHT.COEFFICIENT", weightCoefficientTextField.getText());
-         runnableProjectConfig.updateConfig("COMPATABILITY.THRESHOLD", thresholdCompabilityTextField.getText());
-         runnableProjectConfig.updateConfig("COMPATABILITY.CHANGE", changeCompabilityTextField.getText());
-         runnableProjectConfig.updateConfig("SPECIE.COUNT", specieCountTextField.getText());
-         runnableProjectConfig.updateConfig("SURVIVAL.THRESHOLD", survivalThresholdTextField.getText());
-         runnableProjectConfig.updateConfig("SPECIE.AGE.THRESHOLD", specieAgeThresholdTextField.getText());
-         runnableProjectConfig.updateConfig("SPECIE.YOUTH.THRESHOLD", specieYouthThresholdTextField.getText());
-         runnableProjectConfig.updateConfig("SPECIE.OLD.PENALTY", specieOldPenaltyTextField.getText());
-         runnableProjectConfig.updateConfig("SPECIE.YOUTH.BOOST", specieYouthBoostTextField.getText());
-         runnableProjectConfig.updateConfig("SPECIE.FITNESS.MAX", specieFitnessMaxTextField.getText());
-         runnableProjectConfig.updateConfig("INPUT.NODES", inputNodesTextField.getText());
-         runnableProjectConfig.updateConfig("OUTPUT.NODES", outputNodesTextField.getText());
-         runnableProjectConfig.updateConfig("MAX.PERTURB", maxPertrubTextField.getText());
-         runnableProjectConfig.updateConfig("MAX.BIAS.PERTURB", maxBiasPertrubTextField.getText());
-         runnableProjectConfig.updateConfig("FEATURE.SELECTION", String.valueOf(featureSelectionToogle.isSelected()));
-         runnableProjectConfig.updateConfig("RECURRENCY.ALLOWED", String.valueOf(reccurencyAllowedToogle.isSelected()));
-         runnableProjectConfig.updateConfig("ELE.EVENTS", String.valueOf(eleEventsToogle.isSelected()));
-         runnableProjectConfig.updateConfig("ELE.SURVIVAL.COUNT", eleSurvivalCountTextField.getText());
-         runnableProjectConfig.updateConfig("ELE.EVENT.TIME", eleEventTimeTextField.getText());
-         runnableProjectConfig.updateConfig("KEEP.BEST.EVER", String.valueOf(keepBestEverToogle.isSelected()));
-         runnableProjectConfig.updateConfig("EXTRA.FEATURE.COUNT", extraFeatureCountTextField.getText());
-         runnableProjectConfig.updateConfig("POP.SIZE", popSizeTextField.getText());
-         runnableProjectConfig.updateConfig("NUMBER.EPOCHS", numberEpochsTextField.getText());
+         runnableNEATConfig.updateConfig("PROBABILITY.MUTATION", mutationProbabilityTextField.getText());
+         runnableNEATConfig.updateConfig("PROBABILITY.CROSSOVER", crossoverProbabilityTextField.getText());
+         runnableNEATConfig.updateConfig("PROBABILITY.ADDLINK", addLinkProbabilityTextField.getText());
+         runnableNEATConfig.updateConfig("PROBABILITY.ADDNODE", addNodeProbabilityTextField.getText());
+         runnableNEATConfig.updateConfig("PROBABILITY.MUTATEBIAS", mutateBiasProbabilityTextField.getText());
+         runnableNEATConfig.updateConfig("PROBABILITY.TOGGLELINK", toggleLinkProbabilityTextField.getText());
+         runnableNEATConfig.updateConfig("PROBABILITY.NEWACTIVATIONFUNCTION", newActivationFunctionProbabilityTextField.getText());
+         runnableNEATConfig.updateConfig("PROBABILITY.WEIGHT.REPLACED", weightReplaceProbabilityTextField.getText());
+         runnableNEATConfig.updateConfig("GENERATOR.SEED", generatorSeedTextField.getText());
+         runnableNEATConfig.updateConfig("EXCESS.COEFFICIENT", excessCoefficientTextField.getText());
+         runnableNEATConfig.updateConfig("DISJOINT.COEFFICIENT", disjointCoefficientTextField.getText());
+         runnableNEATConfig.updateConfig("WEIGHT.COEFFICIENT", weightCoefficientTextField.getText());
+         runnableNEATConfig.updateConfig("COMPATABILITY.THRESHOLD", thresholdCompabilityTextField.getText());
+         runnableNEATConfig.updateConfig("COMPATABILITY.CHANGE", changeCompabilityTextField.getText());
+         runnableNEATConfig.updateConfig("SPECIE.COUNT", specieCountTextField.getText());
+         runnableNEATConfig.updateConfig("SURVIVAL.THRESHOLD", survivalThresholdTextField.getText());
+         runnableNEATConfig.updateConfig("SPECIE.AGE.THRESHOLD", specieAgeThresholdTextField.getText());
+         runnableNEATConfig.updateConfig("SPECIE.YOUTH.THRESHOLD", specieYouthThresholdTextField.getText());
+         runnableNEATConfig.updateConfig("SPECIE.OLD.PENALTY", specieOldPenaltyTextField.getText());
+         runnableNEATConfig.updateConfig("SPECIE.YOUTH.BOOST", specieYouthBoostTextField.getText());
+         runnableNEATConfig.updateConfig("SPECIE.FITNESS.MAX", specieFitnessMaxTextField.getText());
+         runnableNEATConfig.updateConfig("INPUT.NODES", inputNodesTextField.getText());
+         runnableNEATConfig.updateConfig("OUTPUT.NODES", outputNodesTextField.getText());
+         runnableNEATConfig.updateConfig("MAX.PERTURB", maxPertrubTextField.getText());
+         runnableNEATConfig.updateConfig("MAX.BIAS.PERTURB", maxBiasPertrubTextField.getText());
+         runnableNEATConfig.updateConfig("FEATURE.SELECTION", String.valueOf(featureSelectionToogle.isSelected()));
+         runnableNEATConfig.updateConfig("RECURRENCY.ALLOWED", String.valueOf(reccurencyAllowedToogle.isSelected()));
+         runnableNEATConfig.updateConfig("ELE.EVENTS", String.valueOf(eleEventsToogle.isSelected()));
+         runnableNEATConfig.updateConfig("ELE.SURVIVAL.COUNT", eleSurvivalCountTextField.getText());
+         runnableNEATConfig.updateConfig("ELE.EVENT.TIME", eleEventTimeTextField.getText());
+         runnableNEATConfig.updateConfig("KEEP.BEST.EVER", String.valueOf(keepBestEverToogle.isSelected()));
+         runnableNEATConfig.updateConfig("EXTRA.FEATURE.COUNT", extraFeatureCountTextField.getText());
+         runnableNEATConfig.updateConfig("POP.SIZE", popSizeTextField.getText());
+         runnableNEATConfig.updateConfig("NUMBER.EPOCHS", numberEpochsTextField.getText());
         TitledPane titledPane = null;
         JFXToggleButton jfxToggleButton = null;
         for (int i = 0; i < activationFunctionAccordion.getPanes().size(); i++) {
@@ -1076,13 +1234,13 @@ public class MainController {
             }
             switch (i){
                 case 0:
-                    runnableProjectConfig.updateConfig("INPUT.ACTIVATIONFUNCTIONS", stringBuilder.toString());
+                    runnableNEATConfig.updateConfig("INPUT.ACTIVATIONFUNCTIONS", stringBuilder.toString());
                     break;
                 case 1:
-                    runnableProjectConfig.updateConfig("HIDDEN.ACTIVATIONFUNCTIONS", stringBuilder.toString());
+                    runnableNEATConfig.updateConfig("HIDDEN.ACTIVATIONFUNCTIONS", stringBuilder.toString());
                     break;
                 case 2:
-                    runnableProjectConfig.updateConfig("OUTPUT.ACTIVATIONFUNCTIONS", stringBuilder.toString());
+                    runnableNEATConfig.updateConfig("OUTPUT.ACTIVATIONFUNCTIONS", stringBuilder.toString());
                     break;
             }
 
@@ -1092,42 +1250,42 @@ public class MainController {
 
         }
 
-         //runnableProjectConfig.updateConfig("");
+         //runnableNEATConfig.updateConfig("");
     }
     
     private void fillFieldsUsingOriginalConfig(){
-        mutationProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.MUTATION"));
-        crossoverProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.CROSSOVER"));
-        addLinkProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.ADDLINK"));
-        addNodeProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.ADDNODE"));
-        mutateBiasProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.MUTATEBIAS"));
-        newActivationFunctionProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.NEWACTIVATIONFUNCTION"));
-        toggleLinkProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.TOGGLELINK"));
-        weightReplaceProbabilityTextField.setText(originalProjectConfig.configElement("PROBABILITY.WEIGHT.REPLACED"));
-        generatorSeedTextField.setText(originalProjectConfig.configElement("GENERATOR.SEED"));
-        excessCoefficientTextField.setText(originalProjectConfig.configElement("EXCESS.COEFFICIENT"));
-        disjointCoefficientTextField.setText(originalProjectConfig.configElement("DISJOINT.COEFFICIENT"));
-        weightCoefficientTextField.setText(originalProjectConfig.configElement("WEIGHT.COEFFICIENT"));
-        thresholdCompabilityTextField.setText(originalProjectConfig.configElement("COMPATABILITY.THRESHOLD"));
-        changeCompabilityTextField.setText(originalProjectConfig.configElement("COMPATABILITY.CHANGE"));
-        specieCountTextField.setText(originalProjectConfig.configElement("SPECIE.COUNT"));
-        survivalThresholdTextField.setText(originalProjectConfig.configElement("SURVIVAL.THRESHOLD"));
-        specieAgeThresholdTextField.setText(originalProjectConfig.configElement("SPECIE.AGE.THRESHOLD"));
-        specieYouthThresholdTextField.setText(originalProjectConfig.configElement("SPECIE.YOUTH.THRESHOLD"));
-        specieOldPenaltyTextField.setText(originalProjectConfig.configElement("SPECIE.OLD.PENALTY"));
-        specieYouthBoostTextField.setText(originalProjectConfig.configElement("SPECIE.YOUTH.BOOST"));
-        specieFitnessMaxTextField.setText(originalProjectConfig.configElement("SPECIE.FITNESS.MAX"));
-        maxPertrubTextField.setText(originalProjectConfig.configElement("MAX.PERTURB"));
-        maxBiasPertrubTextField.setText(originalProjectConfig.configElement("MAX.BIAS.PERTURB"));
-        featureSelectionToogle.setSelected(Boolean.parseBoolean(originalProjectConfig.configElement("FEATURE.SELECTION")));
-        reccurencyAllowedToogle.setSelected(Boolean.parseBoolean(originalProjectConfig.configElement("RECURRENCY.ALLOWED")));
-        eleEventsToogle.setSelected(Boolean.parseBoolean(originalProjectConfig.configElement("ELE.EVENTS")));
-        eleSurvivalCountTextField.setText(originalProjectConfig.configElement("ELE.SURVIVAL.COUNT"));
-        eleEventTimeTextField.setText(originalProjectConfig.configElement("ELE.EVENT.TIME"));
-        keepBestEverToogle.setSelected(Boolean.parseBoolean(originalProjectConfig.configElement("KEEP.BEST.EVER")));
-        extraFeatureCountTextField.setText(originalProjectConfig.configElement("EXTRA.FEATURE.COUNT"));
-        popSizeTextField.setText(originalProjectConfig.configElement("POP.SIZE"));
-        numberEpochsTextField.setText(originalProjectConfig.configElement("NUMBER.EPOCHS"));
+        mutationProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.MUTATION"));
+        crossoverProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.CROSSOVER"));
+        addLinkProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.ADDLINK"));
+        addNodeProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.ADDNODE"));
+        mutateBiasProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.MUTATEBIAS"));
+        newActivationFunctionProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.NEWACTIVATIONFUNCTION"));
+        toggleLinkProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.TOGGLELINK"));
+        weightReplaceProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.WEIGHT.REPLACED"));
+        generatorSeedTextField.setText(originalNEATConfig.configElement("GENERATOR.SEED"));
+        excessCoefficientTextField.setText(originalNEATConfig.configElement("EXCESS.COEFFICIENT"));
+        disjointCoefficientTextField.setText(originalNEATConfig.configElement("DISJOINT.COEFFICIENT"));
+        weightCoefficientTextField.setText(originalNEATConfig.configElement("WEIGHT.COEFFICIENT"));
+        thresholdCompabilityTextField.setText(originalNEATConfig.configElement("COMPATABILITY.THRESHOLD"));
+        changeCompabilityTextField.setText(originalNEATConfig.configElement("COMPATABILITY.CHANGE"));
+        specieCountTextField.setText(originalNEATConfig.configElement("SPECIE.COUNT"));
+        survivalThresholdTextField.setText(originalNEATConfig.configElement("SURVIVAL.THRESHOLD"));
+        specieAgeThresholdTextField.setText(originalNEATConfig.configElement("SPECIE.AGE.THRESHOLD"));
+        specieYouthThresholdTextField.setText(originalNEATConfig.configElement("SPECIE.YOUTH.THRESHOLD"));
+        specieOldPenaltyTextField.setText(originalNEATConfig.configElement("SPECIE.OLD.PENALTY"));
+        specieYouthBoostTextField.setText(originalNEATConfig.configElement("SPECIE.YOUTH.BOOST"));
+        specieFitnessMaxTextField.setText(originalNEATConfig.configElement("SPECIE.FITNESS.MAX"));
+        maxPertrubTextField.setText(originalNEATConfig.configElement("MAX.PERTURB"));
+        maxBiasPertrubTextField.setText(originalNEATConfig.configElement("MAX.BIAS.PERTURB"));
+        featureSelectionToogle.setSelected(Boolean.parseBoolean(originalNEATConfig.configElement("FEATURE.SELECTION")));
+        reccurencyAllowedToogle.setSelected(Boolean.parseBoolean(originalNEATConfig.configElement("RECURRENCY.ALLOWED")));
+        eleEventsToogle.setSelected(Boolean.parseBoolean(originalNEATConfig.configElement("ELE.EVENTS")));
+        eleSurvivalCountTextField.setText(originalNEATConfig.configElement("ELE.SURVIVAL.COUNT"));
+        eleEventTimeTextField.setText(originalNEATConfig.configElement("ELE.EVENT.TIME"));
+        keepBestEverToogle.setSelected(Boolean.parseBoolean(originalNEATConfig.configElement("KEEP.BEST.EVER")));
+        extraFeatureCountTextField.setText(originalNEATConfig.configElement("EXTRA.FEATURE.COUNT"));
+        popSizeTextField.setText(originalNEATConfig.configElement("POP.SIZE"));
+        numberEpochsTextField.setText(originalNEATConfig.configElement("NUMBER.EPOCHS"));
 
         int i = 0;
         for(TitledPane titledPane : activationFunctionAccordion.getPanes()){
@@ -1135,13 +1293,13 @@ public class MainController {
             List<String> functions = null;
             switch (i){
                 case 0:
-                    functions = ((NEATConfig)originalProjectConfig).getActivationFunctionsByElementKey("INPUT.ACTIVATIONFUNCTIONS");
+                    functions = ((NEATConfig) originalNEATConfig).getActivationFunctionsByElementKey("INPUT.ACTIVATIONFUNCTIONS");
                     break;
                 case 1:
-                    functions = ((NEATConfig)originalProjectConfig).getActivationFunctionsByElementKey("HIDDEN.ACTIVATIONFUNCTIONS");
+                    functions = ((NEATConfig) originalNEATConfig).getActivationFunctionsByElementKey("HIDDEN.ACTIVATIONFUNCTIONS");
                     break;
                 case 2:
-                    functions = ((NEATConfig)originalProjectConfig).getActivationFunctionsByElementKey("OUTPUT.ACTIVATIONFUNCTIONS");
+                    functions = ((NEATConfig) originalNEATConfig).getActivationFunctionsByElementKey("OUTPUT.ACTIVATIONFUNCTIONS");
                     break;
             }
 
@@ -1174,14 +1332,14 @@ public class MainController {
         String nameOfDataSet = DataPreparatorDialogue.getInstance(this.scene).getNameOfDataSet();
         if( nameOfDataSet != null ){
             if(nameOfDataSet.length() != 0){
-                this.runnableProjectConfig.updateConfig("ALLOWED.DATASETS", this.runnableProjectConfig.configElement("ALLOWED.DATASETS")+";"+nameOfDataSet);
-                this.originalProjectConfig.updateConfig("ALLOWED.DATASETS", this.originalProjectConfig.configElement("ALLOWED.DATASETS")+";"+nameOfDataSet);
+                this.runnableNEATConfig.updateConfig("ALLOWED.DATASETS", this.runnableNEATConfig.configElement("ALLOWED.DATASETS")+";"+nameOfDataSet);
+                this.originalNEATConfig.updateConfig("ALLOWED.DATASETS", this.originalNEATConfig.configElement("ALLOWED.DATASETS")+";"+nameOfDataSet);
                 try {
-                    this.originalProjectConfig.saveConfig(this.projectFile);
+                    this.originalNEATConfig.saveConfig(this.projectFile);
                 } catch (IOException e) {
                     AlertWindow.createAlertWindow("Не удалось сохранить новый конфиг");
                 }
-                fillDataSetChoiceBox(this.runnableProjectConfig);
+                fillDataSetChoiceBox(this.runnableNEATConfig);
             }
         }
     }
@@ -1198,15 +1356,15 @@ public class MainController {
             trainThread.interrupt();
         }
         initRunnableConfigUsingGUI();
-        this.runnableProjectConfig.updateConfig("TRAINING.SET", this.currentProjectTextField.getText()+"\\datasets\\"+this.datasetChoiceBox.getValue()+"\\"+this.datasetChoiceBox.getValue()+"@train_temp.dataset");
+        this.runnableNEATConfig.updateConfig("TRAINING.SET", this.currentProjectTextField.getText()+"\\datasets\\"+this.datasetChoiceBox.getValue()+"\\"+this.datasetChoiceBox.getValue()+"@train_temp.dataset");
 
 
 
         try {
-            this.saveTempDataSet(this.runnableProjectConfig.configElement("TRAINING.SET"));
-            logger.debug(this.runnableProjectConfig.configElement("TRAINING.SET"));
+            this.saveTempDataSet(this.runnableNEATConfig.configElement("TRAINING.SET"));
+            logger.debug(this.runnableNEATConfig.configElement("TRAINING.SET"));
             //TODO replace Test set init
-            this.runnableProjectConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+this.datasetChoiceBox.getValue()+"\\"+this.datasetChoiceBox.getValue()+"@test_temp.dataset");
+            this.runnableNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+this.datasetChoiceBox.getValue()+"\\"+this.datasetChoiceBox.getValue()+"@test_temp.dataset");
             trainigTab.setDisable(false);
             infoTabPane.getSelectionModel().select(trainigTab);
 
@@ -1251,7 +1409,7 @@ public class MainController {
                 }*/
 
             });
-            neatTrainingForJavaFX.initialise(runnableProjectConfig);
+            neatTrainingForJavaFX.initialise(runnableNEATConfig);
             neatTrainingForJavaFX.statusProperty().addListener(observable -> {
                 Platform.runLater(new Runnable() {
                     @Override public void run() {
@@ -1293,7 +1451,7 @@ public class MainController {
 
                         if(neatTrainingForJavaFX.statusProperty().get() == 1.0){
                             try {
-                                netVisualisator.setNetToVisualise(bestChromo, runnableProjectConfig);
+                                netVisualisator.setNetToVisualise(bestChromo, runnableNEATConfig);
                                 netVisualisator.visualiseNet(netVisualisationCanvas);
                             } catch (InitialisationFailedException e) {
                                 e.printStackTrace();
@@ -1320,7 +1478,7 @@ public class MainController {
 
     }
 
-    private void menuSlide(Timeline timeline, int i) {
+    private void menuSlide(Timeline timeline, SplitPane splitPane, BorderPane menuBorderPane ,int i, int direction) {
         //0.3373729476153245
         double pos = splitPane.getDividers().get(0).getPosition();
         double width = menuBorderPane.getWidth();
@@ -1333,11 +1491,11 @@ public class MainController {
         }
         else if (width == menuBorderPane.getMinWidth()) {
 
-            splitPane.setDividerPositions(pos+0.001f);
+            splitPane.setDividerPositions(pos+direction*0.001f);
             timeline.stop();
 
         }
-        else splitPane.setDividerPositions(pos +  ((double)i)/100);
+        else splitPane.setDividerPositions(pos + direction*  ((double)i)/100);
     }
 
 

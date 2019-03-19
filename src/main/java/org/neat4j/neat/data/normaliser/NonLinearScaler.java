@@ -3,6 +3,7 @@ package org.neat4j.neat.data.normaliser;
 import org.neat4j.neat.nn.core.ActivationFunction;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
@@ -45,7 +46,31 @@ public class NonLinearScaler implements DataScaler {
     @Override
     public List<List<Double>> normalize(List<List<Double>> dataToNormalize, double minRange, double maxRange) {
         int n = dataToNormalize.size() * dataToNormalize.get(0).size();
-        double averrage = dataToNormalize.stream()
+        Double[][] dataArray = dataToNormalize.stream().map(doubles -> doubles.stream().toArray(Double[]::new)).toArray(Double[][]::new);
+        Double[][] normalisedDataArray = new Double[dataArray.length][dataArray[0].length];
+
+        double average = 0;
+        double disp = 0;
+        for (int j = 0; j < dataArray[0].length; j++) {
+
+            average = 0;
+            for (int i = 0; i < dataArray.length; i++) {
+                average += dataArray[i][j];
+            }
+            average /= dataArray.length;
+            disp = 0;
+            for (int i = 0; i < dataArray.length; i++) {
+                disp += Math.pow(dataArray[i][j]-average, 2);
+            }
+            disp = Math.sqrt(disp/(dataArray.length-1));
+            for (int i = 0; i < dataArray.length; i++) {
+               normalisedDataArray[i][j] = activationFunction.activate((dataToNormalize.get(i).get(j)-average)/disp) * (maxRange - minRange) + minRange;
+            }
+        }
+
+        List<List<Double>> normalised = Arrays.stream(normalisedDataArray).map(doubles -> Arrays.stream(doubles).collect(Collectors.toList())).collect(Collectors.toList());
+
+        /*double averrage = dataToNormalize.stream()
                 .flatMap(List::stream)
                 .mapToDouble(Double::doubleValue)
                 .sum() / (n);
@@ -53,14 +78,18 @@ public class NonLinearScaler implements DataScaler {
         double disp = Math.sqrt(dataToNormalize.stream().flatMap(List::stream).mapToDouble(aDouble -> Math.pow((aDouble - averrage), 2)).sum() / (n-1));
 
         List<List<Double>> normalised = new ArrayList<>(dataToNormalize.size());
+
+
+
+
         List<Double> row;
         for (int i = 0; i < dataToNormalize.size(); i++) {
             row = new ArrayList<Double>(dataToNormalize.get(i).size());
             for(int j = 0 ; j < dataToNormalize.get(i).size(); j++){
-                row.add(activationFunction.activate((dataToNormalize.get(i).get(j)-averrage)/disp) * (maxRange - minRange) + minRange);
+                row.add((activationFunction.activate((dataToNormalize.get(i).get(j)-averrage)/disp)) * (maxRange - minRange) + minRange);
             }
             normalised.add(row);
-        }
+        }*/
 
         return normalised;
     }

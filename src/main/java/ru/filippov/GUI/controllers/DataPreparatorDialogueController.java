@@ -213,7 +213,7 @@ public class DataPreparatorDialogueController {
         });
 
 
-        chooseActivationFunctionChoiceBox.setItems(FXCollections.observableArrayList(SigmoidFunction.getStaticFunctionName(), TanhFunction.getStaticFunctionName(), ArctgFunction.getStaticFunctionName()));
+        chooseActivationFunctionChoiceBox.setItems(FXCollections.observableArrayList(SigmoidFunction.getStaticFunctionName(), TanhFunction.getStaticFunctionName()));
         this.minRangeTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             minRangeTextField.setText(newValue.replace(",","."));
             if (newValue.isEmpty() || !NumberUtils.isCreatable(newValue)) {
@@ -484,25 +484,35 @@ public class DataPreparatorDialogueController {
 
     private void finishStep() {
         File file = new File(this.projectPath+this.dataSetNameTextField.getText());
-        if(file.exists()){
-            AlertWindow.createAlertWindow(dataSetAlreadyExists).show();
-        } else {
-            file.mkdir();
-            File dataFile = new File(file.getAbsolutePath()+"\\"+this.dataSetNameTextField.getText()+"@train.dataset");
-            try {
+        file.mkdir();
+        File dataFile;
+        try {
+            if(!trainSetIndexes.isEmpty()) {
+                dataFile = new File(file.getAbsolutePath() + "\\" + this.dataSetNameTextField.getText() + ".trd");
+                if(dataFile.exists()) {
+                    AlertWindow.createAlertWindow("\"" + this.dataSetNameTextField.getText() + "\" train dataset - is already exists. \n Choose another name");
+                    return;
+                }
                 this.writeDataIntoFile(dataFile, this.normalisedTrainDataTableView);
-                dataFile = new File(file.getAbsolutePath()+"\\"+this.dataSetNameTextField.getText()+"@test.dataset");
-                this.writeDataIntoFile(dataFile, this.normalisedTestDataTableView);
-            } catch (IOException e) {
-                AlertWindow.createAlertWindow(e.getMessage()).show();
             }
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle(success);
-            alert.setHeaderText(dataWasCreated);
-            alert.setContentText(useChoiceBox);
-            alert.show();
-            this.stage.close();
+            if(!testSetIndexes.isEmpty()) {
+                dataFile = new File(file.getAbsolutePath() + "\\" + this.dataSetNameTextField.getText() + ".ted");
+                if(dataFile.exists()) {
+                    AlertWindow.createAlertWindow("\"" + this.dataSetNameTextField.getText() + "\" test dataset - is already exists. \n Choose another name");
+                    return;
+                }
+                this.writeDataIntoFile(dataFile, this.normalisedTestDataTableView);
+            }
+        } catch (IOException e) {
+            AlertWindow.createAlertWindow(e.getMessage()).show();
         }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle(success);
+        alert.setHeaderText(dataWasCreated);
+        alert.setContentText(useChoiceBox);
+        alert.show();
+        this.stage.close();
+
 
 
     }
@@ -870,35 +880,8 @@ public class DataPreparatorDialogueController {
                             normalisedUsedData = dataScaler.normalize(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
                             break;
                         case "tanh(x)":
-                            dataScaler = new NonLinearScaler(new ActivationFunctionImpl() {
-                                @Override
-                                public double activate(double neuronIp) {
-                                    return 0;
-                                }
+                            dataScaler = new NonLinearScaler(new TanhFunction());
 
-                                @Override
-                                public double derivative(double neuronIp) {
-                                    return th(neuronIp)/2+0.5;
-                                }
-
-                                public double th(double neuronIp){
-                                    return (Math.exp(neuronIp)-Math.exp(-neuronIp))/(Math.exp(neuronIp)+Math.exp(-neuronIp));
-                                }
-
-                                @Override
-                                public ActivationFunction newInstance() {
-                                    return null;
-                                }
-
-                                @Override
-                                public String getFunctionName() {
-                                    return null;
-                                }
-                            });
-                            normalisedUsedData = dataScaler.normalize(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
-                            break;
-                        case "arctg(x)":
-                            dataScaler = new NonLinearScaler(new ArctgFunction());
                             normalisedUsedData = dataScaler.normalize(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
                             break;
                     }
