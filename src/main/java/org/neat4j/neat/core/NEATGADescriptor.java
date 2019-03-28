@@ -46,6 +46,7 @@ public class NEATGADescriptor implements GADescriptor {
 	private boolean recurrencyAllowed;
 	private boolean keepBestEver;
 	private double errorTerminationValue;
+	private boolean toggleErrorTerminationValue;
 	private boolean naturalOrder;
 	private double maxPerturb;
 	private double maxBiasPerturb;
@@ -423,5 +424,13 @@ public class NEATGADescriptor implements GADescriptor {
 
 	public void setPNewActivationFunction(double getPNewActivationFunction) {
 		this.pNewActivationFunction = getPNewActivationFunction;
+	}
+
+	public boolean isToggleErrorTerminationValue() {
+		return toggleErrorTerminationValue;
+	}
+
+	public void setToggleErrorTerminationValue(boolean toggleErrorTerminationValue) {
+		this.toggleErrorTerminationValue = toggleErrorTerminationValue;
 	}
 }

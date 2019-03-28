@@ -32,6 +32,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -57,9 +58,12 @@ import org.neat4j.neat.nn.core.functions.ActivationFunctionFinder;
 import org.neat4j.neat.nn.core.functions.LinearFunction;
 import org.neat4j.neat.nn.core.functions.SigmoidFunction;
 import org.neat4j.neat.nn.core.functions.TanhFunction;
+import ru.filippov.GUI.customNodes.TreeCellIContextMenu;
+import ru.filippov.GUI.customNodes.TreeItemContextMenu;
 import ru.filippov.GUI.customNodes.ZoomableCanvas;
 import ru.filippov.GUI.windows.AlertWindow;
 import ru.filippov.GUI.windows.DataPreparatorDialogue;
+import ru.filippov.GUI.windows.NewDatasetDialogue;
 import ru.filippov.GUI.windows.NewProjectDialogue;
 import ru.filippov.utils.CsControl;
 import ru.filippov.utils.JFXUtils;
@@ -71,6 +75,118 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainController {
+
+
+
+
+    static class ProjectFileDescriptor{
+
+
+        public enum TYPE{
+            PROJECT,
+            TRAINING_SET,
+            TEST_SET,
+            NEAT_CONFIG,
+            TRAINED_MODEL
+        }
+
+        private TYPE type;
+        private String name;
+        private String directoryPath;
+        private String extension;
+        private Node graphic;
+
+        public ProjectFileDescriptor(TYPE type, String directoryPath, String nameString, String extension) {
+            this.type = type;
+
+            MaterialIcon projectIcon = MaterialIcon.FOLDER_OPEN;
+            OctIcon neatIcon = OctIcon.GEAR;
+            OctIcon trainIcon = OctIcon.BEAKER;
+            MaterialDesignIcon testDatasetIcon = MaterialDesignIcon.CHART_AREASPLINE;
+            MaterialDesignIcon trainedModelIcon = MaterialDesignIcon.VECTOR_POLYGON;
+
+            switch (type){
+                case TRAINED_MODEL:
+                    graphic  = new MaterialDesignIconView(trainedModelIcon);
+                    break;
+                case PROJECT:
+                    graphic  = new MaterialIconView(projectIcon);
+                    break;
+                case NEAT_CONFIG:
+                    graphic = new OctIconView(neatIcon);
+                    break;
+                case TEST_SET:
+                    graphic = new MaterialDesignIconView(testDatasetIcon);
+                    break;
+                case TRAINING_SET:
+                    graphic = new OctIconView(trainIcon);
+                    break;
+            }
+
+
+
+            this.name = nameString;
+            this.directoryPath = directoryPath;
+            this.extension = extension;
+        }
+
+        public TYPE getType() {
+            return type;
+        }
+
+        public void setType(TYPE type) {
+            this.type = type;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getDirectoryPath() {
+            return directoryPath;
+        }
+
+        public void setDirectoryPath(String directoryPath) {
+            this.directoryPath = directoryPath;
+        }
+
+        public String getExtension() {
+            return extension;
+        }
+
+        public void setExtension(String extension) {
+            this.extension = extension;
+        }
+
+        @Override
+        public String toString() {
+            if (this.type == TYPE.PROJECT || this.type == TYPE.NEAT_CONFIG){
+                return name;
+            }
+            return name + " ( " + this.type + " ) ";
+        }
+
+        public Node getGraphic() {
+            return graphic;
+        }
+
+        public void setGraphic(Node graphic) {
+            this.graphic = graphic;
+        }
+
+        public File getAsFile() {
+            return new File(this.directoryPath+"\\"+this.name+"."+this.extension);
+        }
+
+        public String getFullPath(){
+            return this.directoryPath+"\\"+this.name+"."+this.extension;
+        }
+
+    }
 
     Logger logger = Logger.getLogger(MainController.class);
 
@@ -99,6 +215,9 @@ public class MainController {
     @FXML private TextField currentProjectTextField;
 
 
+    private ContextMenu projectContextMenu;
+    private ContextMenu datasetFolderContext;
+    private ContextMenu dataContextMenu;
 
     @FXML
     private SplitPane projectSplitPane;
@@ -112,7 +231,7 @@ public class MainController {
     private JFXButton pinProjectMenuButton;
     @FXML
     private MaterialDesignIconView pinProjectMenuIcon;
-    @FXML private TreeView<String> projectTreeView;
+    @FXML private TreeView<ProjectFileDescriptor> projectTreeView;
 
 
 
@@ -129,7 +248,7 @@ public class MainController {
     private Timeline openProjectMenu, closeProjectMenu;
 
 
-    @FXML private MaterialDesignIconView openMenuIcon;
+    @FXML private MaterialDesignIconView openNEATMenuIcon;
     @FXML private BorderPane neatMenuBorderPane;
     private ScrollPane parametresScrollPane;
     private VBox titlesPaneContainer;
@@ -172,33 +291,31 @@ public class MainController {
     private JFXTextField outputNodesTextField;
     private JFXTextField maxPertrubTextField;
     private JFXTextField maxBiasPertrubTextField;
-    private JFXToggleButton featureSelectionToogle;
-    private JFXToggleButton reccurencyAllowedToogle;
+    private JFXToggleButton featureSelectionToggle;
+    private JFXToggleButton reccurencyAllowedToggle;
     private TitledPane extinctionControlTitledPane;
     private JFXToggleButton eleEventsToogle;
     private JFXTextField eleSurvivalCountTextField;
     private JFXTextField eleEventTimeTextField;
     private TitledPane epochControlTitledPane;
-    private JFXToggleButton keepBestEverToogle;
+    private JFXToggleButton keepBestEverToggle;
     private JFXTextField extraFeatureCountTextField;
     private JFXTextField popSizeTextField;
     private JFXTextField numberEpochsTextField;
+    private JFXToggleButton terminationValueToggle;
+    private JFXTextField terminationValueTextField;
 
     
     @FXML private TabPane infoTabPane;
 
-    @FXML private Tab datasetsTab;
-    @FXML private ChoiceBox<String> datasetChoiceBox;
+    @FXML private ChoiceBox<ProjectFileDescriptor> trainDatasetChoiceBox;
     @FXML
     private ScrollPane dataSetsScrollPane;
     @FXML
     private TitledPane trainTitledPane;
     @FXML
     private TableView<List<Double>> trainTableView;
-    @FXML
-    private TitledPane testTitledPane;
-    @FXML
-    private TableView<List<Double>> testTableView;
+
 
     @FXML private Tab trainigTab;
     @FXML private JFXTextField lastErrorTextField;
@@ -221,8 +338,28 @@ public class MainController {
 
 
     @FXML
+    private TableView<List<Double>> testTableView;
+    @FXML
     private Tab testingTab;
     @FXML private ProgressBar testingProgressBar;
+
+    @FXML
+    private ChoiceBox<ProjectFileDescriptor> trainedModelsChoiceBox;
+
+    @FXML
+    private Tooltip openTrainedModelTooltip;
+
+    @FXML
+    private ChoiceBox<ProjectFileDescriptor> testDatasetChoiceBox;
+
+    @FXML
+    private Tooltip openTestDatasetTooltip;
+
+    @FXML
+    private JFXButton runTestButton;
+
+
+
     @FXML private Button startTrainingButton;
     @FXML private JFXButton pinButton;
 
@@ -233,20 +370,37 @@ public class MainController {
 
 
 
-    private AIConfig originalNEATConfig;
-    private AIConfig runnableNEATConfig;
+    private AIConfig currentNEATConfig;
+    private boolean isNEATConfigSaved;
+    private ProjectFileDescriptor currentNeatConfigFile;
+
+    private File tempDirectory;
 
     ResourceBundle resourceBundle;
     Locale locale;
     Scene scene;
     List<List<Double>> trainDataSet;
     List<List<Double>> testDataSet;
-    private File projectFile;
+
+    List<ProjectFileDescriptor> trainSets;
+    List<ProjectFileDescriptor> testSets;
 
     int trainingCount = 0;
 
     public void init() {
         this.scene = this.currentProjectLabel.getParent().getScene();
+
+        new File(Paths.get("").toAbsolutePath().toString()+"\\projects").mkdir();
+        this.tempDirectory = new File(Paths.get("").toAbsolutePath().toString()+"\\temp");
+        if(!this.tempDirectory.exists()){
+            this.tempDirectory.mkdir();
+        }
+
+
+        this.scene.getWindow().setOnCloseRequest(event -> {
+            Arrays.stream(this.tempDirectory.listFiles()).forEach(file1 -> file1.delete());
+        });
+
 
         this.trainingCount = 0;
 
@@ -255,6 +409,71 @@ public class MainController {
         this.parametresScrollPane = new ScrollPane();
         this.parametresScrollPane.setFitToWidth(true);
         this.titlesPaneContainer = new VBox();
+
+        /*this.projectTreeView.addEventHandler(MouseEvent.ANY, event -> {
+            if (event.getClickCount() == 2 && event.getButton().equals(MouseButton.PRIMARY)) {
+                if (event.getEventType().equals(MouseEvent.MOUSE_CLICKED)) {
+                    ((TreeView<ProjectFileDescriptor>)event.getSource()).getSelectionModel().getSelectedItem().setExpanded(true);
+                }
+
+                event.consume();
+            }
+        });*/
+
+        projectTreeView.setCellFactory(param -> {
+            TreeCell<ProjectFileDescriptor> treeCell = new TreeCellIContextMenu();
+
+            treeCell.addEventFilter(MouseEvent.MOUSE_PRESSED, (MouseEvent e) -> {
+
+                if (e.getClickCount() % 2 == 0 && e.getButton().equals(MouseButton.PRIMARY)) {
+                    ProjectFileDescriptor value = treeCell.getTreeItem().getValue();
+
+
+                    switch (value.getType()){
+                        case NEAT_CONFIG:
+                            openNEATFile(value);
+                            break;
+                        case TRAINED_MODEL:
+                            if(currentNeatConfigFile == null){
+                                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                            }
+                            this.infoTabPane.getSelectionModel().select(testingTab);
+                            if(!trainedModelsChoiceBox.getItems().contains(this.projectTreeView.getSelectionModel().getSelectedItem().getValue())) {
+                                this.trainedModelsChoiceBox.getItems().add(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                            }
+                            this.trainedModelsChoiceBox.getSelectionModel().select(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                            break;
+                        case TEST_SET:
+                            if(currentNeatConfigFile == null){
+                                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                            }
+                            this.infoTabPane.getSelectionModel().select(testingTab);
+
+                            if(!testDatasetChoiceBox.getItems().contains(this.projectTreeView.getSelectionModel().getSelectedItem().getValue())) {
+                                this.testDatasetChoiceBox.getItems().add(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                            }
+                            this.testDatasetChoiceBox.getSelectionModel().select(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                            break;
+                        case TRAINING_SET:
+                            if(currentNeatConfigFile == null){
+                                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                            }
+
+                            this.infoTabPane.getSelectionModel().select(trainigTab);
+
+                            if(!trainDatasetChoiceBox.getItems().contains(this.projectTreeView.getSelectionModel().getSelectedItem().getValue())) {
+                                this.trainDatasetChoiceBox.getItems().add(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                            }
+                            this.trainDatasetChoiceBox.getSelectionModel().select(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                            break;
+                    }
+                    e.consume();
+                }
+            });
+            return treeCell;
+        });
+
+
 
 
 
@@ -435,8 +654,8 @@ public class MainController {
         this.outputNodesTextField = new JFXTextField();
         this.maxPertrubTextField = new JFXTextField();
         this.maxBiasPertrubTextField = new JFXTextField();
-        this.featureSelectionToogle = new JFXToggleButton();
-        this.reccurencyAllowedToogle = new JFXToggleButton();
+        this.featureSelectionToggle = new JFXToggleButton();
+        this.reccurencyAllowedToggle = new JFXToggleButton();
         this.inputNodesTextField.setLabelFloat(true);
         this.outputNodesTextField.setLabelFloat(true);
         this.maxPertrubTextField.setLabelFloat(true);
@@ -446,8 +665,8 @@ public class MainController {
                 this.outputNodesTextField,
                 this.maxPertrubTextField,
                 this.maxBiasPertrubTextField,
-                this.featureSelectionToogle,
-                this.reccurencyAllowedToogle
+                this.featureSelectionToggle,
+                this.reccurencyAllowedToggle
         );
         this.networkControlTitledPane.setContent(tempVbox);
 
@@ -465,21 +684,51 @@ public class MainController {
         );
         this.extinctionControlTitledPane.setContent(tempVbox);
 
+        this.eleEventsToogle.selectedProperty().addListener((observable, oldValue, newValue) ->{
+            if(newValue){
+                eleEventTimeTextField.setVisible(true);
+                eleSurvivalCountTextField.setVisible(true);
+            } else {
+                eleEventTimeTextField.setVisible(false);
+                eleSurvivalCountTextField.setVisible(false);
+            }
+        });
+        this.eleEventsToogle.selectedProperty().setValue(false);
+        eleEventTimeTextField.setVisible(false);
+        eleSurvivalCountTextField.setVisible(false);
+
+
+
+
         tempVbox = new VBox();
         tempVbox.setSpacing(25);
         this.epochControlTitledPane = new TitledPane();
-        this.keepBestEverToogle = new JFXToggleButton();
+        this.keepBestEverToggle = new JFXToggleButton();
         this.extraFeatureCountTextField = new JFXTextField();
         this.popSizeTextField = new JFXTextField();
         this.numberEpochsTextField = new JFXTextField();
+        this.terminationValueToggle = new JFXToggleButton();
+        this.terminationValueToggle.setTooltip(new Tooltip());
+        this.terminationValueTextField = new JFXTextField();
+        this.terminationValueTextField.setTooltip(new Tooltip());;
         tempVbox.getChildren().addAll(
-                this.keepBestEverToogle,
+                this.keepBestEverToggle,
                 this.extraFeatureCountTextField,
                 this.popSizeTextField,
-                this.numberEpochsTextField
+                this.numberEpochsTextField,
+                this.terminationValueToggle,
+                this.terminationValueTextField
         );
         this.epochControlTitledPane.setContent(tempVbox);
-
+        this.terminationValueToggle.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue) {
+                this.terminationValueTextField.setVisible(true);
+            } else {
+                this.terminationValueTextField.setVisible(false);
+            }
+        });
+        this.terminationValueToggle.setSelected(false);
+        this.terminationValueTextField.setVisible(false);
 
         this.titlesPaneContainer.getChildren().addAll(
                 this.GASettingsTitledPane,
@@ -510,7 +759,7 @@ public class MainController {
         closeNEATMenu.setCycleCount(Timeline.INDEFINITE);
         neatMenuBorderPane.getCenter().setVisible(false);
 
-        enableSlideMenu(openMenuIcon, neatMenuBorderPane, MAX_WIDTH_NEAT_MENU, closeNEATMenu, openNEATMenu);
+        enableSlideMenu(openNEATMenuIcon, neatMenuBorderPane, MAX_WIDTH_NEAT_MENU, closeNEATMenu, openNEATMenu);
         setPinButtonAction(pinButton, neatMenuBorderPane, MAX_WIDTH_NEAT_MENU, MIN_WIDTH_NEAT_MENU);
 
         this.projectBorderPane.setCenter(noActiveProjectLabel);
@@ -532,7 +781,7 @@ public class MainController {
         enableSlideMenu(openProjectMenuIcon, projectBorderPane, MAX_WIDTH_PROJECT_MENU, closeProjectMenu, openProjectMenu);
         setPinButtonAction(pinProjectMenuButton, projectBorderPane, MAX_WIDTH_PROJECT_MENU, MIN_WIDTH_PROJECT_MENU);
 
-
+        initContextMenues();
 
         loadLanguage(Locale.getDefault());
         RequiredFieldValidator requiredFieldValidator = new RequiredFieldValidator("It cant be empty");
@@ -577,38 +826,28 @@ public class MainController {
         this.inputNodesTextField.setDisable(true);
         this.outputNodesTextField.setDisable(true);
 
-        this.eleEventsToogle.selectedProperty().addListener((observable, oldValue, newValue) ->{
-            if(eleEventsToogle.isSelected()){
-                eleEventTimeTextField.setVisible(true);
-                eleSurvivalCountTextField.setVisible(true);
-            } else {
-                eleEventTimeTextField.setVisible(false);
-                eleSurvivalCountTextField.setVisible(false);
-            }
-        });
-        this.eleEventsToogle.selectedProperty().setValue(false);
-        eleEventTimeTextField.setVisible(false);
-        eleSurvivalCountTextField.setVisible(false);
 
-        if (this.originalNEATConfig == null){
+
+        if (this.currentNEATConfig == null){
             this.parametresScrollPane.setVisible(false);
             this.infoTabPane.setVisible(false);
             this.dataSetsScrollPane.setVisible(false);
         }
 
 
-        this.datasetChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+        this.trainDatasetChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
-                loadDataset(newValue);
+                this.trainDataSet = loadDataset(newValue.getAsFile(), trainTableView, true);
+                //loadDataset(newValue.getAsFile());
                 this.dataSetsScrollPane.setVisible(true);
                 errorChart.getData().clear();
                 valueGraphicChart.getData().clear();
                 trainingCount = 0;
-                //this.originalNEATConfig.updateConfig("AI.SOURCE", newValue+"BestNetwork_temp.ser");
-                //this.originalNEATConfig.updateConfig("SAVE.LOCATION", newValue+"BestNetwork_temp.ser");
-
-                this.runnableNEATConfig.updateConfig("SAVE.LOCATION", newValue+"BestNetwork_temp.ser");
-                if(new File(this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork.ser").exists()){
+                //this.currentNEATConfig.updateConfig("AI.SOURCE", newValue+"BestNetwork_temp.ser");
+                //this.currentNEATConfig.updateConfig("SAVE.LOCATION", newValue+"BestNetwork_temp.ser");
+                //TODO REFACTOR THIS SHIT
+                this.currentNEATConfig.updateConfig("SAVE.LOCATION", newValue+"_last_best.ser");
+                /*if(new File(this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork.ser").exists()){
                     this.runnableNEATConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork.ser");
                     this.runnableNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"@test.dataset");
                     logger.debug(this.runnableNEATConfig.configElement("AI.SOURCE"));
@@ -623,8 +862,9 @@ public class MainController {
                 } else {
                     this.runnableNEATConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork_temp.ser");
                     logger.debug(this.runnableNEATConfig.configElement("AI.SOURCE"));
-                    this.testingTab.setDisable(true);
-                }
+                    //this.testingTab.setDisable(true);
+                }*/
+
                 /*trainigTab.setDisable(false);
                 testingTab.setDisable(false);*/
                 this.startTrainingButton.setDisable(false);
@@ -633,8 +873,8 @@ public class MainController {
             }
         });
 
-        trainigTab.setDisable(true);
-        testingTab.setDisable(true);
+        //trainigTab.setDisable(true);
+        //testingTab.setDisable(true);
         this.trainingProgressBar = new ProgressBar(0);
         this.trainingProgressBar.setOnMouseClicked(event -> {
             if(event.getButton() == MouseButton.PRIMARY){
@@ -768,7 +1008,7 @@ public class MainController {
                                           pinMenuButton.getGraphic().setRotate(0);
                                           menuBorderPane.setMaxWidth(minWidthMenu);
                                           menuBorderPane.setPrefWidth(minWidthMenu);
-                                          enableSlideMenu(openMenuIcon, menuBorderPane, maxWidthMenu, closeNEATMenu, openNEATMenu);
+                                          enableSlideMenu(openNEATMenuIcon, menuBorderPane, maxWidthMenu, closeNEATMenu, openNEATMenu);
                                       }
                                   }
                               }
@@ -795,7 +1035,6 @@ public class MainController {
             menuBorderPane.setMinWidth(menuBorderPane.getMinWidth()+0.1);
             menuBorderPane.setMaxWidth(menuBorderPane.getMinWidth()+0.2);
             menuBorderPane.getCenter().setVisible(false);
-            menuBorderPane.getCenter().setVisible(false);
             iconRotateTransition.setRate(-1);
             iconRotateTransition.play();
             openMenu.stop(); closeMenu.play();
@@ -803,16 +1042,16 @@ public class MainController {
     }
 
 
-    private void loadDataset(String datasetName){
-        String pathToDatasetDirectory = this.currentProjectTextField.getText() + "\\datasets\\" + datasetName;
-        String trainDataSetName = pathToDatasetDirectory + "\\" +datasetName+"@train.dataset";
-        String testDataSetName = pathToDatasetDirectory + "\\" +datasetName+"@test.dataset";
+
+    private List<List<Double>> loadDataset(File datasetName, TableView<List<Double>> tableView, boolean needInit){
         try {
             /*Read training dataset file*/
-            BufferedReader reader = new BufferedReader(new FileReader(new File(trainDataSetName)));
+            BufferedReader reader = new BufferedReader(new FileReader(datasetName));
             StringTokenizer stringTokenizer = new StringTokenizer(reader.readLine(),";");
-            this.inputNodesTextField.setText(stringTokenizer.nextToken()); //get number of inputs
-            this.outputNodesTextField.setText(stringTokenizer.nextToken()); // get number of outputs
+            if(needInit) {
+                this.inputNodesTextField.setText(stringTokenizer.nextToken()); //get number of inputs
+                this.outputNodesTextField.setText(stringTokenizer.nextToken()); // get number of outputs
+            }
             stringTokenizer = new StringTokenizer(reader.readLine(),";");
             /*Prepare headers of table's columns*/
             int tokens = stringTokenizer.countTokens();
@@ -825,10 +1064,10 @@ public class MainController {
                 {
                     return new SimpleObjectProperty<Double>((p.getValue().get(index)));
                 });
-                this.trainTableView.getColumns().add(tableColumn);
+                tableView.getColumns().add(tableColumn);
             }
             /*Read dataset values*/
-            trainDataSet = new ArrayList<>(50);
+            List<List<Double>> tempDataSet = new ArrayList<>(50);
             String line = reader.readLine();
             while (line != null) {
                 stringTokenizer = new StringTokenizer(line,";");
@@ -836,57 +1075,21 @@ public class MainController {
                 while(stringTokenizer.hasMoreTokens()){
                     row.add(Double.valueOf(stringTokenizer.nextToken()));
                 }
-                trainDataSet.add(row);
+                tempDataSet.add(row);
                 line = reader.readLine();
             }
             /*Put read data into tableview*/
             ObservableList<List<Double>> observableList = FXCollections.observableArrayList();
-                    observableList.addAll(trainDataSet);
-            this.trainTableView.setItems(observableList);
+                    observableList.addAll(tempDataSet);
+            tableView.setItems(observableList);
+            return tempDataSet;
             /*Reading of training dataset is over*/
-
-
-            /*Read testing dataset file*/
-            reader = new BufferedReader(new FileReader(new File(testDataSetName)));
-            stringTokenizer = new StringTokenizer(reader.readLine(),";");
-            stringTokenizer = new StringTokenizer(reader.readLine(),";");
-            /*Prepare headers of table's columns*/
-            tokens = stringTokenizer.countTokens();
-            for (int i = 0; i < tokens; i++){
-                TableColumn tableColumn = new TableColumn();
-                tableColumn.setText(stringTokenizer.nextToken());
-                tableColumn.setPrefWidth(65);
-                final int index = i;
-                tableColumn.setCellValueFactory((Callback<TableColumn.CellDataFeatures<List<Double>, Double>, ObservableValue<Double>>) p ->
-                {
-                    return new SimpleObjectProperty<Double>((p.getValue().get(index)));
-                });
-                this.testTableView.getColumns().add(tableColumn);
-            }
-            /*Read dataset values*/
-            testDataSet = new ArrayList<>(50);
-            line = reader.readLine();
-            while (line != null) {
-                stringTokenizer = new StringTokenizer(line,";");
-                List<Double> row = new ArrayList<>();
-                while(stringTokenizer.hasMoreTokens()){
-                    row.add(Double.valueOf(stringTokenizer.nextToken()));
-                }
-                row.add(null);
-                testDataSet.add(row);
-                line = reader.readLine();
-            }
-            /*Put read data into tableview*/
-            ObservableList<List<Double>> observableList1 = FXCollections.observableArrayList();
-            observableList1.addAll(testDataSet);
-            this.testTableView.setItems(observableList1);
-            /*Reading of training dataset is over*/
-
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
 
@@ -944,6 +1147,29 @@ public class MainController {
         this.specieYouthBoostTextField.setPromptText(resourceBundle.getString("SPECIE_YOUTH_BOOST"));
         this.specieFitnessMaxTextField.setPromptText(resourceBundle.getString("FITNESS_MAX"));
 
+        this.networkControlTitledPane.setText(resourceBundle.getString("NETWORK_CONTROL"));
+        this.inputNodesTextField.setPromptText(resourceBundle.getString("INPUT_NODES"));
+        this.outputNodesTextField.setPromptText(resourceBundle.getString("OUTPUT_NODES"));
+        this.maxPertrubTextField.setPromptText(resourceBundle.getString("MAX_WEIGHT_PERTURB"));
+        this.maxBiasPertrubTextField.setPromptText(resourceBundle.getString("MAX_BIAS_PERTURB"));
+        this.featureSelectionToggle.setText(resourceBundle.getString("FEATURE_SELECTION"));
+        this.reccurencyAllowedToggle.setText(resourceBundle.getString("RECURRENCY_ALLOWED"));
+
+        this.extinctionControlTitledPane.setText(resourceBundle.getString("EXTINCTION_CONTROL"));
+        this.eleEventsToogle.setText(resourceBundle.getString("EXTINCTION_EVENT"));
+        this.eleSurvivalCountTextField.setPromptText(resourceBundle.getString("EXTINCTION_SURVIVAL_COUNT"));
+        this.eleEventTimeTextField.setPromptText(resourceBundle.getString("EXTINCTION_EVENT_TIME"));
+
+        this.epochControlTitledPane.setText(resourceBundle.getString("EPOCH_CONTROL"));
+        this.keepBestEverToggle.setText(resourceBundle.getString("KEEP_BEST_EVER"));
+        this.extraFeatureCountTextField.setPromptText(resourceBundle.getString("EXTRA_FEATURE_COUNT"));
+        this.popSizeTextField.setPromptText(resourceBundle.getString("POP_SIZE"));
+        this.numberEpochsTextField.setPromptText(resourceBundle.getString("NUMBER_EPOCHS"));
+        this.terminationValueToggle.setText(resourceBundle.getString("TERMINATION_VALUE_TOGGLE"));
+        this.terminationValueToggle.getTooltip().setText(resourceBundle.getString("TERMINATION_VALUE_TOOLTIP"));
+        this.terminationValueTextField.setPromptText(resourceBundle.getString("TERMINATION_VALUE"));
+        this.terminationValueTextField.getTooltip().setText(resourceBundle.getString("TERMINATION_VALUE_TOOLTIP"));
+
 
         this.activationFunctionsChooser.setText(resourceBundle.getString("ACTIVATION_FUNCTION"));
         ((Label)((VBox)this.activationFunctionsChooser.getContent()).getChildren().get(0)).setText((resourceBundle.getString("ALLOWED_TO_USE")));
@@ -952,8 +1178,11 @@ public class MainController {
         this.hiddenActivationFunctionsChooser.setText(resourceBundle.getString("HIDDEN_ACTIVATION_FUNCTIONS"));
 
 
+
+
         AlertWindow.setLanguage(resourceBundle);
         NewProjectDialogue.getInstance(this.scene).setLanguage(resourceBundle);
+        NewDatasetDialogue.getInstance(this.scene).setLanguage(resourceBundle);
 
 
 
@@ -973,6 +1202,7 @@ public class MainController {
         if (projectFile != null){
             try {
                 readProjectFile(projectFile);
+
             } catch (FileNotFoundException e) {
                 AlertWindow.createAlertWindow("Can't open the file").show();
             } catch (IOException e) {
@@ -984,37 +1214,43 @@ public class MainController {
 
     private void readProjectFile(File projectFile) throws IOException {
 
+        this.isNEATConfigSaved = true;
+
+
         BufferedReader reader = new BufferedReader(new FileReader(projectFile));
         StringTokenizer stringTokenizer = new StringTokenizer(reader.readLine(),":");
         String token;
-        TreeItem<String> rootProject = new TreeItem<>();
 
-        MaterialIcon projectIcon = MaterialIcon.FOLDER_OPEN;
-        OctIcon neatIcon = OctIcon.GEAR;
-        OctIcon trainIcon = OctIcon.BEAKER;
-        MaterialDesignIcon testDatasetIcon = MaterialDesignIcon.CHART_AREASPLINE;
-        MaterialDesignIcon datasetIcon = MaterialDesignIcon.FILE_CHART;
-        MaterialDesignIcon trainedModelIcon = MaterialDesignIcon.VECTOR_POLYGON;
+        TreeItem<ProjectFileDescriptor> lastSelected = null;
+
+        TreeItem<ProjectFileDescriptor> rootProject = new TreeItemContextMenu<ProjectFileDescriptor>();
 
 
 
+
+
+
+        ProjectFileDescriptor projectFileDescriptor = null;
         if(stringTokenizer.hasMoreTokens()){
             token = stringTokenizer.nextToken();
             if(token.equals("PROJECT_NAME")){
                 token = stringTokenizer.nextToken();
-                rootProject.setValue(token);
-                rootProject.setGraphic(new MaterialIconView(projectIcon));
+                String[] fileName = token.split("[.]");
+                projectFileDescriptor =  new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.PROJECT, projectFile.getParent() ,fileName[0], fileName[1]);
+
+                rootProject = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), projectContextMenu);
             }
             else {
                 throw new IOException();
             }
         }
         this.projectTreeView.setRoot(rootProject);
+        rootProject.setExpanded(true);
 
         String lastOpenedProject = "";
         stringTokenizer = new StringTokenizer(reader.readLine(),":");
 
-        if(stringTokenizer.nextToken().equals("LAST_OPENED")){
+        if(stringTokenizer.nextToken().equals("LAST_OPENED_DATASET")){
             if(stringTokenizer.hasMoreTokens()){
                 lastOpenedProject = stringTokenizer.nextToken();
             }
@@ -1024,21 +1260,25 @@ public class MainController {
 
         this.projectBorderPane.setCenter(this.projectTreeView);
 
-        TreeItem<String> treeItem;
+        TreeItem<ProjectFileDescriptor> treeItem;
         String line;
 
 
 
-
+        String pathToCurrentDataset = "";
 
         while((line=reader.readLine())!=null){
             stringTokenizer = new StringTokenizer(line,":");
             switch (stringTokenizer.nextToken()){
                 case "DATASET_NAME":
                     if(stringTokenizer.hasMoreTokens()){
-                        treeItem = new TreeItem<>(stringTokenizer.nextToken());
+                        token = stringTokenizer.nextToken();
+                        String[] fileName = token.split("[.]");
+                        pathToCurrentDataset = projectFile.getParent()+"\\datasets\\"+fileName[0]+"\\";
+                        projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.NEAT_CONFIG, pathToCurrentDataset ,fileName[0], fileName[1]);
+                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), datasetFolderContext);
                         rootProject.getChildren().add(treeItem);
-                        treeItem.setGraphic(new MaterialDesignIconView(datasetIcon));
+
                         if(lastOpenedProject.equals(treeItem.getValue())){
                             projectTreeView.getSelectionModel().select(treeItem);
                         }
@@ -1046,59 +1286,283 @@ public class MainController {
                     break;
                 case "TRAIN_SET":
                     if(stringTokenizer.hasMoreTokens()){
-                        treeItem = new TreeItem<>(stringTokenizer.nextToken());
-                        treeItem.setGraphic(new OctIconView(trainIcon));
-                        rootProject.getChildren().get(rootProject.getChildren().size()-1).getChildren().add(treeItem);
-                    }
-                    break;
-                case "NEAT_OPTIONS":
-                    if(stringTokenizer.hasMoreTokens()){
-                        treeItem = new TreeItem<>(stringTokenizer.nextToken());
-                        treeItem.setGraphic(new OctIconView(neatIcon));
+                        token = stringTokenizer.nextToken();
+
+                        String[] fileName = token.split("[.]");
+                        projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINING_SET, pathToCurrentDataset ,fileName[0], fileName[1]);
+                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu);
                         rootProject.getChildren().get(rootProject.getChildren().size()-1).getChildren().add(treeItem);
                     }
                     break;
                 case "TEST_SET":
                     if(stringTokenizer.hasMoreTokens()){
-                        treeItem = new TreeItem<>(stringTokenizer.nextToken());
-                        treeItem.setGraphic(new MaterialDesignIconView(testDatasetIcon));
+                        token = stringTokenizer.nextToken();
+                        String[] fileName = token.split("[.]");
+
+                        projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TEST_SET, pathToCurrentDataset ,fileName[0], fileName[1]);
+                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu);
                         rootProject.getChildren().get(rootProject.getChildren().size()-1).getChildren().add(treeItem);
                     }
                     break;
                 case "TRAINED_MODEL":
                     if(stringTokenizer.hasMoreTokens()){
-                        treeItem = new TreeItem<>(stringTokenizer.nextToken());
-                        treeItem.setGraphic(new MaterialDesignIconView(trainedModelIcon));
+                        token = stringTokenizer.nextToken();
+                        String[] fileName = token.split("[.]");
+                        projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINED_MODEL, pathToCurrentDataset ,fileName[0], fileName[1]);
+                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu);
                         rootProject.getChildren().get(rootProject.getChildren().size()-1).getChildren().add(treeItem);
                     }
                     break;
             }
         }
 
+        this.currentProjectTextField.setText(projectFile.getAbsolutePath());
+
 
     }
 
-    private void openNEATFile(File projectFile) {
+
+
+    void initContextMenues(){
+        projectContextMenu = new ContextMenu();
+        configureContextMenu(projectContextMenu);
+
+        MenuItem newDatasetFolder = new MenuItem("New dataset folder");
+        newDatasetFolder.setOnAction(event -> {
+            createNewDatasetFolder(event);
+        });
+
+        MenuItem deleteNEAT = new MenuItem("Delete");
+        deleteNEAT.setOnAction(event -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Delete File");
+            alert.setHeaderText("Are you sure want to remove this?");
+            alert.setContentText(projectTreeView.getSelectionModel().getSelectedItem().getValue().getName()+"."+projectTreeView.getSelectionModel().getSelectedItem().getValue().getExtension());
+            // option != null.
+            Optional<ButtonType> option = alert.showAndWait();
+
+            if (option.get() != null) {
+                if (option.get() == ButtonType.OK) {
+                    Alert alert1 = new Alert(Alert.AlertType.INFORMATION);
+                    alert1.setTitle("Information");
+                    if(deleteDatasetFolder(projectTreeView.getSelectionModel().getSelectedItem().getValue())){
+                        alert1.setContentText("Dataset was removed successfully!");
+                        this.projectTreeView.getRoot().getChildren().remove(this.projectTreeView.getSelectionModel().getSelectedItem());
+                        saveProject();
+                    } else {
+                        alert1.setContentText("Can't remove!");
+                    }
+                    alert1.showAndWait();
+                }
+            }
+
+        });
+
+
+        MenuItem loadNEAT = new MenuItem("Load");
+        loadNEAT.setOnAction(event -> {
+            openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getValue());
+        });
+
+        projectContextMenu.getItems().addAll(
+                newDatasetFolder
+        );
+
+        MenuItem newDatasetItem = new MenuItem("Prepare new data");
+        newDatasetItem.setOnAction(event -> {
+            prepareNewData(event);
+        });
+
+
+        datasetFolderContext = new ContextMenu();
+        configureContextMenu(datasetFolderContext);
+        datasetFolderContext.getItems().addAll(loadNEAT, new SeparatorMenuItem(), newDatasetItem, new SeparatorMenuItem(), deleteNEAT);
+
+
+
+        MenuItem loadDataItem = new MenuItem("Load");
+        loadDataItem.setOnAction(event -> {
+            if(currentNeatConfigFile == null){
+                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+            }
+            ProjectFileDescriptor projectFileDescriptor = projectTreeView.getSelectionModel().getSelectedItem().getValue();
+            switch (projectFileDescriptor.getType()){
+                case TRAINED_MODEL:
+                    if(currentNeatConfigFile == null){
+                        openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                    }
+                    this.infoTabPane.getSelectionModel().select(testingTab);
+                    if(!trainedModelsChoiceBox.getItems().contains(this.projectTreeView.getSelectionModel().getSelectedItem().getValue())) {
+                        this.trainedModelsChoiceBox.getItems().add(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                    }
+                    this.trainedModelsChoiceBox.getSelectionModel().select(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                    break;
+                case TEST_SET:
+                    if(currentNeatConfigFile == null){
+                        openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                    }
+                    this.infoTabPane.getSelectionModel().select(testingTab);
+
+                    if(!testDatasetChoiceBox.getItems().contains(this.projectTreeView.getSelectionModel().getSelectedItem().getValue())) {
+                        this.testDatasetChoiceBox.getItems().add(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                    }
+                    this.testDatasetChoiceBox.getSelectionModel().select(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                    break;
+                case TRAINING_SET:
+                    if(currentNeatConfigFile == null){
+                        openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                    }
+
+                    this.infoTabPane.getSelectionModel().select(trainigTab);
+
+                    if(!trainDatasetChoiceBox.getItems().contains(this.projectTreeView.getSelectionModel().getSelectedItem().getValue())) {
+                        this.trainDatasetChoiceBox.getItems().add(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                    }
+                    this.trainDatasetChoiceBox.getSelectionModel().select(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                    break;
+            }
+        });
+
+        MenuItem deleteDataItem = new MenuItem("Delete");
+
+        deleteDataItem.setOnAction(event -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Delete File");
+            alert.setHeaderText("Are you sure want to remove this?");
+            alert.setContentText(projectTreeView.getSelectionModel().getSelectedItem().getValue().getName()+"."+projectTreeView.getSelectionModel().getSelectedItem().getValue().getExtension());
+            // option != null.
+            Optional<ButtonType> option = alert.showAndWait();
+
+            if (option.get() != null) {
+                if (option.get() == ButtonType.OK) {
+                    Alert alert1 = new Alert(Alert.AlertType.INFORMATION);
+                    alert1.setTitle("Information");
+                    TreeItem<ProjectFileDescriptor> selectedItem = projectTreeView.getSelectionModel().getSelectedItem();
+                    if(deleteData(selectedItem.getValue())){
+                        alert1.setContentText(selectedItem.getValue().getName() + " was removed successfully!");
+                        this.projectTreeView.getSelectionModel().getSelectedItem().getParent().getChildren().remove(this.projectTreeView.getSelectionModel().getSelectedItem());
+                        saveProject();
+                    } else {
+                        alert1.setContentText("Can't remove!");
+                    }
+                    alert1.showAndWait();
+                }
+            }
+
+        });
+
+
+        this.dataContextMenu = new ContextMenu();
+        configureContextMenu(this.dataContextMenu);
+        this.dataContextMenu.getItems().addAll(loadDataItem, new SeparatorMenuItem(), deleteDataItem);
+
+
+
+
+    }
+
+    private void configureContextMenu(ContextMenu contextMenu) {
+        contextMenu.setOnShowing(event -> {
+                    projectBorderPane.setMaxWidth(MAX_WIDTH_PROJECT_MENU);
+                    projectBorderPane.setPrefWidth(MAX_WIDTH_PROJECT_MENU);
+                    projectBorderPane.setOnMouseEntered(null);
+                    projectBorderPane.setOnMouseExited(null);
+            }
+        );
+
+        contextMenu.setOnHiding(event -> {
+            projectBorderPane.getCenter().setVisible(false);
+            projectBorderPane.setMaxWidth(MIN_WIDTH_PROJECT_MENU);
+            projectBorderPane.setPrefWidth(MIN_WIDTH_PROJECT_MENU);
+            enableSlideMenu(openProjectMenuIcon, projectBorderPane, MAX_WIDTH_PROJECT_MENU, closeProjectMenu, openProjectMenu);
+
+        });
+    }
+
+    private boolean deleteDatasetFolder(ProjectFileDescriptor value) {
+        File file = value.getAsFile().getParentFile();
+        Arrays.stream(file.listFiles()).forEach(file1 -> file1.delete());
+        return file.delete();
+    }
+
+    private boolean deleteData(ProjectFileDescriptor value){
+        return value.getAsFile().delete();
+    }
+
+    private void openNEATFile(ProjectFileDescriptor projectFileDescriptor) {
+        //TODO Ask user to save old config to open new
+
+        if(!isNEATConfigSaved && currentNEATConfig != null){
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Open new NEAT config");
+            alert.setHeaderText("Yout last NEAT config was modified and not saved");
+            alert.setContentText("Would you like to save it?");
+
+
+            ButtonType save = new ButtonType("Save");
+            ButtonType notSave = new ButtonType("Don't save");
+            ButtonType cancel = new ButtonType("Cancel");
+
+            alert.getButtonTypes().clear();
+
+            alert.getButtonTypes().addAll(save, notSave, cancel);
+
+            // option != null.
+            Optional<ButtonType> option = alert.showAndWait();
+
+            if (option.get() != null) {
+                if (option.get() == save) {
+                    saveConfig();
+                } else if (option.get() == cancel){
+                    return;
+                }
+            }
+
+        }
+
+        File projectFile = projectFileDescriptor.getAsFile();
         if(projectFile != null){
 
             this.clearAllInfoElements();
+            this.clearGUIConfig();
+            this.testDatasetChoiceBox.getItems().clear();
+            this.trainDatasetChoiceBox.getItems().clear();
+            this.trainedModelsChoiceBox.getItems().clear();
 
-            this.originalNEATConfig = this.loadConfig(projectFile.getPath());
-            this.runnableNEATConfig = new NEATConfig((NEATConfig) this.originalNEATConfig);
-            this.currentProjectTextField.setText(projectFile.getParent());
+            this.currentNEATConfig = this.loadConfig(projectFile.getAbsolutePath());
+            //this.currentProjectTextField.setText(projectFile.getParent());
             //this.neatOptionsLabel.setText(neatOptionGASettings);
             this.neatMenuBorderPane.setCenter(this.parametresScrollPane);
             this.infoTabPane.setVisible(true);
-            this.projectFile = projectFile;
-            fillDataSetChoiceBox(originalNEATConfig);
-            fillFieldsUsingOriginalConfig();
 
 
+            TreeItem<ProjectFileDescriptor> treeItem = this.projectTreeView.getRoot().getChildren().stream().filter(projectFileDescriptorTreeItem -> {
+                return projectFileDescriptorTreeItem.getValue() == projectFileDescriptor;
+            }).findAny().orElse(null);
+
+
+            if(treeItem != null) {
+                this.currentNeatConfigFile = treeItem.getValue();
+                fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TRAINING_SET, treeItem, trainDatasetChoiceBox);
+                fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TEST_SET, treeItem, testDatasetChoiceBox);
+                fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TRAINED_MODEL, treeItem, trainedModelsChoiceBox);
+            }
+            fillFieldsUsingAIConfig(this.currentNEATConfig);
+
+            isNEATConfigSaved = true;
 
         }
     }
 
+    private void fillChoiceBoxWithData(ProjectFileDescriptor.TYPE type, TreeItem<ProjectFileDescriptor> treeItem, ChoiceBox<ProjectFileDescriptor> choiceBox) {
+        treeItem.getChildren().stream().forEach(treeItem1 -> {
+            if(treeItem1.getValue().getType() == type) choiceBox.getItems().add(treeItem1.getValue());
+        });
+        choiceBox.getSelectionModel().selectFirst();
+    }
+
     private void clearAllInfoElements() {
+
         trainTableView.getItems().clear();
         trainTableView.getColumns().clear();
         testTableView.getItems().clear();
@@ -1109,27 +1573,155 @@ public class MainController {
         this.testingProgressBar.progressProperty().setValue(0);
     }
 
-    private void fillDataSetChoiceBox(AIConfig sourceConfig) {
-        this.datasetChoiceBox.getItems().clear();
-        if(sourceConfig.configElement("ALLOWED.DATASETS") == null) return;
-        StringTokenizer stringTokenizer = new StringTokenizer(sourceConfig.configElement("ALLOWED.DATASETS"),";");
-        while (stringTokenizer.hasMoreTokens()) {
-            this.datasetChoiceBox.getItems().add(stringTokenizer.nextToken());
+    private void clearGUIConfig(){
+        mutationProbabilityTextField.setText("");
+        crossoverProbabilityTextField.setText("");
+        addLinkProbabilityTextField.setText("");
+        addNodeProbabilityTextField.setText("");
+        mutateBiasProbabilityTextField.setText("");
+        newActivationFunctionProbabilityTextField.setText("");
+        toggleLinkProbabilityTextField.setText("");
+        weightReplaceProbabilityTextField.setText("");
+        generatorSeedTextField.setText("");
+        excessCoefficientTextField.setText("");
+        disjointCoefficientTextField.setText("");
+        weightCoefficientTextField.setText("");
+        thresholdCompabilityTextField.setText("");
+        changeCompabilityTextField.setText("");
+        specieCountTextField.setText("");
+        survivalThresholdTextField.setText("");
+        specieAgeThresholdTextField.setText("");
+        specieYouthThresholdTextField.setText("");
+        specieOldPenaltyTextField.setText("");
+        specieYouthBoostTextField.setText("");
+        specieFitnessMaxTextField.setText("");
+        maxPertrubTextField.setText("");
+        maxBiasPertrubTextField.setText("");
+        featureSelectionToggle.setSelected(false);
+        reccurencyAllowedToggle.setSelected(false);
+        eleEventsToogle.setSelected(false);
+        eleSurvivalCountTextField.setText("");
+        eleEventTimeTextField.setText("");
+        keepBestEverToggle.setSelected(false);
+        extraFeatureCountTextField.setText("");
+        popSizeTextField.setText("");
+        numberEpochsTextField.setText("");
+        terminationValueToggle.setSelected(false);
+        terminationValueTextField.setText("");
+
+
+        for(TitledPane titledPane : activationFunctionAccordion.getPanes()){
+            VBox vBox = (VBox)titledPane.getContent();
+            for (Node toggleButton : vBox.getChildren()){
+                JFXToggleButton jfxToggleButton = ((JFXToggleButton) toggleButton);
+                jfxToggleButton.setSelected(false);
+
+                }
         }
+
     }
+
 
     @FXML
     private void createNewProject(ActionEvent actionEvent){
+
+        if(projectTreeView.getRoot() != null){
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Creating new project");
+            alert.setHeaderText("You tried to create new project");
+            alert.setContentText("Would you like to save all changes in current project?");
+            // option != null.
+
+            ButtonType save = new ButtonType("Save");
+            ButtonType notSave = new ButtonType("Don't save");
+            ButtonType cancel = new ButtonType("Cancel");
+
+            alert.getButtonTypes().clear();
+
+            alert.getButtonTypes().addAll(save, notSave, cancel);
+
+            // option != null.
+            Optional<ButtonType> option = alert.showAndWait();
+
+            if (option.get() != null) {
+                if (option.get() == save) {
+                    saveConfig();
+                    saveProject();
+                } else if (option.get() == cancel){
+                    return;
+                }
+            }
+
+        }
+
         NewProjectDialogue dialogue = NewProjectDialogue.getInstance(this.scene);
         dialogue.show();
         if(dialogue.getProjectFile() != null ){
             try {
-                this.openNEATFile(dialogue.getProjectFile());
+
+                readProjectFile(dialogue.getProjectFile());
             } catch (Exception ex){
                 AlertWindow.createAlertWindow(ex.getMessage()).show();
             }
         }
     }
+
+    @FXML
+    private void createNewDatasetFolder(ActionEvent actionEvent){
+        NewDatasetDialogue dialogue = NewDatasetDialogue.getInstance(this.scene);
+        dialogue.setCurrentProject(this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getAsFile());
+        dialogue.show();
+        if (dialogue.getNewDatasetFolder() != null){
+            ProjectFileDescriptor projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.NEAT_CONFIG, dialogue.getNewDatasetFolder().getAbsolutePath()+"\\"+dialogue.getNewDatasetFolder().getName()+".neat", dialogue.getNewDatasetFolder().getName(), "neat");
+            TreeItem<ProjectFileDescriptor> treeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), datasetFolderContext);
+                this.projectTreeView.getRoot().getChildren().add(treeItem);
+        }
+        saveProject();
+
+    }
+
+    private void saveProject() {
+
+        ProjectFileDescriptor projectFileDescriptor = this.projectTreeView.getRoot().getValue();
+        try {
+
+            FileWriter fileWriter = new FileWriter(projectFileDescriptor.getAsFile(), false);
+
+            fileWriter.write("PROJECT_NAME:"+this.projectTreeView.getRoot().getValue().getName()+"."+this.projectTreeView.getRoot().getValue().getExtension()+"\n");
+            fileWriter.append("LAST_OPENED_DATASET:");
+            if(currentNeatConfigFile != null) {
+                fileWriter.append(currentNeatConfigFile.getName() + "." + currentNeatConfigFile.getExtension()+"\n");
+            } else {
+                fileWriter.append("\n");
+            }
+
+            for(TreeItem<ProjectFileDescriptor> dataset : this.projectTreeView.getRoot().getChildren()){
+                fileWriter.append("DATASET_NAME:"+ dataset.getValue().getName()+"."+dataset.getValue().getExtension()+"\n");
+                for(TreeItem<ProjectFileDescriptor> item : dataset.getChildren()){
+                    switch (item.getValue().getType()){
+                        case TRAINING_SET:
+                            fileWriter.append("TRAIN_SET:"+ item.getValue().getName()+"."+item.getValue().getExtension()+"\n");
+                            break;
+                        case TEST_SET:
+                            fileWriter.append("TEST_SET:"+ item.getValue().getName()+"."+item.getValue().getExtension()+"\n");
+                            break;
+                        case TRAINED_MODEL:
+                            fileWriter.append("TRAINED_MODEL:"+ item.getValue().getName()+"."+item.getValue().getExtension()+"\n");
+                            break;
+                    }
+                }
+            }
+            fileWriter.flush();
+            fileWriter.close();
+
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
     private <T extends TextField & IFXLabelFloatControl> void validationPaneFormatter(
             T jfxTextField) {
@@ -1173,48 +1765,52 @@ public class MainController {
     @FXML
     private void saveConfig(){
         try {
-            initRunnableConfigUsingGUI();
-            runnableNEATConfig.saveConfig(this.projectFile);
+            initNEATConfigUsingGUI(this.currentNEATConfig);
+            currentNEATConfig.saveConfig(this.currentNeatConfigFile.getAsFile());
+            isNEATConfigSaved = true;
         } catch (IOException e) {
             AlertWindow.createAlertWindow("CANT_SAVE_FILE").show();
+            isNEATConfigSaved = false;
         }
     }
 
-    private void initRunnableConfigUsingGUI() {
-         runnableNEATConfig.updateConfig("PROBABILITY.MUTATION", mutationProbabilityTextField.getText());
-         runnableNEATConfig.updateConfig("PROBABILITY.CROSSOVER", crossoverProbabilityTextField.getText());
-         runnableNEATConfig.updateConfig("PROBABILITY.ADDLINK", addLinkProbabilityTextField.getText());
-         runnableNEATConfig.updateConfig("PROBABILITY.ADDNODE", addNodeProbabilityTextField.getText());
-         runnableNEATConfig.updateConfig("PROBABILITY.MUTATEBIAS", mutateBiasProbabilityTextField.getText());
-         runnableNEATConfig.updateConfig("PROBABILITY.TOGGLELINK", toggleLinkProbabilityTextField.getText());
-         runnableNEATConfig.updateConfig("PROBABILITY.NEWACTIVATIONFUNCTION", newActivationFunctionProbabilityTextField.getText());
-         runnableNEATConfig.updateConfig("PROBABILITY.WEIGHT.REPLACED", weightReplaceProbabilityTextField.getText());
-         runnableNEATConfig.updateConfig("GENERATOR.SEED", generatorSeedTextField.getText());
-         runnableNEATConfig.updateConfig("EXCESS.COEFFICIENT", excessCoefficientTextField.getText());
-         runnableNEATConfig.updateConfig("DISJOINT.COEFFICIENT", disjointCoefficientTextField.getText());
-         runnableNEATConfig.updateConfig("WEIGHT.COEFFICIENT", weightCoefficientTextField.getText());
-         runnableNEATConfig.updateConfig("COMPATABILITY.THRESHOLD", thresholdCompabilityTextField.getText());
-         runnableNEATConfig.updateConfig("COMPATABILITY.CHANGE", changeCompabilityTextField.getText());
-         runnableNEATConfig.updateConfig("SPECIE.COUNT", specieCountTextField.getText());
-         runnableNEATConfig.updateConfig("SURVIVAL.THRESHOLD", survivalThresholdTextField.getText());
-         runnableNEATConfig.updateConfig("SPECIE.AGE.THRESHOLD", specieAgeThresholdTextField.getText());
-         runnableNEATConfig.updateConfig("SPECIE.YOUTH.THRESHOLD", specieYouthThresholdTextField.getText());
-         runnableNEATConfig.updateConfig("SPECIE.OLD.PENALTY", specieOldPenaltyTextField.getText());
-         runnableNEATConfig.updateConfig("SPECIE.YOUTH.BOOST", specieYouthBoostTextField.getText());
-         runnableNEATConfig.updateConfig("SPECIE.FITNESS.MAX", specieFitnessMaxTextField.getText());
-         runnableNEATConfig.updateConfig("INPUT.NODES", inputNodesTextField.getText());
-         runnableNEATConfig.updateConfig("OUTPUT.NODES", outputNodesTextField.getText());
-         runnableNEATConfig.updateConfig("MAX.PERTURB", maxPertrubTextField.getText());
-         runnableNEATConfig.updateConfig("MAX.BIAS.PERTURB", maxBiasPertrubTextField.getText());
-         runnableNEATConfig.updateConfig("FEATURE.SELECTION", String.valueOf(featureSelectionToogle.isSelected()));
-         runnableNEATConfig.updateConfig("RECURRENCY.ALLOWED", String.valueOf(reccurencyAllowedToogle.isSelected()));
-         runnableNEATConfig.updateConfig("ELE.EVENTS", String.valueOf(eleEventsToogle.isSelected()));
-         runnableNEATConfig.updateConfig("ELE.SURVIVAL.COUNT", eleSurvivalCountTextField.getText());
-         runnableNEATConfig.updateConfig("ELE.EVENT.TIME", eleEventTimeTextField.getText());
-         runnableNEATConfig.updateConfig("KEEP.BEST.EVER", String.valueOf(keepBestEverToogle.isSelected()));
-         runnableNEATConfig.updateConfig("EXTRA.FEATURE.COUNT", extraFeatureCountTextField.getText());
-         runnableNEATConfig.updateConfig("POP.SIZE", popSizeTextField.getText());
-         runnableNEATConfig.updateConfig("NUMBER.EPOCHS", numberEpochsTextField.getText());
+    private void initNEATConfigUsingGUI(AIConfig NEATConfig) {
+         NEATConfig.updateConfig("PROBABILITY.MUTATION", mutationProbabilityTextField.getText());
+         NEATConfig.updateConfig("PROBABILITY.CROSSOVER", crossoverProbabilityTextField.getText());
+         NEATConfig.updateConfig("PROBABILITY.ADDLINK", addLinkProbabilityTextField.getText());
+         NEATConfig.updateConfig("PROBABILITY.ADDNODE", addNodeProbabilityTextField.getText());
+         NEATConfig.updateConfig("PROBABILITY.MUTATEBIAS", mutateBiasProbabilityTextField.getText());
+         NEATConfig.updateConfig("PROBABILITY.TOGGLELINK", toggleLinkProbabilityTextField.getText());
+         NEATConfig.updateConfig("PROBABILITY.NEWACTIVATIONFUNCTION", newActivationFunctionProbabilityTextField.getText());
+         NEATConfig.updateConfig("PROBABILITY.WEIGHT.REPLACED", weightReplaceProbabilityTextField.getText());
+         NEATConfig.updateConfig("GENERATOR.SEED", generatorSeedTextField.getText());
+         NEATConfig.updateConfig("EXCESS.COEFFICIENT", excessCoefficientTextField.getText());
+         NEATConfig.updateConfig("DISJOINT.COEFFICIENT", disjointCoefficientTextField.getText());
+         NEATConfig.updateConfig("WEIGHT.COEFFICIENT", weightCoefficientTextField.getText());
+         NEATConfig.updateConfig("COMPATABILITY.THRESHOLD", thresholdCompabilityTextField.getText());
+         NEATConfig.updateConfig("COMPATABILITY.CHANGE", changeCompabilityTextField.getText());
+         NEATConfig.updateConfig("SPECIE.COUNT", specieCountTextField.getText());
+         NEATConfig.updateConfig("SURVIVAL.THRESHOLD", survivalThresholdTextField.getText());
+         NEATConfig.updateConfig("SPECIE.AGE.THRESHOLD", specieAgeThresholdTextField.getText());
+         NEATConfig.updateConfig("SPECIE.YOUTH.THRESHOLD", specieYouthThresholdTextField.getText());
+         NEATConfig.updateConfig("SPECIE.OLD.PENALTY", specieOldPenaltyTextField.getText());
+         NEATConfig.updateConfig("SPECIE.YOUTH.BOOST", specieYouthBoostTextField.getText());
+         NEATConfig.updateConfig("SPECIE.FITNESS.MAX", specieFitnessMaxTextField.getText());
+         NEATConfig.updateConfig("INPUT.NODES", inputNodesTextField.getText());
+         NEATConfig.updateConfig("OUTPUT.NODES", outputNodesTextField.getText());
+         NEATConfig.updateConfig("MAX.PERTURB", maxPertrubTextField.getText());
+         NEATConfig.updateConfig("MAX.BIAS.PERTURB", maxBiasPertrubTextField.getText());
+         NEATConfig.updateConfig("FEATURE.SELECTION", String.valueOf(featureSelectionToggle.isSelected()));
+         NEATConfig.updateConfig("RECURRENCY.ALLOWED", String.valueOf(reccurencyAllowedToggle.isSelected()));
+         NEATConfig.updateConfig("ELE.EVENTS", String.valueOf(eleEventsToogle.isSelected()));
+         NEATConfig.updateConfig("ELE.SURVIVAL.COUNT", eleSurvivalCountTextField.getText());
+         NEATConfig.updateConfig("ELE.EVENT.TIME", eleEventTimeTextField.getText());
+         NEATConfig.updateConfig("KEEP.BEST.EVER", String.valueOf(keepBestEverToggle.isSelected()));
+         NEATConfig.updateConfig("EXTRA.FEATURE.COUNT", extraFeatureCountTextField.getText());
+         NEATConfig.updateConfig("POP.SIZE", popSizeTextField.getText());
+         NEATConfig.updateConfig("NUMBER.EPOCHS", numberEpochsTextField.getText());
+         NEATConfig.updateConfig("TERMINATION.VALUE.TOGGLE", String.valueOf(terminationValueToggle.isSelected()));
+         NEATConfig.updateConfig("TERMINATION.VALUE", terminationValueTextField.getText());
         TitledPane titledPane = null;
         JFXToggleButton jfxToggleButton = null;
         for (int i = 0; i < activationFunctionAccordion.getPanes().size(); i++) {
@@ -1234,13 +1830,13 @@ public class MainController {
             }
             switch (i){
                 case 0:
-                    runnableNEATConfig.updateConfig("INPUT.ACTIVATIONFUNCTIONS", stringBuilder.toString());
+                    NEATConfig.updateConfig("INPUT.ACTIVATIONFUNCTIONS", stringBuilder.toString());
                     break;
                 case 1:
-                    runnableNEATConfig.updateConfig("HIDDEN.ACTIVATIONFUNCTIONS", stringBuilder.toString());
+                    NEATConfig.updateConfig("HIDDEN.ACTIVATIONFUNCTIONS", stringBuilder.toString());
                     break;
                 case 2:
-                    runnableNEATConfig.updateConfig("OUTPUT.ACTIVATIONFUNCTIONS", stringBuilder.toString());
+                    NEATConfig.updateConfig("OUTPUT.ACTIVATIONFUNCTIONS", stringBuilder.toString());
                     break;
             }
 
@@ -1253,39 +1849,41 @@ public class MainController {
          //runnableNEATConfig.updateConfig("");
     }
     
-    private void fillFieldsUsingOriginalConfig(){
-        mutationProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.MUTATION"));
-        crossoverProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.CROSSOVER"));
-        addLinkProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.ADDLINK"));
-        addNodeProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.ADDNODE"));
-        mutateBiasProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.MUTATEBIAS"));
-        newActivationFunctionProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.NEWACTIVATIONFUNCTION"));
-        toggleLinkProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.TOGGLELINK"));
-        weightReplaceProbabilityTextField.setText(originalNEATConfig.configElement("PROBABILITY.WEIGHT.REPLACED"));
-        generatorSeedTextField.setText(originalNEATConfig.configElement("GENERATOR.SEED"));
-        excessCoefficientTextField.setText(originalNEATConfig.configElement("EXCESS.COEFFICIENT"));
-        disjointCoefficientTextField.setText(originalNEATConfig.configElement("DISJOINT.COEFFICIENT"));
-        weightCoefficientTextField.setText(originalNEATConfig.configElement("WEIGHT.COEFFICIENT"));
-        thresholdCompabilityTextField.setText(originalNEATConfig.configElement("COMPATABILITY.THRESHOLD"));
-        changeCompabilityTextField.setText(originalNEATConfig.configElement("COMPATABILITY.CHANGE"));
-        specieCountTextField.setText(originalNEATConfig.configElement("SPECIE.COUNT"));
-        survivalThresholdTextField.setText(originalNEATConfig.configElement("SURVIVAL.THRESHOLD"));
-        specieAgeThresholdTextField.setText(originalNEATConfig.configElement("SPECIE.AGE.THRESHOLD"));
-        specieYouthThresholdTextField.setText(originalNEATConfig.configElement("SPECIE.YOUTH.THRESHOLD"));
-        specieOldPenaltyTextField.setText(originalNEATConfig.configElement("SPECIE.OLD.PENALTY"));
-        specieYouthBoostTextField.setText(originalNEATConfig.configElement("SPECIE.YOUTH.BOOST"));
-        specieFitnessMaxTextField.setText(originalNEATConfig.configElement("SPECIE.FITNESS.MAX"));
-        maxPertrubTextField.setText(originalNEATConfig.configElement("MAX.PERTURB"));
-        maxBiasPertrubTextField.setText(originalNEATConfig.configElement("MAX.BIAS.PERTURB"));
-        featureSelectionToogle.setSelected(Boolean.parseBoolean(originalNEATConfig.configElement("FEATURE.SELECTION")));
-        reccurencyAllowedToogle.setSelected(Boolean.parseBoolean(originalNEATConfig.configElement("RECURRENCY.ALLOWED")));
-        eleEventsToogle.setSelected(Boolean.parseBoolean(originalNEATConfig.configElement("ELE.EVENTS")));
-        eleSurvivalCountTextField.setText(originalNEATConfig.configElement("ELE.SURVIVAL.COUNT"));
-        eleEventTimeTextField.setText(originalNEATConfig.configElement("ELE.EVENT.TIME"));
-        keepBestEverToogle.setSelected(Boolean.parseBoolean(originalNEATConfig.configElement("KEEP.BEST.EVER")));
-        extraFeatureCountTextField.setText(originalNEATConfig.configElement("EXTRA.FEATURE.COUNT"));
-        popSizeTextField.setText(originalNEATConfig.configElement("POP.SIZE"));
-        numberEpochsTextField.setText(originalNEATConfig.configElement("NUMBER.EPOCHS"));
+    private void fillFieldsUsingAIConfig(AIConfig NEATConfig){
+        mutationProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.MUTATION"));
+        crossoverProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.CROSSOVER"));
+        addLinkProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.ADDLINK"));
+        addNodeProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.ADDNODE"));
+        mutateBiasProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.MUTATEBIAS"));
+        newActivationFunctionProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.NEWACTIVATIONFUNCTION"));
+        toggleLinkProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.TOGGLELINK"));
+        weightReplaceProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.WEIGHT.REPLACED"));
+        generatorSeedTextField.setText(NEATConfig.configElement("GENERATOR.SEED"));
+        excessCoefficientTextField.setText(NEATConfig.configElement("EXCESS.COEFFICIENT"));
+        disjointCoefficientTextField.setText(NEATConfig.configElement("DISJOINT.COEFFICIENT"));
+        weightCoefficientTextField.setText(NEATConfig.configElement("WEIGHT.COEFFICIENT"));
+        thresholdCompabilityTextField.setText(NEATConfig.configElement("COMPATABILITY.THRESHOLD"));
+        changeCompabilityTextField.setText(NEATConfig.configElement("COMPATABILITY.CHANGE"));
+        specieCountTextField.setText(NEATConfig.configElement("SPECIE.COUNT"));
+        survivalThresholdTextField.setText(NEATConfig.configElement("SURVIVAL.THRESHOLD"));
+        specieAgeThresholdTextField.setText(NEATConfig.configElement("SPECIE.AGE.THRESHOLD"));
+        specieYouthThresholdTextField.setText(NEATConfig.configElement("SPECIE.YOUTH.THRESHOLD"));
+        specieOldPenaltyTextField.setText(NEATConfig.configElement("SPECIE.OLD.PENALTY"));
+        specieYouthBoostTextField.setText(NEATConfig.configElement("SPECIE.YOUTH.BOOST"));
+        specieFitnessMaxTextField.setText(NEATConfig.configElement("SPECIE.FITNESS.MAX"));
+        maxPertrubTextField.setText(NEATConfig.configElement("MAX.PERTURB"));
+        maxBiasPertrubTextField.setText(NEATConfig.configElement("MAX.BIAS.PERTURB"));
+        featureSelectionToggle.setSelected(Boolean.parseBoolean(NEATConfig.configElement("FEATURE.SELECTION")));
+        reccurencyAllowedToggle.setSelected(Boolean.parseBoolean(NEATConfig.configElement("RECURRENCY.ALLOWED")));
+        eleEventsToogle.setSelected(Boolean.parseBoolean(NEATConfig.configElement("ELE.EVENTS")));
+        eleSurvivalCountTextField.setText(NEATConfig.configElement("ELE.SURVIVAL.COUNT"));
+        eleEventTimeTextField.setText(NEATConfig.configElement("ELE.EVENT.TIME"));
+        keepBestEverToggle.setSelected(Boolean.parseBoolean(NEATConfig.configElement("KEEP.BEST.EVER")));
+        extraFeatureCountTextField.setText(NEATConfig.configElement("EXTRA.FEATURE.COUNT"));
+        popSizeTextField.setText(NEATConfig.configElement("POP.SIZE"));
+        numberEpochsTextField.setText(NEATConfig.configElement("NUMBER.EPOCHS"));
+        terminationValueToggle.setSelected(Boolean.parseBoolean(NEATConfig.configElement("TERMINATION.VALUE.TOGGLE")));
+        terminationValueTextField.setText(NEATConfig.configElement("TERMINATION.VALUE"));
 
         int i = 0;
         for(TitledPane titledPane : activationFunctionAccordion.getPanes()){
@@ -1293,13 +1891,13 @@ public class MainController {
             List<String> functions = null;
             switch (i){
                 case 0:
-                    functions = ((NEATConfig) originalNEATConfig).getActivationFunctionsByElementKey("INPUT.ACTIVATIONFUNCTIONS");
+                    functions = ((NEATConfig) NEATConfig).getActivationFunctionsByElementKey("INPUT.ACTIVATIONFUNCTIONS");
                     break;
                 case 1:
-                    functions = ((NEATConfig) originalNEATConfig).getActivationFunctionsByElementKey("HIDDEN.ACTIVATIONFUNCTIONS");
+                    functions = ((NEATConfig) NEATConfig).getActivationFunctionsByElementKey("HIDDEN.ACTIVATIONFUNCTIONS");
                     break;
                 case 2:
-                    functions = ((NEATConfig) originalNEATConfig).getActivationFunctionsByElementKey("OUTPUT.ACTIVATIONFUNCTIONS");
+                    functions = ((NEATConfig) NEATConfig).getActivationFunctionsByElementKey("OUTPUT.ACTIVATIONFUNCTIONS");
                     break;
             }
 
@@ -1328,20 +1926,33 @@ public class MainController {
     
     @FXML
     private void prepareNewData(ActionEvent actionEvent) {
-        DataPreparatorDialogue.getInstance(this.scene).setProjectPath(this.currentProjectTextField.getText()).show();
-        String nameOfDataSet = DataPreparatorDialogue.getInstance(this.scene).getNameOfDataSet();
-        if( nameOfDataSet != null ){
+        DataPreparatorDialogue.getInstance(this.scene).setCurrentDatasetFolder(this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getAsFile().getParent()).show();
+        String nameOfDataSet = DataPreparatorDialogue.getInstance(this.scene).getNameOfTrainingSet();
+        ProjectFileDescriptor projectFileDescriptor;
+        if(nameOfDataSet.length() != 0){
+            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINING_SET, this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getDirectoryPath(), nameOfDataSet, "trd");
+            this.projectTreeView.getSelectionModel().getSelectedItem().getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
+            this.trainDatasetChoiceBox.getItems().add(projectFileDescriptor);
+        }
+        nameOfDataSet = DataPreparatorDialogue.getInstance(this.scene).getNameOfTestSet();
+        if(nameOfDataSet.length() != 0){
+            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TEST_SET, this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getDirectoryPath(), nameOfDataSet, "ted");
+            this.projectTreeView.getSelectionModel().getSelectedItem().getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
+            this.testDatasetChoiceBox.getItems().add(projectFileDescriptor);
+        }
+        saveProject();
+        /*if( nameOfDataSet != null ){
             if(nameOfDataSet.length() != 0){
-                this.runnableNEATConfig.updateConfig("ALLOWED.DATASETS", this.runnableNEATConfig.configElement("ALLOWED.DATASETS")+";"+nameOfDataSet);
-                this.originalNEATConfig.updateConfig("ALLOWED.DATASETS", this.originalNEATConfig.configElement("ALLOWED.DATASETS")+";"+nameOfDataSet);
                 try {
-                    this.originalNEATConfig.saveConfig(this.projectFile);
+                    this.currentNEATConfig.saveConfig(this.projectFile);
                 } catch (IOException e) {
                     AlertWindow.createAlertWindow("Не удалось сохранить новый конфиг");
                 }
-                fillDataSetChoiceBox(this.runnableNEATConfig);
             }
-        }
+        }*/
+
+
+
     }
 
     public void generateNewSeed() {
@@ -1355,16 +1966,14 @@ public class MainController {
         if(trainThread.isAlive()){
             trainThread.interrupt();
         }
-        initRunnableConfigUsingGUI();
-        this.runnableNEATConfig.updateConfig("TRAINING.SET", this.currentProjectTextField.getText()+"\\datasets\\"+this.datasetChoiceBox.getValue()+"\\"+this.datasetChoiceBox.getValue()+"@train_temp.dataset");
-
-
+        initNEATConfigUsingGUI(this.currentNEATConfig);
+        this.currentNEATConfig.updateConfig("TRAINING.SET", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
 
         try {
-            this.saveTempDataSet(this.runnableNEATConfig.configElement("TRAINING.SET"));
-            logger.debug(this.runnableNEATConfig.configElement("TRAINING.SET"));
+            this.saveTempDataSet(this.currentNEATConfig.configElement("TRAINING.SET"));
+            logger.debug(this.currentNEATConfig.configElement("TRAINING.SET"));
             //TODO replace Test set init
-            this.runnableNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+this.datasetChoiceBox.getValue()+"\\"+this.datasetChoiceBox.getValue()+"@test_temp.dataset");
+            //this.currentNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+this.trainDatasetChoiceBox.getValue()+"\\"+this.trainDatasetChoiceBox.getValue()+"@test_temp.dataset");
             trainigTab.setDisable(false);
             infoTabPane.getSelectionModel().select(trainigTab);
 
@@ -1409,7 +2018,7 @@ public class MainController {
                 }*/
 
             });
-            neatTrainingForJavaFX.initialise(runnableNEATConfig);
+            neatTrainingForJavaFX.initialise(currentNEATConfig);
             neatTrainingForJavaFX.statusProperty().addListener(observable -> {
                 Platform.runLater(new Runnable() {
                     @Override public void run() {
@@ -1451,7 +2060,7 @@ public class MainController {
 
                         if(neatTrainingForJavaFX.statusProperty().get() == 1.0){
                             try {
-                                netVisualisator.setNetToVisualise(bestChromo, runnableNEATConfig);
+                                netVisualisator.setNetToVisualise(bestChromo, currentNEATConfig);
                                 netVisualisator.visualiseNet(netVisualisationCanvas);
                             } catch (InitialisationFailedException e) {
                                 e.printStackTrace();
@@ -1500,8 +2109,8 @@ public class MainController {
 
 
 
-    public File saveTempDataSet(String dataSetPath) throws IOException {
-        File file = new File(dataSetPath);
+    public File saveTempDataSet(String filePath) throws IOException {
+        File file = new File(filePath);
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, false));
         double value;
         for(List<Double> list : this.trainDataSet){
@@ -1515,6 +2124,12 @@ public class MainController {
         bufferedWriter.flush();
         bufferedWriter.close();
         return file;
+    }
+
+    public void openTrainedModels(ActionEvent actionEvent) {
+    }
+
+    public void openTestDataset(ActionEvent actionEvent) {
     }
 
 

@@ -61,8 +61,8 @@ public class DataPreparatorDialogue {
         return instance;
     }
 
-    public DataPreparatorDialogue setProjectPath(String projectPath){
-        controller.setProjectPath(projectPath);
+    public DataPreparatorDialogue setCurrentDatasetFolder(String datasetFolderName){
+        controller.setCurrentDatasetFolder(datasetFolderName);
         return instance;
     }
 
@@ -71,7 +71,8 @@ public class DataPreparatorDialogue {
         instance.stage.showAndWait();
     }
 
-    public String getNameOfDataSet(){
-        return instance.controller.getNameOfDataSet();
+    public String getNameOfTrainingSet(){
+        return instance.controller.getNameOfTrainingSet();
     }
+    public String getNameOfTestSet(){ return instance.controller.getNameOfTestSet(); }
 }

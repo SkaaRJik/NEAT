@@ -74,37 +74,29 @@ public class NewProjectDialogueController {
             AlertWindow.createAlertWindow("\"" + this.projectNameLabel.getText() + "\"" + " - " + this.resourceBundle.getString("CANT_BE_EMPTY")).show();
             return;
         }
-        File file = new File(this.projectLocationTextField.getText() + "\\" + this.projectNameTextField.getText());
-        if (file.exists()) {
+        File projectDirectory = new File(this.projectLocationTextField.getText() + "\\" + this.projectNameTextField.getText());
+        if (projectDirectory.exists()) {
             AlertWindow.createAlertWindow(this.resourceBundle.getString("ALREADY_EXISTS")).show();
         } else {
-            file.mkdir();
-            File defaultFile = new File(getClass().getClassLoader().getResource("NEATfiles/default.neat").getPath());
-            projectFile = new File(file.getPath()+"/"+this.projectNameTextField.getText()+".neat");
-            InputStream is = null;
-            OutputStream os = null;
-            try {
-                is = new FileInputStream(defaultFile);
-                os = new FileOutputStream(projectFile);
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = is.read(buffer)) > 0) {
-                    os.write(buffer, 0, length);
-                }
-            } catch (FileNotFoundException e) {
+            projectDirectory.mkdir();
+            projectFile = new File(projectDirectory.getAbsolutePath()+"\\"+projectNameTextField.getText()+".prj");
+
+            try{
+                FileWriter fileWriter = new FileWriter(projectFile, false);
+
+                fileWriter.write("PROJECT_NAME:"+this.projectNameTextField.getText()+".prj\n");
+                fileWriter.append("LAST_OPENED_DATASET:\n");
+                fileWriter.append("TRAIN_SET:\n");
+                fileWriter.append("TEST_SET:\n");
+                fileWriter.append("TRAINED_MODEL:\n");
+
+                fileWriter.flush();
+                fileWriter.close();
+            } catch (IOException ex){
+                AlertWindow.createAlertWindow("Can't save project").show();
                 projectFile = null;
-                e.printStackTrace();
-            } catch (IOException e) {
-                projectFile = null;
-                e.printStackTrace();
-            } finally {
-                try {
-                    is.close();
-                    os.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
+
             this.stage.close();
         }
     }

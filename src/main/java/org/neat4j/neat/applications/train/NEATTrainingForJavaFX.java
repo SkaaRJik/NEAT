@@ -34,19 +34,25 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
     public void evolve() {
         int epochs = Integer.parseInt(config.configElement("NUMBER.EPOCHS"));
         double terminateVal = ((NEATGADescriptor)this.ga.getDescriptor()).getErrorTerminationValue();
+        boolean terminateEnabled = ((NEATGADescriptor)this.ga.getDescriptor()).isToggleErrorTerminationValue();
         boolean nOrder = ((NEATGADescriptor)this.ga.getDescriptor()).isNaturalOrder();
         boolean terminate = false;
         int i = 0;
 
-        while (i < epochs && !terminate) {
+        while (i < epochs) {
             cat.info("Running Epoch[" + i + "]\r");
             this.ga.runEpoch();
             this.saveBest();
-            /*if ((this.ga.discoverdBestMember().fitness() >= terminateVal && !nOrder) || (this.ga.discoverdBestMember().fitness() <= terminateVal && nOrder)) {
+            if ((this.ga.discoverdBestMember().fitness() >= terminateVal && !nOrder) || (this.ga.discoverdBestMember().fitness() <= terminateVal && nOrder)) {
                 terminate = true;
-            }*/
+            }
             i++;
             status.setValue(((double)i)/epochs);
+            if(terminate && terminateEnabled) {
+                status.setValue(1);
+                break;
+            }
+
         }
         this.status.setValue(1.0);
         cat.debug("Innovation Database Stats - Hits:" + InnovationDatabase.totalHits + " - totalMisses:" + InnovationDatabase.totalMisses);

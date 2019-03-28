@@ -142,7 +142,8 @@ public class NEATGATrainingManager {
 		double maxPerturb = Double.parseDouble(config.configElement("MAX.PERTURB"));
 		double maxBiasPerturb = Double.parseDouble(config.configElement("MAX.BIAS.PERTURB"));
 		double pNewActivationFunction = Double.parseDouble(config.configElement("PROBABILITY.NEWACTIVATIONFUNCTION"));
-		
+		boolean toggleTerminationValue = Boolean.parseBoolean(config.configElement("TERMINATION.VALUE.TOGGLE"));
+
 		NEATGADescriptor descriptor = new NEATGADescriptor();
 		descriptor.setPAddLink(pAddLink);
 		descriptor.setPAddNode(pAddNode);
@@ -178,6 +179,7 @@ public class NEATGATrainingManager {
 		descriptor.setErrorTerminationValue(terminationValue);
 		descriptor.setMaxPerturb(maxPerturb);
 		descriptor.setMaxBiasPerturb(maxBiasPerturb);
+		descriptor.setToggleErrorTerminationValue(toggleTerminationValue);
 		
 		return (descriptor);
 	}

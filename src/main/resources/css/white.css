@@ -71,3 +71,7 @@
 .visualisation-container{
     -fx-border-color: black;
 }
+
+.borderedHBox{
+    -fx-border-color: grey;
+}

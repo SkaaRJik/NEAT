@@ -250,10 +250,15 @@
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="30.0" />
                                  </BorderPane.margin>
                                  <children>
-                                    <JFXTextField fx:id="dataSetNameTextField" labelFloat="true" prefHeight="33.0" prefWidth="419.0" promptText="Data set name" />
+                                    <JFXTextField fx:id="trainDataNameTextField" labelFloat="true" prefHeight="33.0" prefWidth="419.0" promptText="Train data name" />
+                                    <JFXTextField fx:id="testDataNameTextField" labelFloat="true" layoutX="10.0" layoutY="10.0" prefHeight="33.0" prefWidth="419.0" promptText="Test data name">
+                                       <VBox.margin>
+                                          <Insets top="10.0" />
+                                       </VBox.margin>
+                                    </JFXTextField>
                                     <AnchorPane>
                                        <children>
-                                          <Label fx:id="dataSetsHeaderLabel" alignment="CENTER" text="Label" wrapText="true" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+                                          <Label fx:id="dataSetsHeaderLabel" alignment="CENTER" text="Normalised data" wrapText="true" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
                                        </children>
                                     </AnchorPane>
                                  </children>
@@ -262,7 +267,7 @@
                            <center>
                               <Accordion prefHeight="387.0" prefWidth="800.0">
                                  <panes>
-                                    <TitledPane fx:id="normalizedTrainDataTitledPane" animated="false" text="untitled 1">
+                                    <TitledPane fx:id="normalizedTrainDataTitledPane" animated="false" text="Train data">
                                        <content>
                                           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                              <children>
@@ -271,7 +276,7 @@
                                           </AnchorPane>
                                        </content>
                                     </TitledPane>
-                                    <TitledPane fx:id="normalizedTestDataTitledPane" animated="false" text="untitled 1">
+                                    <TitledPane fx:id="normalizedTestDataTitledPane" animated="false" text="Test data">
                                        <content>
                                           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                              <children>

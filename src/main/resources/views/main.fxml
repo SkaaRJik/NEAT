@@ -24,6 +24,7 @@
 <?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
@@ -146,7 +147,7 @@
                            <items>
                               <ScrollPane fitToWidth="true">
                                  <content>
-                                    <VBox fx:id="trainVBox">
+                                    <VBox fx:id="trainVBox" spacing="10.0">
                                        <children>
                                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                              <children>
@@ -154,30 +155,26 @@
                                                    <center>
                                                       <AnchorPane>
                                                          <children>
-                                                            <ScrollPane fx:id="dataSetsScrollPane" fitToHeight="true" fitToWidth="true" prefHeight="488.0" prefWidth="480.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                            <ScrollPane fx:id="dataSetsScrollPane" fitToHeight="true" fitToWidth="true" prefHeight="226.0" prefWidth="583.0" AnchorPane.bottomAnchor="-122.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                                <content>
-                                                                <AnchorPane minHeight="0.0" minWidth="0.0">
-                                                                     <children>
-                                                                        <TitledPane fx:id="trainTitledPane" animated="false" expanded="false" text="untitled" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                                                          <content>
-                                                                            <AnchorPane>
-                                                                                 <children>
-                                                                                    <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                                                                       <content>
-                                                                                          <TableView fx:id="trainTableView">
-                                                                                            <columns>
-                                                                                              <TableColumn prefWidth="75.0" text="C1" />
-                                                                                              <TableColumn prefWidth="75.0" text="C2" />
-                                                                                            </columns>
-                                                                                          </TableView>
-                                                                                       </content>
-                                                                                    </ScrollPane>
-                                                                                 </children>
-                                                                              </AnchorPane>
-                                                                          </content>
-                                                                        </TitledPane>
-                                                                     </children>
-                                                                  </AnchorPane>
+                                                                  <TitledPane fx:id="trainTitledPane" animated="false" prefHeight="226.0" prefWidth="581.0" text="untitled">
+                                                                    <content>
+                                                                      <AnchorPane>
+                                                                           <children>
+                                                                              <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                                                 <content>
+                                                                                    <TableView fx:id="trainTableView">
+                                                                                      <columns>
+                                                                                        <TableColumn prefWidth="75.0" text="C1" />
+                                                                                        <TableColumn prefWidth="75.0" text="C2" />
+                                                                                      </columns>
+                                                                                    </TableView>
+                                                                                 </content>
+                                                                              </ScrollPane>
+                                                                           </children>
+                                                                        </AnchorPane>
+                                                                    </content>
+                                                                  </TitledPane>
                                                                </content>
                                                             </ScrollPane>
                                                          </children>
@@ -191,7 +188,7 @@
                                                          <center>
                                                             <AnchorPane BorderPane.alignment="CENTER">
                                                                <children>
-                                                                  <ChoiceBox fx:id="datasetChoiceBox" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                                  <ChoiceBox fx:id="trainDatasetChoiceBox" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                                                </children>
                                                             </AnchorPane>
                                                          </center>
@@ -217,25 +214,15 @@
                                                 </BorderPane>
                                              </children>
                                           </AnchorPane>
-                                          <AnchorPane>
-                                             <VBox.margin>
-                                                <Insets bottom="5.0" left="5.0" right="5.0" />
-                                             </VBox.margin>
+                                          <FlowPane hgap="10.0" vgap="10.0">
                                              <children>
-                                                <BorderPane AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-                                                   <center>
-                                                      <JFXTextField fx:id="lastErrorTextField" labelFloat="true">
-                                                         <BorderPane.margin>
-                                                            <Insets right="5.0" />
-                                                         </BorderPane.margin>
-                                                      </JFXTextField>
-                                                   </center>
-                                                </BorderPane>
+                                                <JFXTextField fx:id="lastErrorTextField" labelFloat="true" promptText="Error" />
+                                                <JFXTextField fx:id="currentEpochTextField" labelFloat="true" layoutX="10.0" layoutY="10.0" promptText="Current epoch" />
                                              </children>
-                                          </AnchorPane>
-                                          <AnchorPane>
+                                          </FlowPane>
+                                          <FlowPane hgap="10.0" vgap="10.0">
                                              <children>
-                                                <HBox alignment="CENTER" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                                                <HBox alignment="CENTER" styleClass="borderedHBox">
                                                    <children>
                                                       <LineChart fx:id="errorChart">
                                                         <xAxis>
@@ -252,29 +239,29 @@
                                                       </JFXButton>
                                                    </children>
                                                 </HBox>
+                                                <HBox alignment="CENTER" styleClass="borderedHBox">
+                                                   <children>
+                                                      <LineChart fx:id="valueGraphicChart">
+                                                         <xAxis>
+                                                            <NumberAxis fx:id="legendAxis" label="Legend" side="BOTTOM" />
+                                                         </xAxis>
+                                                         <yAxis>
+                                                            <NumberAxis label="Output values" side="LEFT" />
+                                                         </yAxis>
+                                                      </LineChart>
+                                                      <JFXButton fx:id="valueGraphicChartButton" mnemonicParsing="false">
+                                                         <graphic>
+                                                            <MaterialDesignIconView glyphName="REFRESH" size="20.0" />
+                                                         </graphic>
+                                                      </JFXButton>
+                                                   </children>
+                                                </HBox>
                                              </children>
-                                          </AnchorPane>
-                                          <HBox alignment="CENTER">
-                                             <children>
-                                                <LineChart fx:id="valueGraphicChart">
-                                                   <xAxis>
-                                                      <NumberAxis label="Epochs" side="BOTTOM" />
-                                                   </xAxis>
-                                                   <yAxis>
-                                                      <NumberAxis label="Errors" side="LEFT" />
-                                                   </yAxis>
-                                                </LineChart>
-                                                <JFXButton fx:id="valueGraphicChartButton" mnemonicParsing="false">
-                                                   <graphic>
-                                                      <MaterialDesignIconView glyphName="REFRESH" size="20.0" />
-                                                   </graphic>
-                                                </JFXButton>
-                                             </children>
-                                          </HBox>
+                                          </FlowPane>
                                           <BorderPane fx:id="netVisualizationBorderPane" styleClass="visualisation-container" />
                                        </children>
                                        <padding>
-                                          <Insets top="25.0" />
+                                          <Insets bottom="5.0" left="5.0" right="5.0" top="25.0" />
                                        </padding>
                                     </VBox>
                                  </content>
@@ -283,7 +270,7 @@
                                  <left>
                                     <BorderPane prefHeight="529.0" prefWidth="32.0" BorderPane.alignment="CENTER">
                                        <center>
-                                          <MaterialDesignIconView fx:id="openMenuIcon" glyphName="CHEVRON_DOUBLE_LEFT" size="20" BorderPane.alignment="CENTER" />
+                                          <MaterialDesignIconView fx:id="openNEATMenuIcon" glyphName="CHEVRON_DOUBLE_LEFT" size="20" BorderPane.alignment="CENTER" />
                                        </center>
                                        <top>
                                           <AnchorPane prefHeight="21.0" prefWidth="145.0" rotate="270.0" BorderPane.alignment="CENTER">
@@ -318,15 +305,98 @@
                      <content>
                         <AnchorPane>
                            <children>
-                              <BorderPane layoutX="170.0" layoutY="100.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                              <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                  <center>
-                                    <TableView fx:id="testTableView" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                                      <columns>
-                                        <TableColumn prefWidth="75.0" text="C1" />
-                                        <TableColumn prefWidth="75.0" text="C2" />
-                                      </columns>
-                                    </TableView>
+                                    <ScrollPane fitToWidth="true">
+                                       <content>
+                                          <VBox spacing="10.0">
+                                             <children>
+                                                <TitledPane expanded="false">
+                                                   <content>
+                                                      <TableView fx:id="testTableView" prefHeight="200.0" prefWidth="200.0">
+                                                        <columns>
+                                                          <TableColumn prefWidth="75.0" text="C1" />
+                                                          <TableColumn prefWidth="75.0" text="C2" />
+                                                        </columns>
+                                                      </TableView>
+                                                   </content>
+                                                </TitledPane>
+                                             </children>
+                                             <padding>
+                                                <Insets top="5.0" />
+                                             </padding>
+                                          </VBox>
+                                       </content>
+                                    </ScrollPane>
                                  </center>
+                                 <top>
+                                    <VBox alignment="CENTER" prefHeight="52.0" prefWidth="520.0" spacing="10.0" BorderPane.alignment="CENTER">
+                                       <children>
+                                          <BorderPane prefHeight="0.0" prefWidth="518.0">
+                                             <center>
+                                                <AnchorPane BorderPane.alignment="CENTER">
+                                                   <children>
+                                                      <ChoiceBox fx:id="trainedModelsChoiceBox" prefHeight="31.0" prefWidth="518.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                   </children>
+                                                </AnchorPane>
+                                             </center>
+                                             <right>
+                                                <JFXButton contentDisplay="CENTER" mnemonicParsing="false" onAction="#openTrainedModels" styleClass="JFXButton" text=" " wrapText="true" BorderPane.alignment="CENTER">
+                                                   <tooltip>
+                                                      <Tooltip fx:id="openTrainedModelTooltip" text="Empty Tooltip" />
+                                                   </tooltip>
+                                                   <graphic>
+                                                      <FontAwesomeIconView glyphName="FOLDER_ALT" size="18.0" />
+                                                   </graphic>
+                                                   <BorderPane.margin>
+                                                      <Insets left="5.0" right="5.0" />
+                                                   </BorderPane.margin>
+                                                </JFXButton>
+                                             </right>
+                                             <left>
+                                                <Label text="Label" BorderPane.alignment="CENTER">
+                                                   <BorderPane.margin>
+                                                      <Insets left="5.0" right="5.0" />
+                                                   </BorderPane.margin>
+                                                </Label>
+                                             </left>
+                                          </BorderPane>
+                                          <BorderPane prefHeight="0.0" prefWidth="518.0">
+                                             <center>
+                                                <AnchorPane BorderPane.alignment="CENTER">
+                                                   <children>
+                                                      <ChoiceBox fx:id="testDatasetChoiceBox" prefHeight="31.0" prefWidth="518.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                   </children>
+                                                </AnchorPane>
+                                             </center>
+                                             <right>
+                                                <JFXButton contentDisplay="CENTER" mnemonicParsing="false" onAction="#openTestDataset" styleClass="JFXButton" text=" " wrapText="true" BorderPane.alignment="CENTER">
+                                                   <tooltip>
+                                                      <Tooltip fx:id="openTestDatasetTooltip" text="Empty Tooltip" />
+                                                   </tooltip>
+                                                   <graphic>
+                                                      <FontAwesomeIconView glyphName="FOLDER_ALT" size="18.0" />
+                                                   </graphic>
+                                                   <BorderPane.margin>
+                                                      <Insets left="5.0" right="5.0" />
+                                                   </BorderPane.margin>
+                                                </JFXButton>
+                                             </right>
+                                             <left>
+                                                <Label text="Label" BorderPane.alignment="CENTER">
+                                                   <BorderPane.margin>
+                                                      <Insets left="5.0" right="5.0" />
+                                                   </BorderPane.margin>
+                                                </Label>
+                                             </left>
+                                          </BorderPane>
+                                          <JFXButton fx:id="runTestButton" />
+                                       </children>
+                                       <BorderPane.margin>
+                                          <Insets bottom="5.0" top="5.0" />
+                                       </BorderPane.margin>
+                                    </VBox>
+                                 </top>
                               </BorderPane>
                            </children>
                         </AnchorPane>

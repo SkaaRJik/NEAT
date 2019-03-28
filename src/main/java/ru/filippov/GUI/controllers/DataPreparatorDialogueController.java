@@ -3,7 +3,6 @@ package ru.filippov.GUI.controllers;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTextField;
-import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -25,9 +24,6 @@ import org.apache.log4j.Logger;
 import org.neat4j.neat.data.normaliser.DataScaler;
 import org.neat4j.neat.data.normaliser.LinearScaler;
 import org.neat4j.neat.data.normaliser.NonLinearScaler;
-import org.neat4j.neat.nn.core.ActivationFunction;
-import org.neat4j.neat.nn.core.functions.ActivationFunctionImpl;
-import org.neat4j.neat.nn.core.functions.ArctgFunction;
 import org.neat4j.neat.nn.core.functions.SigmoidFunction;
 import org.neat4j.neat.nn.core.functions.TanhFunction;
 import ru.filippov.GUI.windows.AlertWindow;
@@ -85,7 +81,9 @@ public class DataPreparatorDialogueController {
 
 
     @FXML    private Tab setDataSetNameTable;
-    @FXML    private JFXTextField dataSetNameTextField;
+    @FXML    private JFXTextField trainDataNameTextField;
+    @FXML    private JFXTextField testDataNameTextField;
+
     @FXML    private Label dataSetsHeaderLabel;
     @FXML    private TitledPane normalizedTrainDataTitledPane;
     @FXML    private TableView<List<Double>> normalisedTrainDataTableView;
@@ -343,10 +341,10 @@ public class DataPreparatorDialogueController {
                 nextButton.setDisable(true);
                 return;
             }
+            newValue = newValue.replace(",",".");
             if(!NumberUtils.isCreatable(newValue)){
                 testingSetPercentageTextField.setText(oldValue);
             } else {
-                newValue = newValue.replace(",",".");
                 try {
                     double value = Double.valueOf(newValue);
                     if (value>100) throw new NumberFormatException();
@@ -362,17 +360,25 @@ public class DataPreparatorDialogueController {
             }
         });
 
-        dataSetNameTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if(newValue.isEmpty()){
-                nextButton.setDisable(true);
-            } else{
-                if(!Validator.allowedNameOfFile(newValue)) nextButton.setDisable(true);
-                else{
-                    nextButton.setDisable(false);
+        configureDataNameTextField(trainDataNameTextField);
+        configureDataNameTextField(testDataNameTextField);
+    }
+
+    private void configureDataNameTextField(JFXTextField dataNameTextField) {
+        dataNameTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if(dataNameTextField.isVisible()) {
+                if (newValue.isEmpty()) {
+                    nextButton.setDisable(true);
+                } else {
+                    if (!Validator.allowedNameOfFile(newValue)) nextButton.setDisable(true);
+                    else {
+                        nextButton.setDisable(false);
+                    }
                 }
             }
         });
     }
+
     @FXML    private void cancel() {
         this.stage.close();
     }
@@ -483,22 +489,20 @@ public class DataPreparatorDialogueController {
     }
 
     private void finishStep() {
-        File file = new File(this.projectPath+this.dataSetNameTextField.getText());
-        file.mkdir();
         File dataFile;
         try {
             if(!trainSetIndexes.isEmpty()) {
-                dataFile = new File(file.getAbsolutePath() + "\\" + this.dataSetNameTextField.getText() + ".trd");
+                dataFile = new File(this.projectPath + this.trainDataNameTextField.getText() + ".trd");
                 if(dataFile.exists()) {
-                    AlertWindow.createAlertWindow("\"" + this.dataSetNameTextField.getText() + "\" train dataset - is already exists. \n Choose another name");
+                    AlertWindow.createAlertWindow("\"" + this.trainDataNameTextField.getText() + "\" train dataset - is already exists. \n Choose another name");
                     return;
                 }
                 this.writeDataIntoFile(dataFile, this.normalisedTrainDataTableView);
             }
             if(!testSetIndexes.isEmpty()) {
-                dataFile = new File(file.getAbsolutePath() + "\\" + this.dataSetNameTextField.getText() + ".ted");
+                dataFile = new File(this.projectPath + this.trainDataNameTextField.getText() + ".ted");
                 if(dataFile.exists()) {
-                    AlertWindow.createAlertWindow("\"" + this.dataSetNameTextField.getText() + "\" test dataset - is already exists. \n Choose another name");
+                    AlertWindow.createAlertWindow("\"" + this.trainDataNameTextField.getText() + "\" test dataset - is already exists. \n Choose another name");
                     return;
                 }
                 this.writeDataIntoFile(dataFile, this.normalisedTestDataTableView);
@@ -524,39 +528,64 @@ public class DataPreparatorDialogueController {
         normalisedTestDataTableView.getItems().clear();
 
         //ObservableList<TableColumn<List<Double>, ?>> columns = FXCollections.observableList(normalisedDataTableView.getColumns());
-
+        TableColumn<List<Double>, ?> column;
+        TableColumn<List<Double>, Double> tempColumn;
         for( int i = 0 ; i < normalisedDataTableView.getColumns().size(); i++){
-            TableColumn<List<Double>, ?> column = normalisedDataTableView.getColumns().get(i);
-            TableColumn<List<Double>, Double> col = new TableColumn<List<Double>, Double>();
+            column = normalisedDataTableView.getColumns().get(i);
             int finalI = i;
-            col.setCellValueFactory(p -> {
-               return new SimpleObjectProperty<Double>((p.getValue().get(finalI)));
-            });
-            normalisedTrainDataTableView.getColumns().add(col);
-            col.setText(column.getText());
-
-            col = new TableColumn<List<Double>, Double>();
-            col.setCellValueFactory(p -> {
-                return new SimpleObjectProperty<Double>((p.getValue().get(finalI)));
-            });
-            col.setText(column.getText());
-            normalisedTestDataTableView.getColumns().add(col);
-
+            if(!trainSetIndexes.isEmpty()) {
+                tempColumn = new TableColumn<List<Double>, Double>();
+                tempColumn.setCellValueFactory(p -> {
+                    return new SimpleObjectProperty<Double>((p.getValue().get(finalI)));
+                });
+                normalisedTrainDataTableView.getColumns().add(tempColumn);
+                tempColumn.setText(column.getText());
+            }
+            if(!testSetIndexes.isEmpty()) {
+                tempColumn = new TableColumn<List<Double>, Double>();
+                tempColumn.setCellValueFactory(p -> {
+                    return new SimpleObjectProperty<Double>((p.getValue().get(finalI)));
+                });
+                tempColumn.setText(column.getText());
+                normalisedTestDataTableView.getColumns().add(tempColumn);
+            }
+        }
+        if(!trainSetIndexes.isEmpty()) {
+            normalizedTrainDataTitledPane.setVisible(true);
+            normalizedTrainDataTitledPane.setVisible(true);
+            ObservableList<List<Double>> normalisedTrainData = FXCollections.observableArrayList();
+            for (int index : trainSetIndexes) {
+                normalisedTrainData.add(normalisedUsedData.get(index));
+            }
+            normalisedTrainDataTableView.getItems().addAll(normalisedTrainData);
+            nextButton.setDisable(true);
+            normalizedTrainDataTitledPane.setExpanded(true);
+        } else {
+            trainDataNameTextField.setVisible(false);
+            normalizedTrainDataTitledPane.setVisible(false);
         }
 
-        ObservableList<List<Double>> normalisedTrainData = FXCollections.observableArrayList();
-        ObservableList<List<Double>> normalisedTestData = FXCollections.observableArrayList();
-        for(int index : trainSetIndexes){
-            normalisedTrainData.add(normalisedUsedData.get(index));
-        }
-        for(int index : testSetIndexes) {
-            normalisedTestData.add(normalisedUsedData.get(index));
+        if(!testSetIndexes.isEmpty()) {
+            normalizedTestDataTitledPane.setVisible(true);
+            testDataNameTextField.setVisible(true);
+            ObservableList<List<Double>> normalisedTestData = FXCollections.observableArrayList();
+            for (int index : testSetIndexes) {
+                normalisedTestData.add(normalisedUsedData.get(index));
+            }
+            normalisedTestDataTableView.getItems().addAll(normalisedTestData);
+            nextButton.setDisable(true);
+            if(trainSetIndexes.isEmpty()){
+                normalizedTestDataTitledPane.setExpanded(true);
+            }
+        } else {
+            testDataNameTextField.setVisible(false);
+            normalizedTestDataTitledPane.setVisible(false);
         }
 
-        normalisedTrainDataTableView.getItems().addAll(normalisedTrainData);
-        normalisedTestDataTableView.getItems().addAll(normalisedTestData);
-        normalizedTrainDataTitledPane.setExpanded(true);
-        nextButton.setDisable(true);
+
+
+
+
 
     }
 
@@ -775,7 +804,11 @@ public class DataPreparatorDialogueController {
         this.fileTextField.setText("");
         this.dataTextArea.setText("");
         this.nextButton.setDisable(true);
-        this.dataSetNameTextField.setText("");
+        this.trainDataNameTextField.setText("");
+
+        this.trainDataNameTextField.setText("");
+        this.testDataNameTextField.setText("");
+
     }
 
 
@@ -848,6 +881,7 @@ public class DataPreparatorDialogueController {
             }
             stringBuilder.append(line+"\n");
         }
+        reader.close();
         return stringBuilder.toString();
 
     }
@@ -967,8 +1001,8 @@ public class DataPreparatorDialogueController {
         this.selectTrainingDataTableView.refresh();
     }
 
-    public void setProjectPath(String projectPath) {
-        this.projectPath = projectPath + "\\datasets\\";
+    public void setCurrentDatasetFolder(String datasetFolderName) {
+        this.projectPath = datasetFolderName + "\\";
     }
 
 
@@ -997,11 +1031,15 @@ public class DataPreparatorDialogueController {
         writer.flush();
         writer.close();
 
+
         return true;
     }
 
 
-    public String getNameOfDataSet() {
-        return this.dataSetNameTextField.getText();
+    public String getNameOfTrainingSet() {
+        return this.trainDataNameTextField.getText();
+    }
+    public String getNameOfTestSet() {
+        return this.trainDataNameTextField.getText();
     }
 }
