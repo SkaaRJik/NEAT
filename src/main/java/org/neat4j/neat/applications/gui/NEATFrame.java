@@ -90,10 +90,10 @@ class NEATCanvas extends Canvas {
 		int inputs = this.net.netDescriptor().numInputs();
 		
 		for (i = 0; i < neurons.length; i++) {
-			if (neurons[i].neuronDepth() >= 0 && neurons[i].neuronType() != NEATNodeGene.INPUT) {
-				if (neurons[i].neuronType() == NEATNodeGene.OUTPUT) {
+			if (neurons[i].neuronDepth() >= 0 && neurons[i].neuronType() != NEATNodeGene.TYPE.INPUT) {
+				if (neurons[i].neuronType() == NEATNodeGene.TYPE.OUTPUT) {
 					nDepthWidth[0]++; 
-				} else if (neurons[i].neuronType() == NEATNodeGene.HIDDEN) {
+				} else if (neurons[i].neuronType() == NEATNodeGene.TYPE.HIDDEN) {
 					if (neurons[i].neuronDepth() > (maxDepth - 1)) { 
 						maxDepth = neurons[i].neuronDepth() + 1;
 					}
@@ -116,7 +116,7 @@ class NEATCanvas extends Canvas {
 		for (i = 0; i < neurons.length; i++) {
 			neuron = neurons[i];
 			if (neuron.neuronDepth() >= 0) {
-				if (neuron.neuronType() == NEATNodeGene.INPUT) {
+				if (neuron.neuronType() == NEATNodeGene.TYPE.INPUT) {
 					row = maxDepth - 1;
 				} else {
 					row = neuron.neuronDepth();
@@ -207,11 +207,11 @@ class NEATCanvas extends Canvas {
 	}
 	
 	private void drawNeuron(DisplayNeuron neuron, Graphics g) {
-		if (neuron.neuron().neuronType() == NEATNodeGene.INPUT) {
+		if (neuron.neuron().neuronType() == NEATNodeGene.TYPE.INPUT) {
 			g.setColor(Color.MAGENTA);
 		} else if (neuron.neuron().sourceNeurons().size() == 0) {
 			g.setColor(Color.GREEN);
-		} else if (neuron.neuron().neuronType() == NEATNodeGene.OUTPUT) {
+		} else if (neuron.neuron().neuronType() == NEATNodeGene.TYPE.OUTPUT) {
 			g.setColor(Color.ORANGE);
 		} else {
 			g.setColor(Color.LIGHT_GRAY);

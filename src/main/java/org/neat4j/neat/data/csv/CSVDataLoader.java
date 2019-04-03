@@ -9,6 +9,7 @@ import org.neat4j.neat.data.core.*;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 /**
@@ -36,24 +37,38 @@ public class CSVDataLoader implements DataLoader {
 		cat.debug("Creating data sets");
 		NetworkDataSet dataSet = new CSVDataSet();
 		File csvFile = new File(this.fileName);
-		FileInputStream fis;
+		FileInputStream fis = null;
 		StringTokenizer sTok;
 		String line;
 		ExpectedOutputSet opSet;
 		ArrayList eOps = new ArrayList();
 		NetworkInputSet ipSet;
 		ArrayList ips = new ArrayList();
+		int tokens;
 		try {
 			fis = new FileInputStream(csvFile);
 			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+			sTok = new StringTokenizer(br.readLine(), ";");
+			tokens = sTok.countTokens();
+			List<String> inputHeaders = new ArrayList<>(tokens-this.opCols);
+			List<String> outputHeaders = new ArrayList<>(this.opCols);
+			for (int i = 0; i < tokens-this.opCols; i++) {
+				inputHeaders.add(sTok.nextToken());
+			}
+			while(sTok.hasMoreTokens()){
+				outputHeaders.add(sTok.nextToken());
+			}
+
+
 			while ((line = br.readLine()) != null) {
 				sTok = new StringTokenizer(line, "[,; ]");
 				ips.add(this.createInputPattern(sTok));
 				eOps.add(this.createExpectedOutput(sTok));
 			}
-			ipSet = new CSVInputSet(ips);
-			opSet = new CSVExpectedOutputSet(eOps);
+			ipSet = new CSVInputSet(inputHeaders, ips);
+			opSet = new CSVExpectedOutputSet(outputHeaders, eOps);
 			dataSet = new CSVDataSet(ipSet, opSet);
+			fis.close();
 		} catch (FileNotFoundException e) {
 			cat.error(e.getMessage());
 			e.printStackTrace();
@@ -63,6 +78,15 @@ public class CSVDataLoader implements DataLoader {
 		} catch (Exception e) {
 			cat.error(e.getMessage());
 			e.printStackTrace();
+		} finally {
+			if(fis != null) {
+				try {
+					fis.close();
+				} catch (IOException e) {
+					cat.error(e.getMessage());
+					e.printStackTrace();
+				}
+			}
 		}
 		
 		cat.debug("Creating data sets...Done");

@@ -58,4 +58,14 @@ public class Synapse implements Serializable{
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
+
+	@Override
+	public String toString() {
+		return "Synapse{" +
+				"\nfrom=" + from.getID() +
+				"\nto=" + to.getID() +
+				"\nweight=" + weight +
+				"\nenabled=" + enabled +
+				"\n}";
+	}
 }

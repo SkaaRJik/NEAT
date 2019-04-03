@@ -2,7 +2,11 @@ package org.neat4j.neat.applications.train;
 
 
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleListProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.apache.log4j.Logger;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
@@ -16,7 +20,9 @@ import java.util.List;
 public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runnable{
     private static final Logger cat = Logger.getLogger(NEATTrainingForJavaFX.class);
     DoubleProperty status;
-    List<Chromosome> bestEverChromosomes;
+    ObservableList<Chromosome> bestEverChromosomes;
+    ListProperty<Chromosome> bestEverChromosomesProperty;
+    private int currentEpoch;
 
     @Override
     public void run() {
@@ -28,7 +34,9 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
         InnovationDatabase.refresh();
         super.initialise(config);
         this.status = new SimpleDoubleProperty(0);
-        bestEverChromosomes = new ArrayList<>(Integer.parseInt(config.configElement("NUMBER.EPOCHS")));
+
+        bestEverChromosomes = FXCollections.observableArrayList();
+        this.bestEverChromosomesProperty = new SimpleListProperty<>(bestEverChromosomes);
     }
 
     public void evolve() {
@@ -40,6 +48,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
         int i = 0;
 
         while (i < epochs) {
+            currentEpoch = i+1;
             cat.info("Running Epoch[" + i + "]\r");
             this.ga.runEpoch();
             this.saveBest();
@@ -77,5 +86,17 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
 
     public List<Chromosome> getBestEverChromosomes() {
         return bestEverChromosomes;
+    }
+
+    public int getCurrentEpoch() {
+        return this.currentEpoch;
+    }
+
+    public ObservableList<Chromosome> getBestEverChromosomesProperty() {
+        return bestEverChromosomesProperty.get();
+    }
+
+    public ListProperty<Chromosome> bestEverChromosomesPropertyProperty() {
+        return bestEverChromosomesProperty;
     }
 }

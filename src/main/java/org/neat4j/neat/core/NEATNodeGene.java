@@ -15,18 +15,21 @@ import org.neat4j.neat.nn.core.ActivationFunction;
  * Gene that describes a NEAT node (neuron)
  */
 public class NEATNodeGene implements NEATGene {
+
+	public enum TYPE {
+		HIDDEN, OUTPUT, INPUT
+	}
+
 	private int innovationNumber;
 	private int id;
 	private double sigmoidFactor = -1.0;
-	private int type;
+	private TYPE type;
 	private double depth;
 	private double bias;
-	public static final int HIDDEN = 0;
-	public static final int OUTPUT = 1;
-	public static final int INPUT = 2;
 	private ActivationFunction activationFunction;
+	private String label;
 
-	public NEATNodeGene(int innovationNumber, int id, double sigmoidF, int type, double bias, ActivationFunction activationFunction) {
+	public NEATNodeGene(int innovationNumber, int id, double sigmoidF, TYPE type, String label,double bias, ActivationFunction activationFunction) {
 		this.innovationNumber = innovationNumber;
 		this.id = id;
 		this.sigmoidFactor = sigmoidF;
@@ -34,12 +37,13 @@ public class NEATNodeGene implements NEATGene {
 		this.bias = bias;
 		this.initialiseDepth();
 		this.activationFunction = activationFunction;
+		this.label = label;
 	}
 	
 	private void initialiseDepth() {
-		if (this.type == INPUT) {
+		if (this.type == TYPE.INPUT) {
 			this.depth = 0;
-		} else if (this.type == OUTPUT) {
+		} else if (this.type == TYPE.OUTPUT) {
 			this.depth = 1;
 		}
 	}
@@ -61,7 +65,7 @@ public class NEATNodeGene implements NEATGene {
 		this.sigmoidFactor = bias;
 	}
 	
-	public int getType() {
+	public TYPE getType() {
 		return type;
 	}
 
@@ -99,5 +103,13 @@ public class NEATNodeGene implements NEATGene {
 
 	public void setActivationFunction(ActivationFunction activationFunction) {
 		this.activationFunction = activationFunction;
+	}
+
+	public String getLabel() {
+		return label;
+	}
+
+	public void setLabel(String label) {
+		this.label = label;
 	}
 }

@@ -13,6 +13,7 @@ import org.neat4j.neat.data.core.NetworkInputSet;
  *
  */
 public class CSVDataSet implements NetworkDataSet {
+
 	private NetworkInputSet inputSet;
 	private ExpectedOutputSet expectedOutputSet;
 	

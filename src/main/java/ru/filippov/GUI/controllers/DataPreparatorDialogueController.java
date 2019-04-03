@@ -112,6 +112,7 @@ public class DataPreparatorDialogueController {
     int testSize = 0;
 
     String projectPath;
+    String legend;
 
 
     private String stringFromFile;
@@ -132,7 +133,7 @@ public class DataPreparatorDialogueController {
     private String dataWasCreated = "Data was successfully saved";
     private String useChoiceBox = "Use drop out list on main window, to select it";
     private String reloadData = "Upload your data again to apply encoding";
-
+    private boolean legendIsSelected = false;
 
     public void init(){
 
@@ -599,12 +600,20 @@ public class DataPreparatorDialogueController {
 
         TableColumn<List<Double>, ?> column;
         ArrayList<TableColumn<List<Double>, ?>> outputTableColumns = new ArrayList<>(this.selectUsableDataTableView.getColumns().size());
+
+
+
         int counter = 0;
         for( int i = 0 ; i < selectUsableDataTableView.getColumns().size() ; i++){
             column = selectUsableDataTableView.getColumns().get(i);
             if(((ChoiceBox)((BorderPane) column.getGraphic()).getCenter()).getValue().equals("Unused")){
                 //columns.add(tableColumn);
                 columns.remove(column);
+            }
+            else if(((ChoiceBox)((BorderPane) column.getGraphic()).getCenter()).getValue().equals("Legend")){
+                //columns.add(tableColumn);
+                columns.remove(column);
+
             } else {
                 TableColumn<List<Double>, Double> newColumn = new TableColumn<List<Double>, Double>(((Label)((BorderPane)column.getGraphic()).getTop()).getText());
                 int finalJ = counter;
@@ -645,7 +654,7 @@ public class DataPreparatorDialogueController {
 
         this.usedData = new ArrayList<>(this.selectUsableDataTableView.getItems().size());
         ObservableList<TableColumn<List<Double>, ?>> columns = FXCollections.observableArrayList(selectUsableDataTableView.getColumns());/*new ObservableList<TableColumn<List<Double>, ?>>(selectUsableDataTableView.getItems().size());*/
-
+        StringBuilder stringLegend = new StringBuilder("Legend:");
         TableColumn<List<Double>, ?> column;
         ArrayList<TableColumn<List<Double>, ?>> outputTableColumns = new ArrayList<>(this.selectUsableDataTableView.getColumns().size());
         int counter = 0;
@@ -653,7 +662,16 @@ public class DataPreparatorDialogueController {
             column = selectUsableDataTableView.getColumns().get(i);
             if(((ChoiceBox)((BorderPane) column.getGraphic()).getCenter()).getValue().equals("Unused")){
                 columns.remove(column);
-            } else {
+            } else if(((ChoiceBox)((BorderPane) column.getGraphic()).getCenter()).getValue().equals("Legend")) {
+                stringLegend.append(((Label)((BorderPane) column.getGraphic()).getTop()).getText()+";");
+                for(List<Double> item : selectUsableDataTableView.getItems()){
+                    stringLegend.append(column.getCellObservableValue(item).getValue()+";");
+                }
+                stringLegend.deleteCharAt(stringLegend.length()-1);
+
+                columns.remove(column);
+
+            } else{
                 TableColumn<List<Double>, Double> newColumn = new TableColumn<List<Double>, Double>(((Label)((BorderPane)column.getGraphic()).getTop()).getText());
                 int finalJ = counter;
                 newColumn.setSortable(false);
@@ -691,6 +709,8 @@ public class DataPreparatorDialogueController {
 
             }
         }
+
+        this.legend = stringLegend.toString();
         normaliseDataAccordion.setVisible(false);
         nextButton.setDisable(true);
 
@@ -741,7 +761,7 @@ public class DataPreparatorDialogueController {
     }
 
     private ChoiceBox<String> createInputOutputChoiceBox() {
-        ChoiceBox<String> choiceBox = new ChoiceBox<>(FXCollections.observableArrayList("Input", "Output", "Unused"));
+        ChoiceBox<String> choiceBox = new ChoiceBox<>(FXCollections.observableArrayList("Input", "Output", "Legend","Unused"));
         choiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (oldValue != null) {
                 switch (oldValue) {
@@ -750,6 +770,9 @@ public class DataPreparatorDialogueController {
                         break;
                     case "Output":
                         this.outputs--;
+                        break;
+                    case "Legend":
+                        this.legendIsSelected = false;
                         break;
                     default:
                         break;
@@ -761,6 +784,17 @@ public class DataPreparatorDialogueController {
                     break;
                 case "Output":
                     this.outputs++;
+                    break;
+                case "Legend":
+                    if(this.legendIsSelected){
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Information");
+                        alert.setContentText("Only one column can be used as a legend");
+                        alert.showAndWait();
+                        choiceBox.getSelectionModel().select(oldValue);
+                    } else {
+                        this.legendIsSelected = true;
+                    }
                     break;
                 default:
                     break;
@@ -1010,6 +1044,7 @@ public class DataPreparatorDialogueController {
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(dest));
         writer.write(this.inputs+";"+this.outputs+"\n");
+        writer.append(this.legend+"\n");
         for(int i = 0 ; i < tableView.getColumns().size(); i++) {
             writer.append(tableView.getColumns().get(i).getText());
             if(i != tableView.getColumns().size()-1) {

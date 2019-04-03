@@ -18,7 +18,7 @@ import java.util.Random;
 import java.util.Set;
 
 /**
- * Provides the NEAT innovation database as described in Kenneth Stanley's NEAT papers
+ * Provides the NEAT innovation instance as described in Kenneth Stanley's NEAT papers
  * The innovations are kept for the entire life of the run.
  * @author MSimmerson
  *
@@ -28,7 +28,7 @@ public class InnovationDatabase {
 	private HashMap innovations;
 	private static int innovationId = 1;
 	private static int neuronId = 1;
-	private static InnovationDatabase database;
+	private static InnovationDatabase instance;
 	public static int totalHits = 0;
 	public static int totalMisses = 0;
 
@@ -37,14 +37,14 @@ public class InnovationDatabase {
 		neuronId = 1;
 		totalHits = 0;
 		totalMisses = 0;
-		if(database!=null){
-			database.innovations = new HashMap();
+		if(instance !=null){
+			instance.innovations = new HashMap();
 		}
 	}
 
 	public static InnovationDatabase getInstance(Random random){
-		if(database == null) database = new InnovationDatabase(random);
-		return database;
+		if(instance == null) instance = new InnovationDatabase(random);
+		return instance;
 	}
 
 	private InnovationDatabase(Random ran) {
@@ -65,7 +65,7 @@ public class InnovationDatabase {
 	 * @return
 	 */
 	public static InnovationDatabase database() {
-		return (database);
+		return (instance);
 	}
 	
 	/**
@@ -94,11 +94,11 @@ public class InnovationDatabase {
 		}
 		
 		for (i = 0; i < inputs; i++) {
-			nodes[i] = this.createNewNodeGene(NEATNodeGene.INPUT);
+			nodes[i] = this.createNewNodeGene(NEATNodeGene.TYPE.INPUT);
 		}
 
 		for (i = inputs; i < nodes.length; i++) {
-			nodes[i] = this.createNewNodeGene(NEATNodeGene.OUTPUT);
+			nodes[i] = this.createNewNodeGene(NEATNodeGene.TYPE.OUTPUT);
 		}
 
 //		for (i = inputs + outputs; i < nodes.length; i++) {
@@ -155,7 +155,7 @@ public class InnovationDatabase {
 		return (new NEATFeatureGene(innovationNumber, MathUtils.nextDouble()));
 	}
 	
-	private NEATNodeGene createNewNodeGene(int type) {
+	private NEATNodeGene createNewNodeGene(NEATNodeGene.TYPE type) {
 		int innovationNumber = this.nextInnovationNumber();
 		NEATInnovation databaseEntry = new NEATNodeInnovation();
 		databaseEntry.setInnovationId(innovationNumber);
@@ -163,15 +163,15 @@ public class InnovationDatabase {
 		this.innovations.put(new Integer(innovationNumber), databaseEntry);
 		ActivationFunction activationFunction = null;
 
-		if (type == NEATNodeGene.HIDDEN){
+		if (type == NEATNodeGene.TYPE.HIDDEN){
 			activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(ran);
-		} else if (type == NEATNodeGene.INPUT) {
+		} else if (type == NEATNodeGene.TYPE.INPUT) {
 			activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(ran);
-		} else if(type == NEATNodeGene.OUTPUT) {
+		} else if(type == NEATNodeGene.TYPE.OUTPUT) {
 			activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(ran);
 		}
 
-		NEATNodeGene nodeGene = new NEATNodeGene(innovationNumber, ((NEATNodeInnovation)databaseEntry).getNodeId(), MathUtils.nextDouble(), type, MathUtils.nextPlusMinusOne(), activationFunction);
+		NEATNodeGene nodeGene = new NEATNodeGene(innovationNumber, ((NEATNodeInnovation)databaseEntry).getNodeId(), MathUtils.nextDouble(), type, "",MathUtils.nextPlusMinusOne(), activationFunction);
 		
 		return (nodeGene);
 	}
@@ -203,8 +203,8 @@ public class InnovationDatabase {
 	}
 	
 	/**
-	 * Submits a node insertion mutation to the database.  If it does not exist, it creates it and adds it to 
-	 * the database.  It returns the database entry
+	 * Submits a node insertion mutation to the instance.  If it does not exist, it creates it and adds it to
+	 * the instance.  It returns the instance entry
 	 * @param linkGene - link to add node to
 	 * @return - Created node gene
 	 */
@@ -226,14 +226,14 @@ public class InnovationDatabase {
 			totalHits++;
 		}
 
-		gene = new NEATNodeGene(databaseEntry.innovationId(), ((NEATNodeInnovation)databaseEntry).getNodeId(), MathUtils.nextDouble(), NEATNodeGene.HIDDEN, MathUtils.nextPlusMinusOne(), ActivationFunctionContainer.getRandomHiddenActivationFunction(ran));
+		gene = new NEATNodeGene(databaseEntry.innovationId(), ((NEATNodeInnovation)databaseEntry).getNodeId(), MathUtils.nextDouble(), NEATNodeGene.TYPE.HIDDEN, "",MathUtils.nextPlusMinusOne(), ActivationFunctionContainer.getRandomHiddenActivationFunction(ran));
 
 		return (gene);
 	}
 	
 	/**
-	 * Submits a link insertion mutation to the database.  If it does not exist, it creates it and adds it to 
-	 * the database.  It returns the database entry
+	 * Submits a link insertion mutation to the instance.  If it does not exist, it creates it and adds it to
+	 * the instance.  It returns the instance entry
 	 * @param from - from node identifier
 	 * @param to - to node identifier
 	 * @return - Created link gene

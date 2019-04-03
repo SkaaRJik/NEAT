@@ -69,19 +69,19 @@ public class NEATPopulation implements Population {
 		NEATNodeGene nodeGene;
 		NEATLinkGene linkGene;
 		NEATFeatureGene featureGene;
-		
+		String label = "";
 		for (i = 0; i < templateGenes.length; i++) {
 			if (templateGenes[i] instanceof NEATNodeGene) {
 				nodeGene = (NEATNodeGene)templateGenes[i];
 
 				ActivationFunction activationFunction = null;
-				if(nodeGene.getType() == NEATNodeGene.INPUT) activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(random);
-				else if(nodeGene.getType() == NEATNodeGene.HIDDEN) activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(random);
-				else if(nodeGene.getType() == NEATNodeGene.OUTPUT) activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(random);
+				if(nodeGene.getType() == NEATNodeGene.TYPE.INPUT) activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(random);
+				else if(nodeGene.getType() == NEATNodeGene.TYPE.HIDDEN) activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(random);
+				else if(nodeGene.getType() == NEATNodeGene.TYPE.OUTPUT) activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(random);
 
 
 
-				individualGenes[i] = new NEATNodeGene(nodeGene.getInnovationNumber(), nodeGene.id(), MathUtils.nextPlusMinusOne(), nodeGene.getType(), MathUtils.nextDouble(), activationFunction);
+				individualGenes[i] = new NEATNodeGene(nodeGene.getInnovationNumber(), nodeGene.id(), MathUtils.nextPlusMinusOne(), nodeGene.getType(), nodeGene.getLabel(),MathUtils.nextDouble(), activationFunction);
 			} else if (templateGenes[i] instanceof NEATLinkGene) {
 				linkGene = (NEATLinkGene)templateGenes[i];
 				individualGenes[i] = new NEATLinkGene(linkGene.getInnovationNumber(), true, linkGene.getFromId(), linkGene.getToId(), MathUtils.nextPlusMinusOne());

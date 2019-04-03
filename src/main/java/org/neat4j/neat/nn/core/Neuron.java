@@ -17,4 +17,5 @@ public interface Neuron extends Serializable {
 	public double bias();
 	public double[] lastWeightDeltas();
 	public double lastBiasDelta();
+	int getID();
 }

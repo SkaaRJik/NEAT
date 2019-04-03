@@ -17,26 +17,31 @@ import javafx.animation.KeyFrame;
 import javafx.animation.RotateTransition;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.util.Callback;
 import javafx.util.Duration;
@@ -60,14 +65,10 @@ import org.neat4j.neat.nn.core.functions.SigmoidFunction;
 import org.neat4j.neat.nn.core.functions.TanhFunction;
 import ru.filippov.GUI.customNodes.TreeCellIContextMenu;
 import ru.filippov.GUI.customNodes.TreeItemContextMenu;
-import ru.filippov.GUI.customNodes.ZoomableCanvas;
-import ru.filippov.GUI.windows.AlertWindow;
-import ru.filippov.GUI.windows.DataPreparatorDialogue;
-import ru.filippov.GUI.windows.NewDatasetDialogue;
-import ru.filippov.GUI.windows.NewProjectDialogue;
+import ru.filippov.GUI.windows.*;
+import ru.filippov.utils.AdvancedNetVisualisator;
 import ru.filippov.utils.CsControl;
 import ru.filippov.utils.JFXUtils;
-import ru.filippov.utils.NetVisualisator;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -187,6 +188,80 @@ public class MainController {
         }
 
     }
+
+    static class DataKeeper{
+        List<List<Double>> data;
+        List<String> headers;
+        String legendHeader;
+        List<Double> legend;
+        int inputs;
+        int outputs;
+
+        public DataKeeper() {
+
+        }
+
+        public DataKeeper(List<List<Double>> data, List<String> headers, List<Double> legend) {
+            this.data = data;
+            this.headers = headers;
+            this.legend = legend;
+        }
+
+        public List<List<Double>> getData() {
+            return data;
+        }
+
+        public void setData(List<List<Double>> data) {
+            this.data = data;
+        }
+
+        public List<String> getHeaders() {
+            return headers;
+        }
+
+        public void setHeaders(List<String> headers) {
+            this.headers = headers;
+        }
+
+        public List<Double> getLegend() {
+            return legend;
+        }
+
+        public void setLegend(List<Double> legend) {
+            this.legend = legend;
+        }
+
+        public List<String> getHeadersForTableView(){
+            List<String> newHeaders = new ArrayList<>(this.headers.size()+1);
+
+            newHeaders.add(legendHeader);
+            newHeaders.addAll(headers);
+            return newHeaders;
+
+        }
+
+        public List<List<Double>> getDataForTableView(){
+            List<List<Double>> dataForTableView = new ArrayList<>(this.data.size()+1);
+            for (int i = 0 ; i < data.size(); i++) {
+                List<Double> row = new ArrayList<>(data.get(i).size()+1);
+                row.add(legend.get(i));
+                for (int j = 0; j < data.get(i).size(); j++) {
+                    row.add(data.get(i).get(j));
+                }
+                dataForTableView.add(row);
+            }
+            return dataForTableView;
+        }
+
+        public String getLegendHeader() {
+            return legendHeader;
+        }
+
+        public void setLegendHeader(String legendHeader) {
+            this.legendHeader = legendHeader;
+        }
+    }
+
 
     Logger logger = Logger.getLogger(MainController.class);
 
@@ -317,24 +392,29 @@ public class MainController {
     private TableView<List<Double>> trainTableView;
 
 
+
     @FXML private Tab trainigTab;
     @FXML private JFXTextField lastErrorTextField;
+    @FXML
+    private JFXTextField currentEpochTextField;
     @FXML private VBox trainVBox;
     @FXML private ProgressBar trainingProgressBar;
 
 
 
+
     private Thread trainThread;
     @FXML
-    private LineChart<Integer, Integer> errorChart;
+    private LineChart<Number, Number> errorChart;
     @FXML private JFXButton errorChartRefreshButton;
-    @FXML private LineChart<Integer, Integer> valueGraphicChart;
+    @FXML private LineChart<Number, Number> valueGraphicChart;
     @FXML private JFXButton valueGraphicChartButton;
     @FXML
     private BorderPane netVisualizationBorderPane;
-
-    private ZoomableCanvas netVisualisationCanvas;
-    private NetVisualisator netVisualisator;
+    @FXML
+    private Pane drawablePane;
+    //private ZoomableCanvas netVisualisationCanvas;
+    private AdvancedNetVisualisator netVisualisator;
 
 
     @FXML
@@ -379,8 +459,8 @@ public class MainController {
     ResourceBundle resourceBundle;
     Locale locale;
     Scene scene;
-    List<List<Double>> trainDataSet;
-    List<List<Double>> testDataSet;
+    DataKeeper trainDataSet;
+    DataKeeper testDataSet;
 
     List<ProjectFileDescriptor> trainSets;
     List<ProjectFileDescriptor> testSets;
@@ -389,6 +469,9 @@ public class MainController {
 
     public void init() {
         this.scene = this.currentProjectLabel.getParent().getScene();
+
+
+
 
         new File(Paths.get("").toAbsolutePath().toString()+"\\projects").mkdir();
         this.tempDirectory = new File(Paths.get("").toAbsolutePath().toString()+"\\temp");
@@ -837,7 +920,8 @@ public class MainController {
 
         this.trainDatasetChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
-                this.trainDataSet = loadDataset(newValue.getAsFile(), trainTableView, true);
+                this.trainDataSet = loadDataset(newValue.getAsFile(), true);
+                this.fillTableViewWithData(this.trainTableView, this.trainDataSet.getHeadersForTableView(), this.trainDataSet.getDataForTableView());
                 //loadDataset(newValue.getAsFile());
                 this.dataSetsScrollPane.setVisible(true);
                 errorChart.getData().clear();
@@ -904,54 +988,12 @@ public class MainController {
         });
 
 
+        //Panning works via either secondary (right) mouse or primary with ctrl held down
+        configureChart(this.errorChart);
+        configureChart(this.valueGraphicChart);
+        valueGraphicChart.getXAxis().setAutoRanging( false );
+        valueGraphicChart.getYAxis().setAutoRanging( true );
 
-
-        /*Adding ability to zoom linechart*/
-        ChartPanManager panner = new ChartPanManager(this.errorChart);
-        panner.start();
-
-
-
-
-        //while presssing the left mouse button, you can drag to navigate
-        panner.setMouseFilter(mouseEvent -> {
-            if (mouseEvent.getButton() == MouseButton.PRIMARY) {//set your custom combination to trigger navigation
-                // let it through
-                mouseEvent.consume();
-            } else {
-                mouseEvent.consume();
-            }
-        });
-
-        //holding the right mouse button will draw a rectangle to zoom to desired location
-        JFXChartUtil.setupZooming(this.errorChart, mouseEvent -> {
-            if (mouseEvent.getButton() != MouseButton.SECONDARY)//set your custom combination to trigger rectangle zooming
-                mouseEvent.consume();
-
-        });
-
-
-        /*Zooming END*/
-
-        panner = new ChartPanManager(this.valueGraphicChart);
-        panner.start();
-        //while presssing the left mouse button, you can drag to navigate
-        panner.setMouseFilter(mouseEvent -> {
-            if (mouseEvent.getButton() == MouseButton.PRIMARY) {//set your custom combination to trigger navigation
-                // let it through
-            } else {
-                mouseEvent.consume();
-            }
-        });
-
-
-
-        //holding the right mouse button will draw a rectangle to zoom to desired location
-        JFXChartUtil.setupZooming(this.valueGraphicChart, mouseEvent -> {
-            if (mouseEvent.getButton() != MouseButton.SECONDARY)//set your custom combination to trigger rectangle zooming
-                mouseEvent.consume();
-        });
-        /*Zooming END*/
 
 
         Platform.runLater(new Runnable() {
@@ -962,21 +1004,23 @@ public class MainController {
                 projectSplitPane.lookupAll(".split-pane-divider").stream()
                         .forEach(div ->  div.setMouseTransparent(true) );
 
-                netVisualisationCanvas.setWidth(netVisualizationBorderPane.getWidth()-2);
+                /*netVisualisationCanvas.setWidth(netVisualizationBorderPane.getWidth()-2);
                 netVisualisationCanvas.setHeight(netVisualizationBorderPane.getHeight());
+                netVisualisationCanvas.widthProperty().bind(netVisualizationBorderPane.widthProperty());
+                netVisualisationCanvas.heightProperty().bind(netVisualizationBorderPane.heightProperty());*/
             }
         });
 
+        netVisualizationBorderPane.setCenter(this.createZoomPane(this.drawablePane));
 
-
-        this.netVisualisationCanvas = new ZoomableCanvas(300, 300) {
+        /*this.netVisualisationCanvas = new ZoomableCanvas(300, 300) {
             @Override
             public void paint(GraphicsContext gc) {
                 netVisualisator.visualiseNet(netVisualisationCanvas);
             }
-        };
-        this.netVisualisator = new NetVisualisator(this.netVisualisationCanvas);
-        this.netVisualizationBorderPane.setCenter(this.netVisualisationCanvas);
+        };*/
+        this.netVisualisator = new AdvancedNetVisualisator();
+        //this.netVisualizationBorderPane.setCenter(this.netVisualisationCanvas);
 
        /* this.netVisualisationCanvas.widthProperty().bind(this.netVisualizationBorderPane.widthProperty());
         this.netVisualisationCanvas.heightProperty().bind(this.netVisualizationBorderPane.heightProperty());*/
@@ -989,6 +1033,35 @@ public class MainController {
 
 */
 
+    }
+
+    private void configureChart(LineChart chart) {
+        ChartPanManager panner = new ChartPanManager( chart );
+        panner.setMouseFilter( new EventHandler<MouseEvent>() {
+            @Override
+            public void handle( MouseEvent mouseEvent ) {
+                if ( mouseEvent.getButton() == MouseButton.PRIMARY ||
+                        ( mouseEvent.getButton() == MouseButton.SECONDARY &&
+                                mouseEvent.isShortcutDown() ) ) {
+                    //let it through
+                } else {
+                    mouseEvent.consume();
+                }
+            }
+        } );
+        panner.start();
+
+        //Zooming works only via primary mouse button without ctrl held down
+        JFXChartUtil.setupZooming( chart, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle( MouseEvent mouseEvent ) {
+                if ( mouseEvent.getButton() != MouseButton.SECONDARY ||
+                        mouseEvent.isShortcutDown() )
+                    mouseEvent.consume();
+            }
+        } );
+
+        JFXChartUtil.addDoublePrimaryClickAutoRangeHandler( chart );
     }
 
     private void setPinButtonAction(JFXButton pinMenuButton, BorderPane menuBorderPane, double maxWidthMenu, double minWidthMenu) {
@@ -1043,32 +1116,43 @@ public class MainController {
 
 
 
-    private List<List<Double>> loadDataset(File datasetName, TableView<List<Double>> tableView, boolean needInit){
+    private DataKeeper loadDataset(File datasetName, boolean needInit){
         try {
             /*Read training dataset file*/
+            DataKeeper dataKeeper = new DataKeeper();
             BufferedReader reader = new BufferedReader(new FileReader(datasetName));
             StringTokenizer stringTokenizer = new StringTokenizer(reader.readLine(),";");
+            List<String> headers = new ArrayList<>();
+
             if(needInit) {
                 this.inputNodesTextField.setText(stringTokenizer.nextToken()); //get number of inputs
                 this.outputNodesTextField.setText(stringTokenizer.nextToken()); // get number of outputs
             }
-            stringTokenizer = new StringTokenizer(reader.readLine(),";");
-            /*Prepare headers of table's columns*/
-            int tokens = stringTokenizer.countTokens();
-            for (int i = 0; i < tokens; i++){
-                TableColumn tableColumn = new TableColumn();
-                tableColumn.setText(stringTokenizer.nextToken());
-                tableColumn.setPrefWidth(65);
-                final int index = i;
-                tableColumn.setCellValueFactory((Callback<TableColumn.CellDataFeatures<List<Double>, Double>, ObservableValue<Double>>) p ->
-                {
-                    return new SimpleObjectProperty<Double>((p.getValue().get(index)));
-                });
-                tableView.getColumns().add(tableColumn);
+            String line = reader.readLine();
+            stringTokenizer = new StringTokenizer(line,":");
+            if(stringTokenizer.nextToken().equals("Legend")){
+                if(stringTokenizer.hasMoreTokens()) {
+                    stringTokenizer = new StringTokenizer(stringTokenizer.nextToken(), ";");
+                    dataKeeper.setLegendHeader(stringTokenizer.nextToken());
+                    List<Double> legend = new ArrayList<>(stringTokenizer.countTokens());
+                    while (stringTokenizer.hasMoreTokens()) {
+                        legend.add(Double.valueOf(stringTokenizer.nextToken()));
+                    }
+                    dataKeeper.setLegend(legend);
+                }
+                line = reader.readLine();
             }
+
+
+            stringTokenizer = new StringTokenizer(line,";");
+            while (stringTokenizer.hasMoreTokens()){
+                headers.add(stringTokenizer.nextToken());
+            }
+            dataKeeper.setHeaders(headers);
+
             /*Read dataset values*/
             List<List<Double>> tempDataSet = new ArrayList<>(50);
-            String line = reader.readLine();
+            line = reader.readLine();
             while (line != null) {
                 stringTokenizer = new StringTokenizer(line,";");
                 List<Double> row = new ArrayList<>();
@@ -1078,11 +1162,20 @@ public class MainController {
                 tempDataSet.add(row);
                 line = reader.readLine();
             }
-            /*Put read data into tableview*/
-            ObservableList<List<Double>> observableList = FXCollections.observableArrayList();
-                    observableList.addAll(tempDataSet);
-            tableView.setItems(observableList);
-            return tempDataSet;
+
+            dataKeeper.setData(tempDataSet);
+
+            if(dataKeeper.getLegend() == null){
+                dataKeeper.setLegendHeader("№");
+                List<Double> legend = new ArrayList<>();
+                for (double i = 0; i < dataKeeper.getData().size(); i++) {
+                    legend.add(i+1);
+                }
+                dataKeeper.setLegend(legend);
+            }
+
+
+            return dataKeeper;
             /*Reading of training dataset is over*/
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -1090,6 +1183,32 @@ public class MainController {
             e.printStackTrace();
         }
         return null;
+    }
+
+    void fillTableViewWithData(TableView<List<Double>> tableView, List<String> headers, List<List<Double>> data){
+
+
+        tableView.getColumns().clear();
+        tableView.getItems().clear();
+        /*Prepare headers of table's columns*/
+
+        for (int i = 0; i < headers.size(); i++){
+            TableColumn tableColumn = new TableColumn();
+            tableColumn.setText(headers.get(i));
+            tableColumn.setPrefWidth(65);
+            final int index = i;
+            tableColumn.setCellValueFactory((Callback<TableColumn.CellDataFeatures<List<Double>, Double>, ObservableValue<Double>>) p ->
+            {
+                return new SimpleObjectProperty<Double>((p.getValue().get(index)));
+            });
+            tableView.getColumns().add(tableColumn);
+        }
+
+        /*Put read data into tableview*/
+         ObservableList<List<Double>> observableList = FXCollections.observableArrayList();
+                    observableList.addAll(data);
+         tableView.setItems(observableList);
+
     }
 
 
@@ -1451,10 +1570,24 @@ public class MainController {
 
         });
 
+        MenuItem viewDataItem = new MenuItem("View");
+        viewDataItem.setOnAction(event -> {
+            ProjectFileDescriptor projectFileDescriptor = this.projectTreeView.getSelectionModel().getSelectedItem().getValue();
+            switch (projectFileDescriptor.type){
+                case TRAINING_SET:
+                    viewDataInNewWindow(projectFileDescriptor);
+                    break;
+                case TEST_SET:
+                    viewDataInNewWindow(projectFileDescriptor);
+                    break;
+            }
+
+        });
+
 
         this.dataContextMenu = new ContextMenu();
         configureContextMenu(this.dataContextMenu);
-        this.dataContextMenu.getItems().addAll(loadDataItem, new SeparatorMenuItem(), deleteDataItem);
+        this.dataContextMenu.getItems().addAll(viewDataItem, loadDataItem, new SeparatorMenuItem(), deleteDataItem);
 
 
 
@@ -1490,7 +1623,7 @@ public class MainController {
     }
 
     private void openNEATFile(ProjectFileDescriptor projectFileDescriptor) {
-        //TODO Ask user to save old config to open new
+
 
         if(!isNEATConfigSaved && currentNEATConfig != null){
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -1972,7 +2105,6 @@ public class MainController {
         try {
             this.saveTempDataSet(this.currentNEATConfig.configElement("TRAINING.SET"));
             logger.debug(this.currentNEATConfig.configElement("TRAINING.SET"));
-            //TODO replace Test set init
             //this.currentNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+this.trainDatasetChoiceBox.getValue()+"\\"+this.trainDatasetChoiceBox.getValue()+"@test_temp.dataset");
             trainigTab.setDisable(false);
             infoTabPane.getSelectionModel().select(trainigTab);
@@ -1980,14 +2112,22 @@ public class MainController {
 
 
             if(this.valueGraphicChart.getData().isEmpty()){
+                //double tick = this.trainDataSet.getLegend().stream().mapToDouble(value -> {return value;}).sum() / this.trainDataSet.getLegend().size();
+                double tick = (this.trainDataSet.getLegend().get(this.trainDataSet.getLegend().size()-1) - this.trainDataSet.getLegend().get(0)) / (this.trainDataSet.getLegend().size()-1);
+                ((NumberAxis)valueGraphicChart.getXAxis()).setTickUnit(tick);
+                //((NumberAxis)valueGraphicChart.getXAxis()).setTickUnit(this.trainDataSet.legend.get(1)-this.trainDataSet.legend.get(0));
+                ((NumberAxis)valueGraphicChart.getXAxis()).setLowerBound(this.trainDataSet.legend.get(0)-((NumberAxis)valueGraphicChart.getXAxis()).getTickUnit());
+                ((NumberAxis)valueGraphicChart.getXAxis()).setUpperBound(this.trainDataSet.legend.get(this.trainDataSet.legend.size()-1)+((NumberAxis)valueGraphicChart.getXAxis()).getTickUnit());
+                valueGraphicChart.getXAxis().setLabel(this.trainDataSet.getLegendHeader());
                 XYChart.Series expectedOutputDataXYChart = null;
                 for (int i = 0; i < Integer.parseInt(this.outputNodesTextField.getText()); i++) {
+
                     TableColumn tableColumn = this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1-i);
                     expectedOutputDataXYChart = new XYChart.Series();
                     this.valueGraphicChart.getData().add(expectedOutputDataXYChart);
                     expectedOutputDataXYChart.setName(tableColumn.getText() + " (Факт)");
                     for (int j = 0; j < this.trainTableView.getItems().size(); j++) {
-                        XYChart.Data integerObjectData = new XYChart.Data<>(j + 1, tableColumn.getCellData(j));
+                        XYChart.Data integerObjectData = new XYChart.Data<>(trainDataSet.legend.get(j), tableColumn.getCellData(j));
                         integerObjectData.setNode(new StackPane());
                         expectedOutputDataXYChart.getData().add(integerObjectData);
                         Tooltip.install(integerObjectData.getNode(), new Tooltip(String.valueOf(tableColumn.getCellData(j))));
@@ -2003,71 +2143,74 @@ public class MainController {
             this.errorChart.getData().add(errorSeries);
 
 
+
+
             XYChart.Series outputValuesSeries = new XYChart.Series();
             outputValuesSeries.setName(this.trainingCount + ". " + this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1).getText());
             this.valueGraphicChart.getData().add(outputValuesSeries);
 
-            Platform.runLater(() -> {
-                /*errorSeries.getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour[0]+";");
+
+
+           /*Platform.runLater(() -> {
+                *//*errorSeries.getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour[0]+";");
                 Node[] nodes = errorChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
                 nodes[nodes.length-1].setStyle("-fx-background-color: "+ colour[0] +", white;");
                 for (int i = 0; i <outputValuesSeries.length ; i++) {
                     outputValuesSeries[i].getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour[i]+";");
                     nodes = valueGraphicChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
                     nodes[nodes.length-1].setStyle("-fx-background-color: "+ colour[i] +", white;");
-                }*/
+                }*//*
 
-            });
+            });*/
+
+
+
             neatTrainingForJavaFX.initialise(currentNEATConfig);
-            neatTrainingForJavaFX.statusProperty().addListener(observable -> {
-                Platform.runLater(new Runnable() {
-                    @Override public void run() {
-                        int n = neatTrainingForJavaFX.getBestEverChromosomes().size();
-                        double fitnessValue = neatTrainingForJavaFX.getBestEverChromosomes().get(n-1).fitness();
-                        XYChart.Data<Number, Number> xyData = new XYChart.Data<>(n, fitnessValue);
-                        xyData.setNode(new StackPane());
-                        lastErrorTextField.setText(String.valueOf(fitnessValue));
-                        Tooltip.install(xyData.getNode(), new Tooltip(String.valueOf(fitnessValue)));
-
-                        /*xyData.getNode().setStyle("-fx-background-color: "+colour[0]+", white;");
-                        errorSeries.getData().add(xyData);
-                        for (int i = 0; i < outputValuesSeries.length; i++) {
-                            outputValuesSeries[i].getData().clear();
-                        }*/
 
 
-                        errorSeries.getData().add(xyData);
-                        outputValuesSeries.getData().clear();
+            AtomicInteger atomicInteger = new AtomicInteger(1);
+            neatTrainingForJavaFX.getBestEverChromosomesProperty().addListener((ListChangeListener<? super Chromosome>) c -> {
+                Platform.runLater(() -> {
+                    int n = neatTrainingForJavaFX.getBestEverChromosomes().size();
+                    double fitnessValue = neatTrainingForJavaFX.getBestEverChromosomes().get(n-1).fitness();
+                    XYChart.Data<Number, Number> xyData = new XYChart.Data<>(neatTrainingForJavaFX.getCurrentEpoch(), fitnessValue);
+                    xyData.setNode(new StackPane());
+                    lastErrorTextField.setText(String.valueOf(fitnessValue));
+                    currentEpochTextField.setText(String.valueOf(neatTrainingForJavaFX.getCurrentEpoch()));
+                    Tooltip.install(xyData.getNode(), new Tooltip(String.valueOf(fitnessValue)));
+                    errorSeries.getData().add(xyData);
+                    outputValuesSeries.getData().clear();
 
-                        Chromosome bestChromo = neatTrainingForJavaFX.getBestEverChromosomes().get(n - 1);
-                        List<List<Double>> outputs = bestChromo.getOutputValues();
-                        AtomicInteger counter = new AtomicInteger();
-                        for(List<Double> output : outputs) {
-                           output.stream().forEach(value -> {
-                               XYChart.Data<Number, Number> data = new XYChart.Data<>(counter.incrementAndGet(), value);
-                               data.setNode(new StackPane());
-                               Tooltip.install(data.getNode(), new Tooltip(String.valueOf(value)));
-                               outputValuesSeries.getData().add(data);
-                               /*for (int i = 0; i < outputValuesSeries.length; i++) {
-                                   XYChart.Data<Number, Number> data = new XYChart.Data<>(counter.incrementAndGet(), value);
-                                   data.setNode(new StackPane());
-                                   Tooltip.install(data.getNode(), new Tooltip(String.valueOf(value)));
-                                   data.getNode().setStyle("-fx-background-color: "+colour[i]+", white;");
-                                   outputValuesSeries[i].getData().add(data);
-                               }*/
-                            });
-                        }
-
-                        if(neatTrainingForJavaFX.statusProperty().get() == 1.0){
-                            try {
-                                netVisualisator.setNetToVisualise(bestChromo, currentNEATConfig);
-                                netVisualisator.visualiseNet(netVisualisationCanvas);
-                            } catch (InitialisationFailedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
+                    Chromosome bestChromo = neatTrainingForJavaFX.getBestEverChromosomes().get(n - 1);
+                    List<List<Double>> outputs = bestChromo.getOutputValues();
+                    AtomicInteger counter = new AtomicInteger();
+                    for(List<Double> output : outputs) {
+                        output.stream().forEach(value -> {
+                            Double fromLegend = trainDataSet.getLegend().get(counter.getAndIncrement());
+                            XYChart.Data<Number, Number> data = new XYChart.Data<>(fromLegend, value);
+                            data.setNode(new StackPane());
+                            Tooltip.install(data.getNode(), new Tooltip(String.valueOf(value)));
+                            outputValuesSeries.getData().add(data);
+                        });
                     }
+
+                });
+            });
+
+
+            neatTrainingForJavaFX.statusProperty().addListener(observable -> {
+                Platform.runLater(() -> {
+                    int n = neatTrainingForJavaFX.getBestEverChromosomes().size();
+                        Chromosome bestChromo = neatTrainingForJavaFX.getBestEverChromosomes().get(n - 1);
+                        try {
+                            if(neatTrainingForJavaFX.statusProperty().getValue() > 0.99) {
+                                netVisualisator.setNetToVisualise(bestChromo, currentNEATConfig);
+                                //netVisualisator.visualiseNet(netVisualisationCanvas);
+                                netVisualisator.visualiseNet(this.drawablePane);
+                            }
+                        } catch (InitialisationFailedException e) {
+                            e.printStackTrace();
+                        }
                 });
             });
             this.trainingProgressBar.progressProperty().bind(neatTrainingForJavaFX.statusProperty());
@@ -2088,7 +2231,7 @@ public class MainController {
     }
 
     private void menuSlide(Timeline timeline, SplitPane splitPane, BorderPane menuBorderPane ,int i, int direction) {
-        //0.3373729476153245
+
         double pos = splitPane.getDividers().get(0).getPosition();
         double width = menuBorderPane.getWidth();
 
@@ -2104,7 +2247,7 @@ public class MainController {
             timeline.stop();
 
         }
-        else splitPane.setDividerPositions(pos + direction*  ((double)i)/100);
+        else splitPane.setDividerPositions(pos + direction *  ((double)i)/100);
     }
 
 
@@ -2113,7 +2256,12 @@ public class MainController {
         File file = new File(filePath);
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, false));
         double value;
-        for(List<Double> list : this.trainDataSet){
+        for (int i = 0; i < this.trainDataSet.getHeaders().size(); i++) {
+            bufferedWriter.write(this.trainDataSet.getHeaders().get(i));
+            if(i != this.trainDataSet.getHeaders().size() - 1) bufferedWriter.write(";");
+        }
+        bufferedWriter.append("\n");
+        for(List<Double> list : this.trainDataSet.getData()){
             for (int i = 0; i < list.size(); i++) {
                 value = list.get(i);
                 bufferedWriter.write(String.valueOf(value));
@@ -2132,5 +2280,139 @@ public class MainController {
     public void openTestDataset(ActionEvent actionEvent) {
     }
 
+    public void viewDataInNewWindow(ProjectFileDescriptor projectFileDescriptor){
+        DataKeeper dataKeeper = loadDataset(projectFileDescriptor.getAsFile(), false);
+
+        ViewDataWindow viewDataWindow = ViewDataWindow.getInstance(this.scene, projectFileDescriptor.getType()+" "+projectFileDescriptor.getName());
+
+        fillTableViewWithData(viewDataWindow.getTableView(), dataKeeper.getHeadersForTableView(), dataKeeper.getDataForTableView());
+        viewDataWindow.show();
+    }
+
+
+
+    private Parent createZoomPane(final Pane group) {
+        final double SCALE_DELTA = 1.1;
+        final StackPane zoomPane = new StackPane();
+
+
+        zoomPane.getChildren().add(group);
+
+        final ScrollPane scroller = new ScrollPane();
+        final Group scrollContent = new Group(zoomPane);
+
+        zoomPane.getStyleClass().add("visualisation-content");
+        group.getStyleClass().add("visualisation-content");
+        scrollContent.getStyleClass().add("visualisation-content");
+        scroller.getStyleClass().add("visualisation-content");
+
+        //scrollContent.getStyleClass().addAll("visualisation-content");
+        scroller.setContent(scrollContent);
+
+        scroller.viewportBoundsProperty().addListener(new ChangeListener<Bounds>() {
+            @Override
+            public void changed(ObservableValue<? extends Bounds> observable,
+                                Bounds oldValue, Bounds newValue) {
+                zoomPane.setMinSize(newValue.getWidth(), newValue.getHeight());
+            }
+        });
+
+        scroller.setPrefViewportWidth(256);
+        scroller.setPrefViewportHeight(256);
+
+        zoomPane.setOnScroll(new EventHandler<ScrollEvent>() {
+            @Override
+            public void handle(ScrollEvent event) {
+                event.consume();
+
+                if (event.getDeltaY() == 0) {
+                    return;
+                }
+
+                double scaleFactor = (event.getDeltaY() > 0) ? SCALE_DELTA
+                        : 1 / SCALE_DELTA;
+
+                // amount of scrolling in each direction in scrollContent coordinate
+                // units
+                Point2D scrollOffset = figureScrollOffset(scrollContent, scroller);
+
+                group.setScaleX(group.getScaleX() * scaleFactor);
+                group.setScaleY(group.getScaleY() * scaleFactor);
+
+                // move viewport so that old center remains in the center after the
+                // scaling
+                repositionScroller(scrollContent, scroller, scaleFactor, scrollOffset);
+
+            }
+        });
+
+        // Panning via drag....
+        final ObjectProperty<Point2D> lastMouseCoordinates = new SimpleObjectProperty<Point2D>();
+        scrollContent.setOnMousePressed(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                lastMouseCoordinates.set(new Point2D(event.getX(), event.getY()));
+            }
+        });
+
+        scrollContent.setOnMouseDragged(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+
+
+
+                double deltaX = event.getX() - lastMouseCoordinates.get().getX();
+                double extraWidth = scrollContent.getLayoutBounds().getWidth() - scroller.getViewportBounds().getWidth();
+                double deltaH = deltaX * (scroller.getHmax() - scroller.getHmin()) / extraWidth;
+                double desiredH = (Double.isNaN(scroller.getHvalue())? 0 : scroller.getHvalue())  - deltaH;
+
+
+
+                scroller.setHvalue(Math.max(0, Math.min(scroller.getHmax(), desiredH)));
+
+                double deltaY = event.getY() - lastMouseCoordinates.get().getY();
+                double extraHeight = scrollContent.getLayoutBounds().getHeight() - scroller.getViewportBounds().getHeight();
+                double deltaV = deltaY * (scroller.getHmax() - scroller.getHmin()) / extraHeight;
+                double desiredV = (Double.isNaN(scroller.getVvalue()) ? 0 : scroller.getVvalue())  - deltaV;
+
+
+
+                scroller.setVvalue(Math.max(0, Math.min(scroller.getVmax(), desiredV)));
+            }
+        });
+
+        return scroller;
+    }
+
+    private Point2D figureScrollOffset(Node scrollContent, ScrollPane scroller) {
+        double extraWidth = scrollContent.getLayoutBounds().getWidth() - scroller.getViewportBounds().getWidth();
+        double hScrollProportion = (scroller.getHvalue() - scroller.getHmin()) / (scroller.getHmax() - scroller.getHmin());
+        double scrollXOffset = hScrollProportion * Math.max(0, extraWidth);
+        double extraHeight = scrollContent.getLayoutBounds().getHeight() - scroller.getViewportBounds().getHeight();
+        double vScrollProportion = (scroller.getVvalue() - scroller.getVmin()) / (scroller.getVmax() - scroller.getVmin());
+        double scrollYOffset = vScrollProportion * Math.max(0, extraHeight);
+        return new Point2D(scrollXOffset, scrollYOffset);
+    }
+
+    private void repositionScroller(Node scrollContent, ScrollPane scroller, double scaleFactor, Point2D scrollOffset) {
+        double scrollXOffset = scrollOffset.getX();
+        double scrollYOffset = scrollOffset.getY();
+        double extraWidth = scrollContent.getLayoutBounds().getWidth() - scroller.getViewportBounds().getWidth();
+        if (extraWidth > 0) {
+            double halfWidth = scroller.getViewportBounds().getWidth() / 2 ;
+            double newScrollXOffset = (scaleFactor - 1) *  halfWidth + scaleFactor * scrollXOffset;
+            scroller.setHvalue(scroller.getHmin() + newScrollXOffset * (scroller.getHmax() - scroller.getHmin()) / extraWidth);
+        } else {
+            scroller.setHvalue(scroller.getHmin());
+        }
+        double extraHeight = scrollContent.getLayoutBounds().getHeight() - scroller.getViewportBounds().getHeight();
+        if (extraHeight > 0) {
+            double halfHeight = scroller.getViewportBounds().getHeight() / 2 ;
+            double newScrollYOffset = (scaleFactor - 1) * halfHeight + scaleFactor * scrollYOffset;
+            scroller.setVvalue(scroller.getVmin() + newScrollYOffset * (scroller.getVmax() - scroller.getVmin()) / extraHeight);
+        } else {
+            scroller.setHvalue(scroller.getHmin());
+        }
+    }
 
 }

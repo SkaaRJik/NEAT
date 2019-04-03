@@ -64,7 +64,7 @@ public class NEATNeuralNet implements NeuralNet {
 		int i;
 		
 		for (i = 0; i < this.neurons.length; i++) {
-			if (this.neurons[i].neuronType() == NEATNodeGene.OUTPUT) {
+			if (this.neurons[i].neuronType() == NEATNodeGene.TYPE.OUTPUT) {
 				outputNeurons.add(this.neurons[i]);
 			}
 		}
@@ -80,7 +80,7 @@ public class NEATNeuralNet implements NeuralNet {
 		int i;
 		
 		this.level++;
-		if (neuron.neuronType() == NEATNodeGene.INPUT) {
+		if (neuron.neuronType() == NEATNodeGene.TYPE.INPUT) {
 			inputPattern = new double[1];
 			// match the input column to the input node, id's start from 1
 			inputPattern[0] = netInput.pattern()[neuron.id() - 1];
@@ -143,17 +143,17 @@ public class NEATNeuralNet implements NeuralNet {
 		
 		for (i = 0; i < neurons.size(); i++) {
 			neuron = (NEATNeuron)neurons.get(i);
-			if (neuron.neuronType() == NEATNodeGene.OUTPUT) {
+			if (neuron.neuronType() == NEATNodeGene.TYPE.OUTPUT) {
 				if (neuron.neuronDepth() == -1) {
 					neuron.setNeuronDepth(depth);
 					this.assignNeuronDepth(neuron.sourceNeurons(), depth + 1);
 				}
-			} else if (neuron.neuronType() == NEATNodeGene.HIDDEN) {
+			} else if (neuron.neuronType() == NEATNodeGene.TYPE.HIDDEN) {
 				if (neuron.neuronDepth() == -1) {
 					neuron.setNeuronDepth(depth);
 					this.assignNeuronDepth(neuron.sourceNeurons(), depth + 1);				
 				}
-			} else if (neuron.neuronType() == NEATNodeGene.INPUT) {
+			} else if (neuron.neuronType() == NEATNodeGene.TYPE.INPUT) {
 				neuron.setNeuronDepth(Integer.MAX_VALUE);
 			}
 		}
@@ -166,7 +166,7 @@ public class NEATNeuralNet implements NeuralNet {
 		
 		for (i = 0; i < neurons.length; i++) {
 			gene = (NEATNodeGene)nodes.get(i);
-			this.neurons[i] = new NEATNeuron(this.createActivationFunction(gene), gene.id(), gene.getType());
+			this.neurons[i] = new NEATNeuron(this.createActivationFunction(gene), gene.id(), gene.getType(), gene.getLabel());
 			this.neurons[i].setActivationFunction(gene.getActivationFunction());
 			this.neurons[i].modifyBias(gene.bias(), 0, true);
 		}
@@ -177,9 +177,9 @@ public class NEATNeuralNet implements NeuralNet {
 	private ActivationFunction createActivationFunction(NEATNodeGene gene) {
 		ActivationFunction function = null;
 		// inputs are passed through
-		if (gene.getType() == NEATNodeGene.INPUT) {
+		if (gene.getType() == NEATNodeGene.TYPE.INPUT) {
 			function = new LinearFunction();
-		} else if (gene.getType() == NEATNodeGene.OUTPUT){
+		} else if (gene.getType() == NEATNodeGene.TYPE.OUTPUT){
 			function = new SigmoidFunction(gene.sigmoidFactor());
 		} else {
 			function = new TanhFunction();
@@ -257,5 +257,9 @@ public class NEATNeuralNet implements NeuralNet {
 
 	public Neuron neuronAt(int x, int y) {
 		return null;
+	}
+
+	public Synapse[] getConnections() {
+		return connections;
 	}
 }

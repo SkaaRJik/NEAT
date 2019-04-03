@@ -11,6 +11,7 @@ import org.neat4j.neat.nn.core.Neuron;
 import org.neat4j.neat.nn.core.Synapse;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * @author MSimmerson
@@ -23,20 +24,20 @@ public class NEATNeuron implements Neuron {
 	private double[] weights;
 	private ActivationFunction activationFunction;
 	private int id;
-	private int type;
+	private NEATNodeGene.TYPE type;
 	private int depth;
+	String label;
 	private ArrayList sourceNeurons;
 	private ArrayList incomingSynapses;
-	private boolean isInput = false;
 
-	public NEATNeuron(ActivationFunction function, int id, int type) {		
+	public NEATNeuron(ActivationFunction function, int id, NEATNodeGene.TYPE type, String label) {
 		this.activationFunction = function;
 		this.id = id;
 		this.type = type;
 		this.sourceNeurons = new ArrayList();
 		this.incomingSynapses = new ArrayList();
-		this.isInput = (type == NEATNodeGene.INPUT);
 		this.depth = -1;
+		this.label = label;
 	}
 	
 	public void addSourceNeuron(NEATNeuron neuron) {
@@ -73,7 +74,7 @@ public class NEATNeuron implements Neuron {
 		// acting as a bias neuron
 		this.lastActivation = -1;
 
-		if (!this.isInput) {			
+		if (this.type != NEATNodeGene.TYPE.INPUT) {
 			if (nInputs.length > 0) {
 				for (i = 0; i < nInputs.length; i++) {
 					input = nInputs[i];
@@ -122,12 +123,17 @@ public class NEATNeuron implements Neuron {
 	public double lastBiasDelta() {
 		return 0;
 	}
-	
+
+	@Override
+	public int getID() {
+		return this.id;
+	}
+
 	public int id() {
 		return (this.id);
 	}
 	
-	public int neuronType() {
+	public NEATNodeGene.TYPE neuronType() {
 		return (this.type);
 	}
 	
@@ -145,5 +151,20 @@ public class NEATNeuron implements Neuron {
 
 	public ActivationFunction getActivationFunction() {
 		return activationFunction;
+	}
+
+	public String getLabel() {
+		return label;
+	}
+
+	@Override
+	public String toString() {
+		return "NEATNeuron{" +
+				"\n  id=" + id +
+				"\n  type=" + type +
+				"\n  label='" + label  +
+				"\n  activationFunction=" + activationFunction.getFunctionName() +
+				"\n  bias=" + bias +
+				"\n}";
 	}
 }

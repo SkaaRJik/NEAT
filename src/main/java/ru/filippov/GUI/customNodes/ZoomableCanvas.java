@@ -161,6 +161,21 @@ public abstract class ZoomableCanvas extends Canvas {
                 viewport.getMinY() + yProportion * viewport.getHeight());
     }*/
 
+    @Override
+    public boolean isResizable() {
+        return true;
+    }
+
+    @Override
+    public double prefWidth(double height) {
+        return getWidth();
+    }
+
+    @Override
+    public double prefHeight(double width) {
+        return getHeight();
+    }
+
     public abstract void paint(GraphicsContext gc);
 
 }

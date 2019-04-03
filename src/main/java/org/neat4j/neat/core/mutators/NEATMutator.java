@@ -152,31 +152,31 @@ public class NEATMutator implements Mutator {
 
 		if (mutateFunctionRandVal < this.pNewActivationFunction){
 			ActivationFunction activationFunction = mutated.getActivationFunction();
-			if(mutated.getType() == NEATNodeGene.INPUT) {
+			if(mutated.getType() == NEATNodeGene.TYPE.INPUT) {
 				if(ActivationFunctionContainer.getInputActivationFunctions().size() > 1)
 					activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(random);
 			}
-			else if(mutated.getType() == NEATNodeGene.HIDDEN){
+			else if(mutated.getType() == NEATNodeGene.TYPE.HIDDEN){
 				if(ActivationFunctionContainer.getHiddenActivationFunctions().size() > 1)
 					activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(random);
 			}
-			else if(mutated.getType() == NEATNodeGene.OUTPUT){
+			else if(mutated.getType() == NEATNodeGene.TYPE.OUTPUT){
 				if(ActivationFunctionContainer.getOutputActivationFunctions().size() > 1)
 					activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(random);
 			}
 
 
-			mutated = new NEATNodeGene(mutated.getInnovationNumber(), mutated.id(), mutated.sigmoidFactor(), mutated.getType(), mutated.bias(), activationFunction);
+			mutated = new NEATNodeGene(mutated.getInnovationNumber(), mutated.id(), mutated.sigmoidFactor(), mutated.getType(), mutated.getLabel(), mutated.bias(), activationFunction);
 		}
 
 		if (perturbRandVal < this.pPerturb) {
 			newSF = mutatee.sigmoidFactor() + MathUtils.nextClampedDouble(-perturb, perturb);
-			mutated = new NEATNodeGene(mutated.getInnovationNumber(), mutated.id(), newSF, mutated.getType(), mutated.bias(), mutated.getActivationFunction());
+			mutated = new NEATNodeGene(mutated.getInnovationNumber(), mutated.id(), newSF, mutated.getType(), mutated.getLabel(),mutated.bias(), mutated.getActivationFunction());
 		}
 		
 		if (mutateBias < this.pMutateBias) {
 			newBias += MathUtils.nextClampedDouble(-biasPerturb, biasPerturb);
-			mutated = new NEATNodeGene(mutated.getInnovationNumber(), mutated.id(), mutated.sigmoidFactor(), mutated.getType(), newBias, mutated.getActivationFunction());
+			mutated = new NEATNodeGene(mutated.getInnovationNumber(), mutated.id(), mutated.sigmoidFactor(), mutated.getType(), mutated.getLabel(),newBias, mutated.getActivationFunction());
 		}
 		
 		return (mutated);
@@ -187,7 +187,7 @@ public class NEATMutator implements Mutator {
 		int idx = 0;
 		NEATLinkGene linkGene;
 		
-		if ((to.getType() == NEATNodeGene.INPUT)){
+		if ((to.getType() == NEATNodeGene.TYPE.INPUT)){
 			illegal = true;
 		} else {
 			while (!illegal && (idx < links.size())) {
@@ -311,18 +311,18 @@ public class NEATMutator implements Mutator {
 		
 		for (i = 0; i < nodeGenes.length; i++) {
 			node = (NEATNodeGene)nodeGenes[i];
-			if (node.getType() == NEATNodeGene.OUTPUT) {
+			if (node.getType() == NEATNodeGene.TYPE.OUTPUT) {
 				if (depth == 1) {
 					node.setDepth(depth);
 					this.assignNeuronDepth(this.findSourceNodes(node.id(), mutated.genes()), depth + 1, mutated);
 				}
-			} else if (node.getType() == NEATNodeGene.HIDDEN) {
+			} else if (node.getType() == NEATNodeGene.TYPE.HIDDEN) {
 				if (node.getDepth() == 0) {
 					// we have an unassigned depth
 					node.setDepth(depth);
 					this.assignNeuronDepth(this.findSourceNodes(node.id(), mutated.genes()), depth + 1, mutated);				
 				}
-			} else if (node.getType() == NEATNodeGene.INPUT) {
+			} else if (node.getType() == NEATNodeGene.TYPE.INPUT) {
 				node.setDepth(Integer.MAX_VALUE);
 			}
 		}
@@ -357,7 +357,7 @@ public class NEATMutator implements Mutator {
 
 		for (i = 0; i < nodes.size(); i++) {
 			node = (NEATNodeGene)nodes.get(i);
-			if (node.getType() == NEATNodeGene.OUTPUT) {
+			if (node.getType() == NEATNodeGene.TYPE.OUTPUT) {
 				outputNodes.add(node);
 			}
 		}

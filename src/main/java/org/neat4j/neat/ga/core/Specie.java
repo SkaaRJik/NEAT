@@ -225,6 +225,7 @@ public abstract class Specie implements Comparable {
 											 ((NEATNodeGene)clonee[i]).id(), 
 											 ((NEATNodeGene)clonee[i]).sigmoidFactor(), 
 											 ((NEATNodeGene)clonee[i]).getType(),
+											 ((NEATNodeGene)clonee[i]).getLabel(),
 											 ((NEATNodeGene)clonee[i]).bias(),
 											 ((NEATNodeGene)clonee[i]).getActivationFunction()
 											);

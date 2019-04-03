@@ -69,9 +69,48 @@
 
 
 .visualisation-container{
-    -fx-border-color: black;
+    -fx-border-color: grey;
 }
 
 .borderedHBox{
     -fx-border-color: grey;
+}
+
+.visualisation-content{
+    -fx-background-color: #1E1E1E;
+    -fx-background: #1E1E1E;
+}
+
+.visualisation-content-input-text{
+    -fx-fill: #866ED8;
+
+}
+
+.visualisation-content-output-text{
+    -fx-fill: #E868AB;
+
+}
+
+.visualisation-content-input-node{
+    -fx-border-color: #3714B0;
+    -fx-background-color: #866ED8;
+    -fx-border-width: 2px;
+    -fx-shape: "m21,157.8c0,-22.09945 38.48619,-40 86,-40c47.51381,0 86,17.90055 86,40c0,22.09945 -38.48619,40 -86,40c-47.51381,0 -86,-17.90055 -86,-40z";
+    -fx-stroke: linear-gradient(to right, #866ED8, #5DD0C0);
+}
+
+.visualisation-content-output-node{
+    -fx-border-color: #D0006E;
+    -fx-background-color: #E868AB;
+    -fx-border-width: 2px;
+    -fx-shape: "m21,157.8c0,-22.09945 38.48619,-40 86,-40c47.51381,0 86,17.90055 86,40c0,22.09945 -38.48619,40 -86,40c-47.51381,0 -86,-17.90055 -86,-40z";
+    -fx-stroke: #E868AB;
+}
+
+.visualisation-content-hidden-node{
+    -fx-border-color: #00A08A;
+    -fx-background-color: #5DD0C0;
+    -fx-border-width: 2px;
+    -fx-shape: "m21,157.8c0,-22.09945 38.48619,-40 86,-40c47.51381,0 86,17.90055 86,40c0,22.09945 -38.48619,40 -86,40c-47.51381,0 -86,-17.90055 -86,-40z";
+    -fx-stroke: #5DD0C0;
 }

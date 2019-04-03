@@ -8,16 +8,21 @@ import org.neat4j.neat.data.core.NetworkInput;
 import org.neat4j.neat.data.core.NetworkInputSet;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author MSimmerson
  *
  */
 public class CSVInputSet implements NetworkInputSet {
-	private ArrayList inputs;
+
+
+	private List<String> headers;
+	private List inputs;
 	private int idx;
 	
-	public CSVInputSet(ArrayList inputs) {
+	public CSVInputSet(List<String> headers ,ArrayList inputs) {
+		this.headers = headers;
 		this.inputs = inputs;
 		this.idx = 0;
 	}
@@ -48,5 +53,15 @@ public class CSVInputSet implements NetworkInputSet {
 		if (idx < this.size()) {
 			this.inputs.remove(idx);
 		}
+	}
+
+	@Override
+	public List<String> getHeaders() {
+		return this.headers;
+	}
+
+	@Override
+	public void setHeaders(List<String> headers) {
+		this.headers = headers;
 	}
 }

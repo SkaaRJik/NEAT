@@ -8,6 +8,7 @@ import org.neat4j.neat.data.core.ExpectedOutputSet;
 import org.neat4j.neat.data.core.NetworkOutput;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author MSimmerson
@@ -15,12 +16,15 @@ import java.util.ArrayList;
  */
 public class CSVExpectedOutputSet implements ExpectedOutputSet {
 
+	List<String> headers;
+
 	private ArrayList ops;
 	private int idx;
 	
-	public CSVExpectedOutputSet(ArrayList eOps) {
+	public CSVExpectedOutputSet( List<String> headers, ArrayList eOps) {
 		this.idx = 0;
 		this.ops = eOps;
+		this.headers = headers;
 	}
 	/**
 	 * @see org.neat4j.ailibrary.nn.data.NetworkOutputSet#size()
@@ -55,6 +59,17 @@ public class CSVExpectedOutputSet implements ExpectedOutputSet {
 	public NetworkOutput outputAt(int idx) {
 		return ((NetworkOutput)this.ops.get(idx));		
 	}
+
+	@Override
+	public List<String> getHeaders() {
+		return this.headers;
+	}
+
+	@Override
+	public void setHeaders(List<String> headers) {
+		this.headers = headers;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.neat4j.ailibrary.nn.data.NetworkOutputSet#removeNetworkOutput(int)
 	 */
@@ -68,4 +83,6 @@ public class CSVExpectedOutputSet implements ExpectedOutputSet {
 	public boolean hasNext() {
 		return this.idx < size();
 	}
+
+
 }
