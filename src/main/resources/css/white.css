@@ -81,36 +81,62 @@
     -fx-background: #1E1E1E;
 }
 
-.visualisation-content-input-text{
+.visualisation-item{
+    -fx-background-color: #1E1E1E;
+    -fx-background: #1E1E1E;
+}
+
+.visualisation-item:input-hidden-connection {
+    -fx-stroke: linear-gradient(to right, #866ED8, #5DD0C0);
+}
+
+.visualisation-item:input-output-connection {
+    -fx-stroke: linear-gradient(to right, #3714B0, #D0006E);
+}
+
+.visualisation-item:hidden-hidden-connection {
+    -fx-stroke: #00A08A;
+}
+
+.visualisation-item:hidden-output-connection {
+    -fx-stroke: linear-gradient(to right, #00A08A, #D0006E);
+}
+
+.visualisation-item:input-text{
     -fx-fill: #866ED8;
-
 }
 
-.visualisation-content-output-text{
+.visualisation-item:output-text{
     -fx-fill: #E868AB;
-
 }
 
-.visualisation-content-input-node{
+.visualisation-item:input-node{
     -fx-border-color: #3714B0;
     -fx-background-color: #866ED8;
     -fx-border-width: 2px;
     -fx-shape: "m21,157.8c0,-22.09945 38.48619,-40 86,-40c47.51381,0 86,17.90055 86,40c0,22.09945 -38.48619,40 -86,40c-47.51381,0 -86,-17.90055 -86,-40z";
-    -fx-stroke: linear-gradient(to right, #866ED8, #5DD0C0);
+    -fx-stroke: linear-gradient(to right, #866ED8, #3714B0);
+
 }
 
-.visualisation-content-output-node{
+.visualisation-item:output-node{
     -fx-border-color: #D0006E;
     -fx-background-color: #E868AB;
     -fx-border-width: 2px;
     -fx-shape: "m21,157.8c0,-22.09945 38.48619,-40 86,-40c47.51381,0 86,17.90055 86,40c0,22.09945 -38.48619,40 -86,40c-47.51381,0 -86,-17.90055 -86,-40z";
-    -fx-stroke: #E868AB;
+    -fx-stroke: linear-gradient(to left, #E868AB, #D0006E);
 }
 
-.visualisation-content-hidden-node{
+.visualisation-item:hidden-node{
     -fx-border-color: #00A08A;
     -fx-background-color: #5DD0C0;
     -fx-border-width: 2px;
     -fx-shape: "m21,157.8c0,-22.09945 38.48619,-40 86,-40c47.51381,0 86,17.90055 86,40c0,22.09945 -38.48619,40 -86,40c-47.51381,0 -86,-17.90055 -86,-40z";
-    -fx-stroke: #5DD0C0;
+}
+
+.visualisation-item:active{
+    -fx-border-color: #FFD200;
+    -fx-background-color: #FFDD40;
+    -fx-stroke: #FFD200;
+    -fx-border-width: 2px;
 }

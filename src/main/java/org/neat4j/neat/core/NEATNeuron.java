@@ -27,15 +27,17 @@ public class NEATNeuron implements Neuron {
 	private NEATNodeGene.TYPE type;
 	private int depth;
 	String label;
-	private ArrayList sourceNeurons;
-	private ArrayList incomingSynapses;
+	private ArrayList<NEATNeuron> sourceNeurons;
+	private ArrayList<Synapse> incomingSynapses;
+	private ArrayList<Synapse> outSynapses;
 
 	public NEATNeuron(ActivationFunction function, int id, NEATNodeGene.TYPE type, String label) {
 		this.activationFunction = function;
 		this.id = id;
 		this.type = type;
-		this.sourceNeurons = new ArrayList();
-		this.incomingSynapses = new ArrayList();
+		this.sourceNeurons = new ArrayList<>();
+		this.incomingSynapses = new ArrayList<>();
+		this.outSynapses = new ArrayList<>();
 		this.depth = -1;
 		this.label = label;
 	}
@@ -48,11 +50,11 @@ public class NEATNeuron implements Neuron {
 		this.incomingSynapses.add(synapse);
 	}
 	
-	public ArrayList incomingSynapses() {
+	public ArrayList<Synapse> incomingSynapses() {
 		return (this.incomingSynapses);
 	}
 	
-	public ArrayList sourceNeurons() {
+	public ArrayList<NEATNeuron> sourceNeurons() {
 		return (this.sourceNeurons);
 	}
 	
@@ -166,5 +168,14 @@ public class NEATNeuron implements Neuron {
 				"\n  activationFunction=" + activationFunction.getFunctionName() +
 				"\n  bias=" + bias +
 				"\n}";
+	}
+
+
+	public ArrayList<Synapse> getOutSynapses() {
+		return outSynapses;
+	}
+
+	public void addOutSynapse(Synapse synapse){
+		this.outSynapses.add(synapse);
 	}
 }

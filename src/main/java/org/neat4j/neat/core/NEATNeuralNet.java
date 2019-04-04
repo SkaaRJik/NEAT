@@ -203,6 +203,7 @@ public class NEATNeuralNet implements NeuralNet {
 			synapses[i] = new Synapse(from, to, gene.getWeight());
 			synapses[i].setEnabled(gene.isEnabled());
 			to.addIncomingSynapse(synapses[i]);
+			from.addOutSynapse(synapses[i]);
 		}
 		
 		return (synapses);

@@ -1,19 +1,17 @@
 package ru.filippov.utils;
 
 import javafx.css.PseudoClass;
-import javafx.scene.Group;
+import javafx.event.EventHandler;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.*;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import org.apache.log4j.Logger;
 import org.neat4j.core.AIConfig;
@@ -42,14 +40,12 @@ public class AdvancedNetVisualisator {
     private static double N_SIZE_W = 0;
     private static double N_SIZE_H = 0;
 
+
     Map<Integer, DisplayNeuron> neuronsPositions;
-    Map<String, DisplayNeuron> connectionsPositions;
+    Map<String, Line> connectionsPositions;
 
     //private DisplayNeuron[] displayNeurons;
     //private  DisplayNeuron[] displaySources;
-
-
-
 
     public void visualiseNet(Pane pane){
         if (this.net == null ) return;
@@ -63,18 +59,25 @@ public class AdvancedNetVisualisator {
         double canvasH = ((StackPane)pane.getParent()).getHeight();
         Region  rectangle;
         Text text = null;
-        //gc.setFill(Color.BLACK);
-        //this.drawNeurons(gc);
         Line line = null;
-        Synapse[] connections = net.getConnections();
-        /*Path path = null;
-        MoveTo moveFrom = null;
-        LineTo quadTo = null;*/
 
-        PseudoClass fromInputToHidden = PseudoClass.getPseudoClass("input-hidden");
-        PseudoClass fromInputToOutput = PseudoClass.getPseudoClass("input-output");
-        PseudoClass fromHiddenToHidden = PseudoClass.getPseudoClass("hidden-hidden");
-        PseudoClass fromHiddenToOutput = PseudoClass.getPseudoClass("hidden-output");
+
+
+        Synapse[] connections = net.getConnections();
+        connectionsPositions = new HashMap<>(connections.length);
+
+        Map<Region, DisplayNeuron> rectangleDisplayNeuronHashMap = new HashMap<>(this.net.neurons().length);
+
+        PseudoClass fromInputToHidden = PseudoClass.getPseudoClass("input-hidden-connection");
+        PseudoClass fromInputToOutput = PseudoClass.getPseudoClass("input-output-connection");
+        PseudoClass fromHiddenToHidden = PseudoClass.getPseudoClass("hidden-hidden-connection");
+        PseudoClass fromHiddenToOutput = PseudoClass.getPseudoClass("hidden-output-connection");
+        PseudoClass inputNode = PseudoClass.getPseudoClass("input-node");
+        PseudoClass outputNode = PseudoClass.getPseudoClass("output-node");
+        PseudoClass hiddenNode = PseudoClass.getPseudoClass("hidden-node");
+        PseudoClass active = PseudoClass.getPseudoClass("active");
+        PseudoClass inputText = PseudoClass.getPseudoClass("input-text");
+        PseudoClass outputText = PseudoClass.getPseudoClass("output-text");
 
         for (int i = 0; i < connections.length; i++) {
 
@@ -82,22 +85,28 @@ public class AdvancedNetVisualisator {
                 to = this.neuronsPositions.get(connections[i].getTo().getID());
 
                 line = new Line(from.x * canvasW + N_SIZE_W, from.y * canvasH + N_SIZE_H / 2, to.x * canvasW, to.y * canvasH + N_SIZE_H / 2);
+
+                connectionsPositions.put(connections[i].getFrom().getID()+"_"+connections[i].getTo().getID(), line);
+
+
                 if(!connections[i].isEnabled()) {
                     line.getStrokeDashArray().addAll(25d, 10d);
                 }
-                if(from.neuron.neuronType() == NEATNodeGene.TYPE.INPUT && to.neuron.neuronType() == NEATNodeGene.TYPE.HIDDEN)
-                line.getStyleClass().add("visualisation-content-input-node");
-                /*line.getPseudoClassStates().add(new PseudoClass() {
 
-                })*/
-
-                //moveFrom = new MoveTo(from.x * canvasW + N_SIZE_W, from.y * canvasH + N_SIZE_H / 2);
-                //quadTo = new LineTo(to.x * canvasW, to.y * canvasH + N_SIZE_H / 2);
-
-                //path.getElements().addAll(moveFrom, quadTo);
-
+                line.getStyleClass().add("visualisation-item");
+                if(from.neuron.neuronType() == NEATNodeGene.TYPE.INPUT && to.neuron.neuronType() == NEATNodeGene.TYPE.HIDDEN){
+                    line.pseudoClassStateChanged(fromInputToHidden, true);
+                }
+                if(from.neuron.neuronType() == NEATNodeGene.TYPE.INPUT && to.neuron.neuronType() == NEATNodeGene.TYPE.OUTPUT){
+                    line.pseudoClassStateChanged(fromInputToOutput, true);
+                }
+                if(from.neuron.neuronType() == NEATNodeGene.TYPE.HIDDEN && to.neuron.neuronType() == NEATNodeGene.TYPE.HIDDEN){
+                    line.pseudoClassStateChanged(fromHiddenToHidden, true);
+                }
+                if(from.neuron.neuronType() == NEATNodeGene.TYPE.HIDDEN && to.neuron.neuronType() == NEATNodeGene.TYPE.OUTPUT){
+                    line.pseudoClassStateChanged(fromHiddenToOutput, true);
+                }
                 Tooltip.install(line, new Tooltip(connections[i].toString()));
-
                 pane.getChildren().add(line);
 
 
@@ -106,11 +115,11 @@ public class AdvancedNetVisualisator {
 
         }
 
-
-        Path path = null;
-
         for(DisplayNeuron neuron : this.neuronsPositions.values()){
             rectangle = new Region();
+
+            rectangleDisplayNeuronHashMap.put(rectangle, neuron);
+
             rectangle.setLayoutX(neuron.x()*canvasW);
             rectangle.setLayoutY(neuron.y()*canvasH);
             rectangle.setMaxWidth(N_SIZE_W);
@@ -118,58 +127,82 @@ public class AdvancedNetVisualisator {
             rectangle.setPrefWidth(N_SIZE_W);
             rectangle.setPrefHeight(N_SIZE_H);
 
-            /*rectangle.setFill(Color.TRANSPARENT);
-            rectangle.setArcHeight(25);
-            rectangle.setArcWidth(25);*/
+            rectangle.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                boolean isActive = false;
+
+                @Override
+                public void handle(MouseEvent event) {
+                    this.isActive = !isActive;
+                    ((Region)event.getSource()).pseudoClassStateChanged(active, isActive);
+
+                    DisplayNeuron mainNeuron = rectangleDisplayNeuronHashMap.get((Region) event.getSource());
+                    String synapseId = "";
+                    for(NEATNeuron neatNeuron : mainNeuron.neuron.sourceNeurons()){
+                        synapseId = neatNeuron.getID()+"_"+ mainNeuron.neuron.id();
+                        activateSynapse(synapseId);
+                    }
+
+                    for (Synapse synapse : mainNeuron.neuron().getOutSynapses()){
+                        synapseId = mainNeuron.neuron.id()+"_"+synapse.getTo().getID();
+                        activateSynapse(synapseId);
+                    }
+
+                }
+
+                private void activateSynapse(String synapseId) {
+                    if(connectionsPositions.containsKey(synapseId)){
+                        connectionsPositions.get(synapseId).pseudoClassStateChanged(active, isActive);
+                        if(isActive){
+                            connectionsPositions.get(synapseId).toFront();
+                        } else {
+                            connectionsPositions.get(synapseId).toBack();
+                        }
+                    }
+                }
+            });
+
+
+
+
+
             if (neuron.neuron().neuronType() == NEATNodeGene.TYPE.INPUT) {
 
-                rectangle.getStyleClass().add("visualisation-content-input-node");
+                rectangle.getStyleClass().add("visualisation-item");
+                rectangle.pseudoClassStateChanged(inputNode, true);
+
 
                 text = new Text(neuron.neuron().getLabel());
                 text.setX(neuron.x()*canvasW - text.getLayoutBounds().getWidth()-N_SIZE_W);
                 text.setY(neuron.y()*canvasH+N_SIZE_H-8);
-                text.getStyleClass().add("visualisation-content-input-text");
+                text.getStyleClass().add("visualisation-item");
+                text.pseudoClassStateChanged(inputText, true);
 
-                line = new Line(text.getX() + text.getLayoutBounds().getWidth(), text.getY() , rectangle.getLayoutX(), rectangle.getLayoutY() + N_SIZE_H/2);
-                line.getStyleClass().add("visualisation-content-input-node");
+
+                line = new Line(text.getX() + text.getLayoutBounds().getWidth(), rectangle.getLayoutY() + N_SIZE_H/2 , rectangle.getLayoutX(), rectangle.getLayoutY() + N_SIZE_H/2);
+                line.getStyleClass().add("visualisation-item");
+                line.pseudoClassStateChanged(inputNode, true);
+
                 pane.getChildren().addAll(line, text);
-                /*path = new Path();
 
-
-
-                path.setStroke(Color.WHITE);
-
-                moveFrom = new MoveTo(text.getX() + text.getLayoutBounds().getWidth(), text.getY()  );
-                quadTo = new LineTo(rectangle.getLayoutX(), rectangle.getLayoutY() + N_SIZE_H/2);
-
-                path.getElements().addAll(moveFrom, quadTo);
-
-                pane.getChildren().addAll(path, text);*/
-
-
-                //gc.setStroke(Color.MAGENTA);
-                //gc.strokeText(neuron.neuron().getLabel(), neuron.x*canvasW - N_SIZE_W * 3, neuron.y()*canvasH+N_SIZE_H-4);
             } else if (neuron.neuron().neuronType() == NEATNodeGene.TYPE.HIDDEN) {
-                /*rectangle.setStroke(Color.web("#00A08A"));
-                rectangle.setFill(Color.web("#5DD0C0"));*/
-                rectangle.getStyleClass().add("visualisation-content-hidden-node");
+
+                rectangle.getStyleClass().add("visualisation-item");
+                rectangle.pseudoClassStateChanged(hiddenNode, true);
 
             } else if (neuron.neuron().neuronType() == NEATNodeGene.TYPE.OUTPUT) {
 
-                /*rectangle.setStroke(Color.web("#D0006E"));
-                rectangle.setFill(Color.web("#E868AB"));*/
-                rectangle.getStyleClass().add("visualisation-content-output-node");
-
-
-
+                rectangle.getStyleClass().add("visualisation-item");
+                rectangle.pseudoClassStateChanged(outputNode, true);
 
                 text = new Text(neuron.neuron().getLabel());
                 text.setX(neuron.x()*canvasW+N_SIZE_W*2);
                 text.setY(neuron.y()*canvasH+N_SIZE_H-8);
-                text.getStyleClass().add("visualisation-content-output-text");
-                line = new Line(text.getX(), text.getY() , rectangle.getLayoutX(), rectangle.getLayoutY() + N_SIZE_H/2);
+                text.getStyleClass().add("visualisation-item");
+                text.pseudoClassStateChanged(outputText, true);
 
-                line.getStyleClass().add("visualisation-content-output-node");
+                line = new Line(text.getX(), rectangle.getLayoutY() + N_SIZE_H/2 , rectangle.getLayoutX()+N_SIZE_W, rectangle.getLayoutY() + N_SIZE_H/2);
+                line.getStyleClass().add("visualisation-item");
+                line.pseudoClassStateChanged(outputNode, true);
 
                 pane.getChildren().addAll(line, text);
 
@@ -301,7 +334,7 @@ public class AdvancedNetVisualisator {
         int row = 0;
         int col = 0;
         NEATNeuron[] neurons = this.net.neurons();
-        List<List<NEATNeuron>> neuronStructure;
+        ;
         NEATNeuron neuron;
 
         // will only need the first few entries, but htis will cope with wierd structures
@@ -329,7 +362,8 @@ public class AdvancedNetVisualisator {
         if (inputs > maxWidth) {
             maxWidth = inputs;
         }
-        neuronStructure = new ArrayList<>(maxDepth);
+
+        List<List<NEATNeuron>> neuronStructure = new ArrayList<>(maxDepth);
         for (int j = 0; j < maxDepth; j++) {
             neuronStructure.add(new ArrayList<>(maxWidth));
         }
@@ -411,15 +445,7 @@ public class AdvancedNetVisualisator {
         List<List<NEATNeuron>> structure = this.analyseNeuronStructure();
         NEATNeuron neuron;
 
-        Synapse[] connections = this.net.getConnections();
-
-
         this.neuronsPositions = new HashMap<Integer, DisplayNeuron>(this.net.neurons().length);
-        this.connectionsPositions = new HashMap<String, DisplayNeuron>(this.net.getConnections().length);
-
-
-
-
         int connectionSizeBulb = 6;
 
         float offsetY;
@@ -443,68 +469,6 @@ public class AdvancedNetVisualisator {
                 currentY += offsetY;
             }
         }
-
-
-
-
-
-
-        //offsetX = ((float) (canvasW)) / (structure.length);
-        //lastX = (int) (offsetX - nodeSize/2);
-
-
-
-
-
-
-        /*//Set<Integer> isRectdrawn = new HashSet<>(topology.getTotalNeurons());
-        for(Set<Neuron> layer : topology.getLayers()){
-            offsetY = ((float) (imageSize)) / (layer.size()+1);
-            lastY = (int) (offsetY) - nodeSize/2;
-                int y = (int) (lastY + AdvancedRandom.nextFloat(-1f, 1f) * (offsetY/2));
-                neuronsPositions.put(neuron.getID(), new Point(lastX, y));
-                g.fillOval(lastX, y , nodeSize, nodeSize);
-                g.setColor(Color.BLACK);
-                g.drawString(String.valueOf(neuron.getID()+1), lastX, y);
-                for(Synapse inputSynapses : neuron.getInputConnections()){
-                    if(!inputSynapses.isEnabled()) continue;
-                    Point point = neuronsPositions.get(inputSynapses.getFromNeuronID());
-                    g.drawLine(point.x+nodeSize, point.y+nodeSize/2, lastX, y+nodeSize/2);
-                    if(!isRectdrawn.contains(neuron.getID())){
-                        g.fillRect(lastX-cubeSize/2, y+nodeSize/2-cubeSize/2, cubeSize, cubeSize);
-                        isRectdrawn.add(neuron.getID());
-                    }
-                }
-                lastY += offsetY;
-            }
-            lastX += offsetX;
-        }*/
-
-
-
-        /*displayNeurons = new DisplayNeuron[structure.length * structure[0].length];
-
-        ArrayList structureList = new ArrayList();
-        ArrayList rowList;
-
-        for (row = 0; row < structure.length; row++) {
-            rowList = new ArrayList();
-            for (col = 0; col < structure[0].length; col++) {
-                neuron = structure[row][col];
-                if (neuron != null) {
-                    rowList.add(neuron);
-                }
-            }
-            structureList.add(rowList);
-        }
-
-        for (row = 0; row < structureList.size(); row++) {
-            rowList = (ArrayList)structureList.get(row);
-            for (col = 0; col < rowList.size(); col++) {
-                neuron = (NEATNeuron)rowList.get(col);
-                displayNeurons[(row * structure[0].length) + col] = new DisplayNeuron(neuron, (int)Math.round((this.canvasW / (rowList.size() + 1)) * (col + 1)), (int)Math.round(((this.canvasH / structureList.size()) - (2 * F_OFFSET)) * (row + 1)));
-            }
-        }*/
     }
 
 
