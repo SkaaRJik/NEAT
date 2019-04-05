@@ -7,6 +7,8 @@ import com.jfoenix.controls.base.IFXLabelFloatControl;
 import com.jfoenix.skins.JFXTextFieldSkin;
 import com.jfoenix.skins.ValidationPane;
 import com.jfoenix.validation.RequiredFieldValidator;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
@@ -761,6 +763,8 @@ public class MainController {
         this.eleEventsToogle = new JFXToggleButton();
         this.eleSurvivalCountTextField = new JFXTextField();
         this.eleEventTimeTextField = new JFXTextField();
+        this.eleSurvivalCountTextField.setLabelFloat(true);
+        this.eleEventTimeTextField.setLabelFloat(true);
         tempVbox.getChildren().addAll(
                 this.eleEventsToogle,
                 this.eleSurvivalCountTextField,
@@ -794,7 +798,11 @@ public class MainController {
         this.terminationValueToggle = new JFXToggleButton();
         this.terminationValueToggle.setTooltip(new Tooltip());
         this.terminationValueTextField = new JFXTextField();
-        this.terminationValueTextField.setTooltip(new Tooltip());;
+        this.terminationValueTextField.setTooltip(new Tooltip());
+        this.extraFeatureCountTextField.setLabelFloat(true);
+        this.popSizeTextField.setLabelFloat(true);
+        this.numberEpochsTextField.setLabelFloat(true);
+        this.terminationValueTextField.setLabelFloat(true);
         tempVbox.getChildren().addAll(
                 this.keepBestEverToggle,
                 this.extraFeatureCountTextField,
@@ -915,51 +923,49 @@ public class MainController {
         if (this.currentNEATConfig == null){
             this.parametresScrollPane.setVisible(false);
             this.infoTabPane.setVisible(false);
-            this.dataSetsScrollPane.setVisible(false);
         }
+
 
 
         this.trainDatasetChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
                 this.trainDataSet = loadDataset(newValue.getAsFile(), true);
                 this.fillTableViewWithData(this.trainTableView, this.trainDataSet.getHeadersForTableView(), this.trainDataSet.getDataForTableView());
-                //loadDataset(newValue.getAsFile());
-                this.dataSetsScrollPane.setVisible(true);
+
+
                 errorChart.getData().clear();
                 valueGraphicChart.getData().clear();
                 drawablePane.getChildren().clear();
 
                 trainingCount = 0;
-                //this.currentNEATConfig.updateConfig("AI.SOURCE", newValue+"BestNetwork_temp.ser");
-                //this.currentNEATConfig.updateConfig("SAVE.LOCATION", newValue+"BestNetwork_temp.ser");
-                //TODO REFACTOR THIS SHIT
                 this.currentNEATConfig.updateConfig("SAVE.LOCATION", this.currentNeatConfigFile.getDirectoryPath()+"\\"+newValue.getName()+"_last_best.ser");
-
-                /*if(new File(this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork.ser").exists()){
-                    this.runnableNEATConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork.ser");
-                    this.runnableNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"@test.dataset");
-                    logger.debug(this.runnableNEATConfig.configElement("AI.SOURCE"));
-                    logger.debug(this.runnableNEATConfig.configElement("INPUT.DATA"));
-                    this.testingTab.setDisable(false);
-                } else if(new File(this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork_temp.ser").exists()){
-                    this.runnableNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"@test.dataset");
-                    this.runnableNEATConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork_temp.ser");
-                    logger.debug(this.runnableNEATConfig.configElement("AI.SOURCE"));
-                    logger.debug(this.runnableNEATConfig.configElement("INPUT.DATA"));
-                    this.testingTab.setDisable(false);
-                } else {
-                    this.runnableNEATConfig.updateConfig("AI.SOURCE", this.currentProjectTextField.getText()+"\\datasets\\"+newValue+"\\"+newValue+"BestNetwork_temp.ser");
-                    logger.debug(this.runnableNEATConfig.configElement("AI.SOURCE"));
-                    //this.testingTab.setDisable(true);
-                }*/
-
-                /*trainigTab.setDisable(false);
-                testingTab.setDisable(false);*/
                 this.startTrainingButton.setDisable(false);
             } else {
                 this.startTrainingButton.setDisable(true);
             }
         });
+
+        this.testDatasetChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue != null){
+                this.testDataSet = loadDataset(newValue.getAsFile(), true);
+                this.fillTableViewWithData(this.testTableView, this.testDataSet.getHeadersForTableView(), this.testDataSet.getDataForTableView());
+                this.currentNEATConfig.updateConfig("INPUT.DATA", newValue.getFullPath());
+                this.runTestButton.setDisable(false);
+            } else {
+                this.runTestButton.setDisable(true);
+            }
+        });
+        /*this.trainedModelsChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue != null){
+                this.currentNEATConfig.updateConfig("AI.SOURCE", newValue.getFullPath());
+                this.runTestButton.setDisable(false);
+            } else {
+                this.runTestButton.setDisable(true);
+            }
+        });*/
+
+
+
 
         //trainigTab.setDisable(true);
         //testingTab.setDisable(true);
@@ -1015,7 +1021,7 @@ public class MainController {
             }
         });
 
-        netVisualizationBorderPane.setCenter(ZoomPane.createZoomPane(this.drawablePane));
+        this.netVisualizationBorderPane.setCenter(ZoomPane.createZoomPane(this.drawablePane));
 
         /*this.netVisualisationCanvas = new ZoomableCanvas(300, 300) {
             @Override
@@ -1157,11 +1163,17 @@ public class MainController {
             /*Read dataset values*/
             List<List<Double>> tempDataSet = new ArrayList<>(50);
             line = reader.readLine();
+            String value;
             while (line != null) {
                 stringTokenizer = new StringTokenizer(line,";");
                 List<Double> row = new ArrayList<>();
                 while(stringTokenizer.hasMoreTokens()){
-                    row.add(Double.valueOf(stringTokenizer.nextToken()));
+                    value = stringTokenizer.nextToken();
+                    if(value.equals("") || value.equals("null")){
+                        row.add(null);
+                    } else {
+                        row.add(Double.valueOf(value));
+                    }
                 }
                 tempDataSet.add(row);
                 line = reader.readLine();
@@ -1843,7 +1855,8 @@ public class MainController {
                             fileWriter.append("TEST_SET:"+ item.getValue().getName()+"."+item.getValue().getExtension()+"\n");
                             break;
                         case TRAINED_MODEL:
-                            fileWriter.append("TRAINED_MODEL:"+ item.getValue().getName()+"."+item.getValue().getExtension()+"\n");
+                            if(!item.getValue().getName().contains("_last_best"))
+                                fileWriter.append("TRAINED_MODEL:"+ item.getValue().getName()+"."+item.getValue().getExtension()+"\n");
                             break;
                     }
                 }
@@ -2221,6 +2234,20 @@ public class MainController {
                 });
             });
             this.trainingProgressBar.progressProperty().bind(neatTrainingForJavaFX.statusProperty());
+
+            neatTrainingForJavaFX.isEndedProperty().addListener((observable, oldValue, newValue) -> {
+                if(newValue){
+                    Platform.runLater(() ->{
+                        try {
+                            netVisualisator.setNetToVisualise(neatTrainingForJavaFX.getBestEverChromosomes().get(neatTrainingForJavaFX.getBestEverChromosomes().size() - 1), currentNEATConfig);
+                            netVisualisator.visualiseNet(this.drawablePane);
+                        } catch (InitialisationFailedException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                }
+            });
+
             Thread trainThread = new Thread(neatTrainingForJavaFX);
             trainThread.start();
 
@@ -2233,10 +2260,13 @@ public class MainController {
                             break;
                         }
                     }
-                    if(projectFileDescriptor != null) break;
+                    if(projectFileDescriptor != null){
+                        trainedModelsChoiceBox.getSelectionModel().select(projectFileDescriptor);
+                        break;
+                    }
                     projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINED_MODEL, this.trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getDirectoryPath() ,this.trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getName()+"_last_best", ".ser");
                     treeItem.getChildren().add(new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu));
-
+                    trainedModelsChoiceBox.getSelectionModel().select(projectFileDescriptor);
                     break;
                 }
             }

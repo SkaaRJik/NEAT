@@ -173,41 +173,29 @@
                                                 </Label>
                                              </left>
                                           </BorderPane>
-                                          <AnchorPane prefHeight="179.0" prefWidth="583.0">
-                                             <children>
-                                                <ScrollPane fx:id="dataSetsScrollPane" fitToHeight="true" fitToWidth="true" prefHeight="226.0" prefWidth="583.0" AnchorPane.bottomAnchor="-122.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                                   <content>
-                                                      <TitledPane fx:id="trainTitledPane" animated="false" prefHeight="226.0" prefWidth="581.0" text="untitled">
-                                                        <content>
-                                                          <AnchorPane>
-                                                               <children>
-                                                                  <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                                                     <content>
-                                                                        <TableView fx:id="trainTableView">
-                                                                          <columns>
-                                                                            <TableColumn prefWidth="75.0" text="C1" />
-                                                                            <TableColumn prefWidth="75.0" text="C2" />
-                                                                          </columns>
-                                                                        </TableView>
-                                                                     </content>
-                                                                  </ScrollPane>
-                                                               </children>
-                                                            </AnchorPane>
-                                                        </content>
-                                                      </TitledPane>
-                                                   </content>
-                                                </ScrollPane>
-                                             </children>
-                                          </AnchorPane>
-                                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                             <children>
-                                                <BorderPane layoutX="5.0" layoutY="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0">
-                                                   <center>
-                                                      <JFXButton fx:id="startTrainingButton" onAction="#trainModel" BorderPane.alignment="CENTER" />
-                                                   </center>
-                                                </BorderPane>
-                                             </children>
-                                          </AnchorPane>
+                                          <TitledPane fx:id="trainTitledPane" animated="false" text="untitled">
+                                            <content>
+                                              <AnchorPane>
+                                                   <children>
+                                                      <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                         <content>
+                                                            <TableView fx:id="trainTableView">
+                                                              <columns>
+                                                                <TableColumn prefWidth="75.0" text="C1" />
+                                                                <TableColumn prefWidth="75.0" text="C2" />
+                                                              </columns>
+                                                            </TableView>
+                                                         </content>
+                                                      </ScrollPane>
+                                                   </children>
+                                                </AnchorPane>
+                                            </content>
+                                          </TitledPane>
+                                          <JFXButton fx:id="startTrainingButton" onAction="#trainModel" text="Start">
+                                             <graphic>
+                                                <FontAwesomeIconView glyphName="PLAY" />
+                                             </graphic>
+                                          </JFXButton>
                                           <FlowPane hgap="10.0" vgap="10.0">
                                              <children>
                                                 <JFXTextField fx:id="lastErrorTextField" labelFloat="true" promptText="Error" />
@@ -313,14 +301,9 @@
                                        <content>
                                           <VBox spacing="10.0">
                                              <children>
-                                                <TitledPane expanded="false">
+                                                <TitledPane>
                                                    <content>
-                                                      <TableView fx:id="testTableView" prefHeight="200.0" prefWidth="200.0">
-                                                        <columns>
-                                                          <TableColumn prefWidth="75.0" text="C1" />
-                                                          <TableColumn prefWidth="75.0" text="C2" />
-                                                        </columns>
-                                                      </TableView>
+                                                      <TableView fx:id="testTableView" prefHeight="200.0" prefWidth="200.0" />
                                                    </content>
                                                 </TitledPane>
                                              </children>

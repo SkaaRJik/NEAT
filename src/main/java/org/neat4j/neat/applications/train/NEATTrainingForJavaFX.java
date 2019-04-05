@@ -1,10 +1,7 @@
 package org.neat4j.neat.applications.train;
 
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.apache.log4j.Logger;
@@ -20,6 +17,7 @@ import java.util.List;
 public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runnable{
     private static final Logger cat = Logger.getLogger(NEATTrainingForJavaFX.class);
     DoubleProperty status;
+    BooleanProperty isEnded;
     ObservableList<Chromosome> bestEverChromosomes;
     ListProperty<Chromosome> bestEverChromosomesProperty;
     private int currentEpoch;
@@ -34,7 +32,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
         InnovationDatabase.refresh();
         super.initialise(config);
         this.status = new SimpleDoubleProperty(0);
-
+        this.isEnded = new SimpleBooleanProperty(false);
         bestEverChromosomes = FXCollections.observableArrayList();
         this.bestEverChromosomesProperty = new SimpleListProperty<>(bestEverChromosomes);
     }
@@ -64,6 +62,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
 
         }
         this.status.setValue(1.0);
+        this.isEnded.setValue(true);
         cat.debug("Innovation Database Stats - Hits:" + InnovationDatabase.totalHits + " - totalMisses:" + InnovationDatabase.totalMisses);
 
     }
@@ -98,5 +97,13 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
 
     public ListProperty<Chromosome> bestEverChromosomesPropertyProperty() {
         return bestEverChromosomesProperty;
+    }
+
+    public boolean isIsEnded() {
+        return isEnded.get();
+    }
+
+    public BooleanProperty isEndedProperty() {
+        return isEnded;
     }
 }

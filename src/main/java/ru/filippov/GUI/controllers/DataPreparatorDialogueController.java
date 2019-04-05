@@ -436,7 +436,12 @@ public class DataPreparatorDialogueController {
                 }
             }
             for (int j = 0; j < countOfValues; j++) {
-                row.add(Double.parseDouble(elementTokenizer.nextToken()));
+                try {
+                    row.add(Double.parseDouble(elementTokenizer.nextToken()));
+                } catch (NoSuchElementException ex) {
+                    row.add(null);
+                }
+
             }
             valuesList.add(row);
         }
@@ -501,22 +506,22 @@ public class DataPreparatorDialogueController {
                 this.writeDataIntoFile(dataFile, this.normalisedTrainDataTableView);
             }
             if(!testSetIndexes.isEmpty()) {
-                dataFile = new File(this.projectPath + this.trainDataNameTextField.getText() + ".ted");
+                dataFile = new File(this.projectPath + this.testDataNameTextField.getText() + ".ted");
                 if(dataFile.exists()) {
                     AlertWindow.createAlertWindow("\"" + this.trainDataNameTextField.getText() + "\" test dataset - is already exists. \n Choose another name");
                     return;
                 }
                 this.writeDataIntoFile(dataFile, this.normalisedTestDataTableView);
             }
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle(success);
+            alert.setHeaderText(dataWasCreated);
+            alert.setContentText(useChoiceBox);
+            alert.show();
+            this.stage.close();
         } catch (IOException e) {
             AlertWindow.createAlertWindow(e.getMessage()).show();
         }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(success);
-        alert.setHeaderText(dataWasCreated);
-        alert.setContentText(useChoiceBox);
-        alert.show();
-        this.stage.close();
 
 
 
@@ -738,6 +743,7 @@ public class DataPreparatorDialogueController {
                     tableColumn = new TableColumn();
                     tableColumn.setSortable(false);
                     ChoiceBox<String> choiceBox = this.createInputOutputChoiceBox();
+                    if( j == 0 ) choiceBox.getSelectionModel().select("Legend");
                     if (j == values.get(0).size() - 1) choiceBox.getSelectionModel().select("Output");
                     Label headerLabel = new Label((String) values.get(0).get(j));
                     BorderPane borderPane = new BorderPane(choiceBox, headerLabel, null, null, null);
@@ -986,12 +992,14 @@ public class DataPreparatorDialogueController {
                 for (List<Double> list : normalisedUsedData) {
                     for (Double val : list) {
                         for (float i = minVal; i < maxVal-step; i += step) {
-                            if (val >= i && val < i + step) {
-                                String intervalID = String.valueOf(String.format("%.2f", i)) + "-" + String.valueOf(String.format("%.2f", i + step));
-                                xychart = intervals.get(intervalID);
-                                xychart.setYValue((xychart.getYValue()) + 1.0);
-                                temp++;
-                                break;
+                            if (val != null) {
+                                if (val >= i && val < i + step) {
+                                    String intervalID = String.valueOf(String.format("%.2f", i)) + "-" + String.valueOf(String.format("%.2f", i + step));
+                                    xychart = intervals.get(intervalID);
+                                    xychart.setYValue((xychart.getYValue()) + 1.0);
+                                    temp++;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -1024,6 +1032,17 @@ public class DataPreparatorDialogueController {
         //if(trainSize >= usedData.size()) trainSize = usedData.size()-1;
         //put indexes
         for (int i = 0 ; i < trainSize; i++){
+            for (int j = 0; j < outputs ; j++) {
+                if( normalisedUsedData.get(i).get(normalisedUsedData.get(i).size()-1-j) == null){
+                    AlertWindow.createAlertWindow("Train set are not allowed to have empty value as output").showAndWait();
+
+                    trainSetIndexes.clear();
+                    return;
+
+                }
+            }
+
+
             trainSetIndexes.add(i);
         }
 
@@ -1075,6 +1094,6 @@ public class DataPreparatorDialogueController {
         return this.trainDataNameTextField.getText();
     }
     public String getNameOfTestSet() {
-        return this.trainDataNameTextField.getText();
+        return this.testDataNameTextField.getText();
     }
 }

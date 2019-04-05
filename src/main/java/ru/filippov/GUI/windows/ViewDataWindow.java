@@ -43,7 +43,7 @@ public class ViewDataWindow {
         this.stage.initOwner(parent.getWindow());
         controller = loader.getController();
 
-        controller.init();
+        //controller.init();
     }
 
     public void setLanguageUsingDefaultLocale(){

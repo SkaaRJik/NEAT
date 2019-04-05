@@ -42,8 +42,10 @@ public class LinearScaler implements DataScaler {
                     max = dataToNormalize.get(i).get(j);
                     continue;
                 }
-                min = Double.min(min, dataToNormalize.get(i).get(j));
-                max = Double.max(max, dataToNormalize.get(i).get(j));
+                if(dataToNormalize.get(i).get(j) != null) {
+                    min = Double.min(min, dataToNormalize.get(i).get(j));
+                    max = Double.max(max, dataToNormalize.get(i).get(j));
+                }
             }
         }
         List<List<Double>> output = new ArrayList<>(dataToNormalize.size());
@@ -51,6 +53,10 @@ public class LinearScaler implements DataScaler {
         for (int i = 0; i < dataToNormalize.size(); i++) {
             row = new ArrayList<Double>(dataToNormalize.get(i).size());
             for(int j = 0 ; j < dataToNormalize.get(i).size(); j++){
+                if(dataToNormalize.get(i).get(j) == null) {
+                    row.add(null);
+                    continue;
+                }
                 if(minRange >= 0)
                     row.add(((dataToNormalize.get(i).get(j)-min)/(max-min))*(maxRange-minRange)+minRange);
                 else

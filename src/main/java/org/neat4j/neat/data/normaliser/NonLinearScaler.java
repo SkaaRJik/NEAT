@@ -51,20 +51,32 @@ public class NonLinearScaler implements DataScaler {
 
         double average = 0;
         double disp = 0;
+        int countNull = 0;
         for (int j = 0; j < dataArray[0].length; j++) {
 
             average = 0;
+            countNull = 0;
             for (int i = 0; i < dataArray.length; i++) {
-                average += dataArray[i][j];
+                if(dataArray[i][j]!=null) {
+                    average += dataArray[i][j];
+                } else {
+                    countNull++;
+                }
             }
-            average /= dataArray.length;
+            average /= (dataArray.length-countNull);
             disp = 0;
             for (int i = 0; i < dataArray.length; i++) {
-                disp += Math.pow(dataArray[i][j]-average, 2);
+                if(dataArray[i][j]!=null) {
+                    disp += Math.pow(dataArray[i][j] - average, 2);
+                }
             }
-            disp = Math.sqrt(disp/(dataArray.length-1));
+            disp = Math.sqrt(disp/(dataArray.length-countNull-1));
             for (int i = 0; i < dataArray.length; i++) {
-               normalisedDataArray[i][j] = activationFunction.activate((dataToNormalize.get(i).get(j)-average)/disp) * (maxRange - minRange) + minRange;
+                if(dataArray[i][j]!=null) {
+                    normalisedDataArray[i][j] = activationFunction.activate((dataArray[i][j] - average) / disp) * (maxRange - minRange) + minRange;
+                } else {
+                    normalisedDataArray[i][j] = null;
+                }
             }
         }
 
