@@ -6,29 +6,33 @@ package org.neat4j.neat.data.csv;
 
 import org.neat4j.neat.data.core.NetworkOutput;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author MSimmerson
  *
  */
 public class CSVExpectedOutput implements NetworkOutput {
-	private double[] values;
+	private List<Double> values;
 	
-	public CSVExpectedOutput(double[] eOut) {
-		this.values = new double[eOut.length];
-		System.arraycopy(eOut, 0, this.values, 0, this.values.length);
+	public CSVExpectedOutput(List<Double> eOut) {
+		this.values = new ArrayList<>(eOut);
+
+		//System.arraycopy(eOut, 0, this.values, 0, this.values.length);
 	}
 	/**
 	 * @see org.neat4j.ailibrary.nn.data.NetworkOutput#values()
 	 */
-	public double[] values() {
+	public List<Double> getNetOutputs() {
 		return (this.values);
 	}
 
 	public String toString() {
 		int i;
 		StringBuffer sBuff = new StringBuffer();
-		for (i = 0; i < this.values.length; i++) {
-			sBuff.append(this.values[i]);
+		for (i = 0; i < this.values.size(); i++) {
+			sBuff.append(this.values.get(i));
 			sBuff.append(",");
 		}
 		

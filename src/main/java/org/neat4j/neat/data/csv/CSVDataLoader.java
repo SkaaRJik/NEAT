@@ -108,12 +108,17 @@ public class CSVDataLoader implements DataLoader {
 	}
 
 	private NetworkOutput createExpectedOutput(StringTokenizer sTok) {
-		double[] pattern = new double[sTok.countTokens()];
+		int outputs = sTok.countTokens();
+		List<Double> pattern = new ArrayList<>(outputs);
 		NetworkOutput op;
 		int i = 0;
-		
-		while (sTok.hasMoreTokens() && i < pattern.length) {
-			pattern[i++] = Double.parseDouble(sTok.nextToken());
+		String val;
+		while (sTok.hasMoreTokens() && i < outputs) {
+			val = sTok.nextToken();
+			if(!val.equals("null")) {
+				pattern.add(Double.parseDouble(val));
+				i++;
+			}
 		}
 		
 		op = new CSVExpectedOutput(pattern);

@@ -12,5 +12,5 @@ public interface ApplicationEngine extends AIController {
 	 * runs defined application
 	 *
 	 */
-	public void runApplication();
+	public void startTesting();
 }

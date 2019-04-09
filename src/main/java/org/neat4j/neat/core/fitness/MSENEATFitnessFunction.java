@@ -31,8 +31,8 @@ public class MSENEATFitnessFunction extends NEATFitnessFunction {
 		NetworkOutputSet opSet;
 		NetworkInput ip;
 		ExpectedOutputSet eOpSet = this.evaluationData().expectedOutputSet();
-		double[] op;
-		double[] eOp;
+		List<Double> op;
+		List<Double> eOp;
 		double error = 0;
 
 		
@@ -44,14 +44,14 @@ public class MSENEATFitnessFunction extends NEATFitnessFunction {
 		for (i = 0; i < eOpSet.size(); i++) {
 			ip = this.evaluationData().inputSet().nextInput();
 			opSet = this.net().execute(ip);
-			op = opSet.nextOutput().values();
-			eOp = eOpSet.nextOutput().values();
-			if(i == 0) ((ArrayList<List<Double>>) outputs).ensureCapacity(op.length);
+			op = opSet.nextOutput().getNetOutputs();
+			eOp = eOpSet.nextOutput().getNetOutputs();
+			if(i == 0) ((ArrayList<List<Double>>) outputs).ensureCapacity(op.size());
 			List<Double> outputValues = new ArrayList<>(eOpSet.size());
 			outputs.add(outputValues);
-			for (j = 0; j < op.length; j++) {
-				outputValues.add(op[j]);
-				error += Math.pow(eOp[j] - op[j], 2);
+			for (j = 0; j < op.size(); j++) {
+				outputValues.add(op.get(j));
+				error += Math.pow(eOp.get(j) - op.get(j), 2);
 			}
 			genoType.setOutputValues(outputs);
 		}

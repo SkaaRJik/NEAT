@@ -4,35 +4,75 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WhitingScaler implements DataScaler {
+
+    int inputs;
+    int outputs;
+
+    public WhitingScaler(int inputs, int outputs) {
+        this.inputs = inputs;
+        this.outputs = outputs;
+    }
+
     @Override
     public List<List<Double>> normalize(List<List<Double>> dataToNormalize) {
-        int columns = dataToNormalize.get(0).size();
-        int rows = dataToNormalize.size();
-        List<Double>[] average = new List[2];
-        average[0] = new ArrayList<>(columns);
-        average[1] = new ArrayList<>(rows);
-        double sum;
-        //Count average value of each columns
-        for (int i = 0; i < dataToNormalize.get(0).size(); i++) {
-            sum = 0;
-            for (int j = 0; j < dataToNormalize.size(); j++) {
-                sum += dataToNormalize.get(j).get(i);
+        double sredX = 0;
+        double sredY = 0;
+        double sumX = 0;
+        double sumY = 0;
+        double sum = 0;
+        int i = 1;
+        int n = dataToNormalize.size()-1;
+
+        double[] massX = new double [dataToNormalize.get(0).size()-1];
+        double[] massY = new double[dataToNormalize.get(0).size() - 1];
+        double[] mul = new double[dataToNormalize.get(0).size() - 1];
+        double[] cov = new double[n];
+        int alfa = 0;
+        //среднее значение
+
+        Double[][] array = dataToNormalize.stream().map(doubles -> { return doubles.stream().toArray(Double[]::new);}).toArray(Double[][]::new);
+
+        /*for (int k = 0 ; k < outputs; k++) {
+            for (int j = 0; j < array[]; j++)
+            {
+                alfa = j + 1;
+                sumY += Math.Pow(Convert.ToDouble(dataGridView1.Rows[j].Cells[n].Value), alfa);
             }
-            average[0].add(sum/dataToNormalize.size());
         }
-        //Count average value of each rows
-        double totalSum = 0;
-        for (int i = 0; i < dataToNormalize.size(); i++) {
+        sredY = sumY / (dataGridView1.RowCount - 1);
+        alfa = 0;
+        while (i != dataGridView1.ColumnCount-1)
+        {
+            sumX = 0;
+            sredX = 0;
             sum = 0;
-            for (int j = 0; j < dataToNormalize.get(i).size(); j++) {
-                sum += dataToNormalize.get(i).get(j);
+            alfa = 0;
+            //сумма по столбцу
+            for (int j = 0; j < dataGridView1.RowCount - 1; j++)
+            {
+                alfa = j+1;
+                sumX += Math.Pow(Convert.ToDouble(dataGridView1.Rows[j].Cells[i].Value),alfa);
             }
-            average[1].add(sum/dataToNormalize.size());
-            for (int j = 0; j < dataToNormalize.get(i).size(); j++) {
-                totalSum += (dataToNormalize.get(i).get(j) - average[1].get(i))*(dataToNormalize.get(i).get(j) - average[0].get(j));
+            //среднее значение
+            sredX = sumX / (dataGridView1.RowCount - 1);
+            alfa = 0;
+            for (int j = 0; j < dataGridView1.RowCount - 1; j++)
+            {
+                alfa = j + 1;
+                massX[j]=Math.Pow((Convert.ToDouble(dataGridView1.Rows[j].Cells[i].Value)),alfa) - sredX;
+
+                massY[j]=Math.Pow((Convert.ToDouble(dataGridView1.Rows[j].Cells[n].Value)),alfa) - sredY;
+                mul[j] = massX[j] * massY[j];
             }
-            totalSum /= (columns*rows-1);
-        }
+            for (int j = 0; j < dataGridView1.RowCount - 1; j++)
+            {
+                sum += mul[j];
+            }
+            cov[i] = sum/(dataGridView1.RowCount - 1);
+            for (int j = 0; j < dataGridView1.RowCount - 1; j++)
+                dataGridView1.Rows[j].Cells[i].Value=(((Convert.ToDouble(dataGridView1.Rows[j].Cells[i].Value))-sredX)*cov[i])/(Math.Sqrt(cov[i]));
+            i++;
+        }*/
         return null;
 
 

@@ -78,9 +78,9 @@ public class NewProjectDialogueController {
         if (projectDirectory.exists()) {
             AlertWindow.createAlertWindow(this.resourceBundle.getString("ALREADY_EXISTS")).show();
         } else {
-            projectDirectory.mkdir();
-            projectFile = new File(projectDirectory.getAbsolutePath()+"\\"+projectNameTextField.getText()+".prj");
 
+            projectFile = new File(projectDirectory.getAbsolutePath()+"\\"+projectNameTextField.getText()+".prj");
+            projectFile.getParentFile().mkdir();
             try{
                 FileWriter fileWriter = new FileWriter(projectFile, false);
 

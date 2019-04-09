@@ -21,6 +21,15 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
     ObservableList<Chromosome> bestEverChromosomes;
     ListProperty<Chromosome> bestEverChromosomesProperty;
     private int currentEpoch;
+    String datasetName;
+
+    public String getDatasetName() {
+        return datasetName;
+    }
+
+    public void setDatasetName(String datasetName) {
+        this.datasetName = datasetName;
+    }
 
     @Override
     public void run() {
@@ -29,7 +38,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
 
     @Override
     public void initialise(AIConfig config) throws InitialisationFailedException {
-        InnovationDatabase.refresh();
+
         super.initialise(config);
         this.status = new SimpleDoubleProperty(0);
         this.isEnded = new SimpleBooleanProperty(false);
@@ -46,6 +55,9 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
         int i = 0;
 
         while (i < epochs) {
+            if(Thread.interrupted()) {
+                break;
+            }
             currentEpoch = i+1;
             cat.info("Running Epoch[" + i + "]\r");
             this.ga.runEpoch();
@@ -63,7 +75,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
         }
         this.status.setValue(1.0);
         this.isEnded.setValue(true);
-        cat.debug("Innovation Database Stats - Hits:" + InnovationDatabase.totalHits + " - totalMisses:" + InnovationDatabase.totalMisses);
+        cat.debug("Innovation Database Stats - Hits:" + innovationDatabase.totalHits + " - totalMisses:" + innovationDatabase.totalMisses);
 
     }
 
@@ -79,6 +91,8 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
     public void saveBest() {
         String pathToSave = config.configElement("SAVE.LOCATION");
         Chromosome best = this.ga.discoverdBestMember();
+        best.setInputs(Integer.parseInt(config.configElement("INPUT.NODES")));
+        best.setOutputs(Integer.parseInt(config.configElement("OUTPUT.NODES")));
         this.save(pathToSave, best);
         bestEverChromosomes.add(best);
     }

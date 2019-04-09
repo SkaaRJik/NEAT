@@ -5,6 +5,7 @@
 <?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <?import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.ChoiceBox?>
@@ -214,7 +215,7 @@
                                                           <NumberAxis label="Errors" side="LEFT" />
                                                         </yAxis>
                                                       </LineChart>
-                                                      <JFXButton fx:id="errorChartRefreshButton" mnemonicParsing="false">
+                                                      <JFXButton fx:id="errorChartClearButton" mnemonicParsing="false">
                                                          <graphic>
                                                             <MaterialDesignIconView glyphName="REFRESH" size="20.0" />
                                                          </graphic>
@@ -223,7 +224,7 @@
                                                 </HBox>
                                                 <HBox alignment="CENTER" styleClass="borderedHBox">
                                                    <children>
-                                                      <LineChart fx:id="valueGraphicChart">
+                                                      <LineChart fx:id="trainValueGraphicChart">
                                                          <xAxis>
                                                             <NumberAxis label="Legend" side="BOTTOM" />
                                                          </xAxis>
@@ -231,7 +232,7 @@
                                                             <NumberAxis label="Output values" side="LEFT" />
                                                          </yAxis>
                                                       </LineChart>
-                                                      <JFXButton fx:id="valueGraphicChartButton" mnemonicParsing="false">
+                                                      <JFXButton fx:id="trainValueGraphicChartClearButton" mnemonicParsing="false">
                                                          <graphic>
                                                             <MaterialDesignIconView glyphName="REFRESH" size="20.0" />
                                                          </graphic>
@@ -244,7 +245,7 @@
                                              <center>
                                                 <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                                                    <children>
-                                                      <Pane fx:id="drawablePane" styleClass="group" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                      <Pane maxWidth="1024" fx:id="drawablePane" styleClass="group" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                                    </children>
                                                 </AnchorPane>
                                              </center>
@@ -295,8 +296,67 @@
                      <content>
                         <AnchorPane>
                            <children>
-                              <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                 <center>
+                              <VBox alignment="CENTER" prefHeight="52.0" prefWidth="520.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <children>
+                                    <BorderPane prefHeight="0.0" prefWidth="518.0">
+                                       <center>
+                                          <AnchorPane BorderPane.alignment="CENTER">
+                                             <children>
+                                                <ChoiceBox fx:id="trainedModelsChoiceBox" prefHeight="31.0" prefWidth="518.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                             </children>
+                                          </AnchorPane>
+                                       </center>
+                                       <right>
+                                          <JFXButton contentDisplay="CENTER" mnemonicParsing="false" onAction="#openTrainedModels" styleClass="JFXButton" text=" " wrapText="true" BorderPane.alignment="CENTER">
+                                             <tooltip>
+                                                <Tooltip fx:id="openTrainedModelTooltip" text="Empty Tooltip" />
+                                             </tooltip>
+                                             <graphic>
+                                                <FontAwesomeIconView glyphName="FOLDER_ALT" size="18.0" />
+                                             </graphic>
+                                             <BorderPane.margin>
+                                                <Insets left="5.0" right="5.0" />
+                                             </BorderPane.margin>
+                                          </JFXButton>
+                                       </right>
+                                       <left>
+                                          <Label text="Label" BorderPane.alignment="CENTER">
+                                             <BorderPane.margin>
+                                                <Insets left="5.0" right="5.0" />
+                                             </BorderPane.margin>
+                                          </Label>
+                                       </left>
+                                    </BorderPane>
+                                    <BorderPane prefHeight="0.0" prefWidth="518.0">
+                                       <center>
+                                          <AnchorPane BorderPane.alignment="CENTER">
+                                             <children>
+                                                <ChoiceBox fx:id="testDatasetChoiceBox" prefHeight="31.0" prefWidth="518.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                             </children>
+                                          </AnchorPane>
+                                       </center>
+                                       <right>
+                                          <JFXButton contentDisplay="CENTER" mnemonicParsing="false" onAction="#openTestDataset" styleClass="JFXButton" text=" " wrapText="true" BorderPane.alignment="CENTER">
+                                             <tooltip>
+                                                <Tooltip fx:id="openTestDatasetTooltip" text="Empty Tooltip" />
+                                             </tooltip>
+                                             <graphic>
+                                                <FontAwesomeIconView glyphName="FOLDER_ALT" size="18.0" />
+                                             </graphic>
+                                             <BorderPane.margin>
+                                                <Insets left="5.0" right="5.0" />
+                                             </BorderPane.margin>
+                                          </JFXButton>
+                                       </right>
+                                       <left>
+                                          <Label text="Label" BorderPane.alignment="CENTER">
+                                             <BorderPane.margin>
+                                                <Insets left="5.0" right="5.0" />
+                                             </BorderPane.margin>
+                                          </Label>
+                                       </left>
+                                    </BorderPane>
+                                    <JFXButton fx:id="runTestButton" onAction="#testModel" />
                                     <ScrollPane fitToWidth="true">
                                        <content>
                                           <VBox spacing="10.0">
@@ -306,6 +366,23 @@
                                                       <TableView fx:id="testTableView" prefHeight="200.0" prefWidth="200.0" />
                                                    </content>
                                                 </TitledPane>
+                                                <HBox alignment="CENTER">
+                                                   <children>
+                                                      <LineChart fx:id="testValueChart">
+                                                        <xAxis>
+                                                          <NumberAxis side="BOTTOM" />
+                                                        </xAxis>
+                                                        <yAxis>
+                                                          <NumberAxis side="LEFT" />
+                                                        </yAxis>
+                                                      </LineChart>
+                                                      <JFXButton fx:id="testValueChartClearButton">
+                                                         <graphic>
+                                                            <MaterialDesignIconView glyphName="REFRESH" size="20.0" />
+                                                         </graphic>
+                                                      </JFXButton>
+                                                   </children>
+                                                </HBox>
                                              </children>
                                              <padding>
                                                 <Insets top="5.0" />
@@ -313,76 +390,8 @@
                                           </VBox>
                                        </content>
                                     </ScrollPane>
-                                 </center>
-                                 <top>
-                                    <VBox alignment="CENTER" prefHeight="52.0" prefWidth="520.0" spacing="10.0" BorderPane.alignment="CENTER">
-                                       <children>
-                                          <BorderPane prefHeight="0.0" prefWidth="518.0">
-                                             <center>
-                                                <AnchorPane BorderPane.alignment="CENTER">
-                                                   <children>
-                                                      <ChoiceBox fx:id="trainedModelsChoiceBox" prefHeight="31.0" prefWidth="518.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                                   </children>
-                                                </AnchorPane>
-                                             </center>
-                                             <right>
-                                                <JFXButton contentDisplay="CENTER" mnemonicParsing="false" onAction="#openTrainedModels" styleClass="JFXButton" text=" " wrapText="true" BorderPane.alignment="CENTER">
-                                                   <tooltip>
-                                                      <Tooltip fx:id="openTrainedModelTooltip" text="Empty Tooltip" />
-                                                   </tooltip>
-                                                   <graphic>
-                                                      <FontAwesomeIconView glyphName="FOLDER_ALT" size="18.0" />
-                                                   </graphic>
-                                                   <BorderPane.margin>
-                                                      <Insets left="5.0" right="5.0" />
-                                                   </BorderPane.margin>
-                                                </JFXButton>
-                                             </right>
-                                             <left>
-                                                <Label text="Label" BorderPane.alignment="CENTER">
-                                                   <BorderPane.margin>
-                                                      <Insets left="5.0" right="5.0" />
-                                                   </BorderPane.margin>
-                                                </Label>
-                                             </left>
-                                          </BorderPane>
-                                          <BorderPane prefHeight="0.0" prefWidth="518.0">
-                                             <center>
-                                                <AnchorPane BorderPane.alignment="CENTER">
-                                                   <children>
-                                                      <ChoiceBox fx:id="testDatasetChoiceBox" prefHeight="31.0" prefWidth="518.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                                   </children>
-                                                </AnchorPane>
-                                             </center>
-                                             <right>
-                                                <JFXButton contentDisplay="CENTER" mnemonicParsing="false" onAction="#openTestDataset" styleClass="JFXButton" text=" " wrapText="true" BorderPane.alignment="CENTER">
-                                                   <tooltip>
-                                                      <Tooltip fx:id="openTestDatasetTooltip" text="Empty Tooltip" />
-                                                   </tooltip>
-                                                   <graphic>
-                                                      <FontAwesomeIconView glyphName="FOLDER_ALT" size="18.0" />
-                                                   </graphic>
-                                                   <BorderPane.margin>
-                                                      <Insets left="5.0" right="5.0" />
-                                                   </BorderPane.margin>
-                                                </JFXButton>
-                                             </right>
-                                             <left>
-                                                <Label text="Label" BorderPane.alignment="CENTER">
-                                                   <BorderPane.margin>
-                                                      <Insets left="5.0" right="5.0" />
-                                                   </BorderPane.margin>
-                                                </Label>
-                                             </left>
-                                          </BorderPane>
-                                          <JFXButton fx:id="runTestButton" />
-                                       </children>
-                                       <BorderPane.margin>
-                                          <Insets bottom="5.0" top="5.0" />
-                                       </BorderPane.margin>
-                                    </VBox>
-                                 </top>
-                              </BorderPane>
+                                 </children>
+                              </VBox>
                            </children>
                         </AnchorPane>
                      </content>

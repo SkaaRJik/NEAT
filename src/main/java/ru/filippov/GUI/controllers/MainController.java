@@ -7,8 +7,6 @@ import com.jfoenix.controls.base.IFXLabelFloatControl;
 import com.jfoenix.skins.JFXTextFieldSkin;
 import com.jfoenix.skins.ValidationPane;
 import com.jfoenix.validation.RequiredFieldValidator;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
@@ -19,7 +17,6 @@ import javafx.animation.KeyFrame;
 import javafx.animation.RotateTransition;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -29,12 +26,8 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.geometry.Bounds;
-import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -42,19 +35,16 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import org.apache.log4j.Logger;
-/*import org.gillius.jfxutils.chart.ChartPanManager;
-import org.gillius.jfxutils.chart.ChartZoomManager;
-import org.gillius.jfxutils.chart.JFXChartUtil;*/
 import org.gillius.jfxutils.chart.ChartPanManager;
 import org.gillius.jfxutils.chart.JFXChartUtil;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
+import org.neat4j.neat.applications.test.NEATPredictionEngineForJavaFX;
 import org.neat4j.neat.applications.train.NEATTrainingForJavaFX;
 import org.neat4j.neat.core.NEATConfig;
 import org.neat4j.neat.core.NEATLoader;
@@ -91,7 +81,10 @@ public class MainController {
             TRAINING_SET,
             TEST_SET,
             NEAT_CONFIG,
-            TRAINED_MODEL
+            TRAINED_MODEL,
+            TRAINING_FOLDER,
+            TESTING_FOLDER,
+            MODEL_FOLDER
         }
 
         private TYPE type;
@@ -113,6 +106,9 @@ public class MainController {
                 case TRAINED_MODEL:
                     graphic  = new MaterialDesignIconView(trainedModelIcon);
                     break;
+                case MODEL_FOLDER:
+                    graphic  = new MaterialDesignIconView(trainedModelIcon);
+                    break;
                 case PROJECT:
                     graphic  = new MaterialIconView(projectIcon);
                     break;
@@ -122,7 +118,13 @@ public class MainController {
                 case TEST_SET:
                     graphic = new MaterialDesignIconView(testDatasetIcon);
                     break;
+                case TESTING_FOLDER:
+                    graphic = new MaterialDesignIconView(testDatasetIcon);
+                    break;
                 case TRAINING_SET:
+                    graphic = new OctIconView(trainIcon);
+                    break;
+                case TRAINING_FOLDER:
                     graphic = new OctIconView(trainIcon);
                     break;
             }
@@ -168,10 +170,7 @@ public class MainController {
 
         @Override
         public String toString() {
-            if (this.type == TYPE.PROJECT || this.type == TYPE.NEAT_CONFIG){
-                return name;
-            }
-            return name + " ( " + this.type + " ) ";
+            return name;
         }
 
         public Node getGraphic() {
@@ -183,7 +182,7 @@ public class MainController {
         }
 
         public File getAsFile() {
-            return new File(this.directoryPath+"\\"+this.name+"."+this.extension);
+            return new File(this.getFullPath());
         }
 
         public String getFullPath(){
@@ -197,8 +196,8 @@ public class MainController {
         List<String> headers;
         String legendHeader;
         List<Double> legend;
-        int inputs;
-        int outputs;
+        String inputs;
+        String outputs;
 
         public DataKeeper() {
 
@@ -262,6 +261,22 @@ public class MainController {
 
         public void setLegendHeader(String legendHeader) {
             this.legendHeader = legendHeader;
+        }
+
+        public String getInputs() {
+            return inputs;
+        }
+
+        public void setInputs(String inputs) {
+            this.inputs = inputs;
+        }
+
+        public String getOutputs() {
+            return outputs;
+        }
+
+        public void setOutputs(String outputs) {
+            this.outputs = outputs;
         }
     }
 
@@ -407,11 +422,12 @@ public class MainController {
 
 
     private Thread trainThread;
+    private Thread testThread;
     @FXML
     private LineChart<Number, Number> errorChart;
-    @FXML private JFXButton errorChartRefreshButton;
-    @FXML private LineChart<Number, Number> valueGraphicChart;
-    @FXML private JFXButton valueGraphicChartButton;
+    @FXML private JFXButton errorChartClearButton;
+    @FXML private LineChart<Number, Number> trainValueGraphicChart;
+    @FXML private JFXButton trainValueGraphicChartClearButton;
     @FXML
     private BorderPane netVisualizationBorderPane;
     @FXML
@@ -440,6 +456,10 @@ public class MainController {
 
     @FXML
     private JFXButton runTestButton;
+    @FXML
+    private JFXButton testValueChartClearButton;
+    @FXML
+    private LineChart<Number, Number> testValueChart;
 
 
 
@@ -455,7 +475,7 @@ public class MainController {
 
     private AIConfig currentNEATConfig;
     private boolean isNEATConfigSaved;
-    private ProjectFileDescriptor currentNeatConfigFile;
+    private TreeItem<ProjectFileDescriptor> currentNeatConfigFile;
 
     private File tempDirectory;
 
@@ -473,6 +493,10 @@ public class MainController {
     public void init() {
         this.scene = this.currentProjectLabel.getParent().getScene();
 
+        this.scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+            this.drawablePane.setMaxWidth(newValue.doubleValue());
+            this.netVisualisator.visualiseNet(drawablePane);
+        });
 
 
 
@@ -481,7 +505,6 @@ public class MainController {
         if(!this.tempDirectory.exists()){
             this.tempDirectory.mkdir();
         }
-
 
         this.scene.getWindow().setOnCloseRequest(event -> {
             Arrays.stream(this.tempDirectory.listFiles()).forEach(file1 -> file1.delete());
@@ -509,7 +532,7 @@ public class MainController {
         projectTreeView.setCellFactory(param -> {
             TreeCell<ProjectFileDescriptor> treeCell = new TreeCellIContextMenu();
 
-            treeCell.addEventFilter(MouseEvent.MOUSE_PRESSED, (MouseEvent e) -> {
+            treeCell.addEventFilter(MouseEvent.MOUSE_CLICKED, (MouseEvent e) -> {
 
                 if (e.getClickCount() % 2 == 0 && e.getButton().equals(MouseButton.PRIMARY)) {
                     ProjectFileDescriptor value = treeCell.getTreeItem().getValue();
@@ -517,11 +540,11 @@ public class MainController {
 
                     switch (value.getType()){
                         case NEAT_CONFIG:
-                            openNEATFile(value);
+                            openNEATFile(treeCell.getTreeItem());
                             break;
                         case TRAINED_MODEL:
                             if(currentNeatConfigFile == null){
-                                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getParent());
                             }
                             this.infoTabPane.getSelectionModel().select(testingTab);
                             if(!trainedModelsChoiceBox.getItems().contains(this.projectTreeView.getSelectionModel().getSelectedItem().getValue())) {
@@ -531,7 +554,7 @@ public class MainController {
                             break;
                         case TEST_SET:
                             if(currentNeatConfigFile == null){
-                                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getParent());
                             }
                             this.infoTabPane.getSelectionModel().select(testingTab);
 
@@ -542,7 +565,7 @@ public class MainController {
                             break;
                         case TRAINING_SET:
                             if(currentNeatConfigFile == null){
-                                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getParent());
                             }
 
                             this.infoTabPane.getSelectionModel().select(trainigTab);
@@ -929,16 +952,20 @@ public class MainController {
 
         this.trainDatasetChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
-                this.trainDataSet = loadDataset(newValue.getAsFile(), true);
+                this.trainDataSet = loadDataset(newValue.getAsFile());
+                this.inputNodesTextField.setText(this.trainDataSet.getInputs()); //get number of inputs
+                this.outputNodesTextField.setText(this.trainDataSet.getOutputs()); // get number of outputs
+
+
                 this.fillTableViewWithData(this.trainTableView, this.trainDataSet.getHeadersForTableView(), this.trainDataSet.getDataForTableView());
 
 
                 errorChart.getData().clear();
-                valueGraphicChart.getData().clear();
+                trainValueGraphicChart.getData().clear();
                 drawablePane.getChildren().clear();
 
                 trainingCount = 0;
-                this.currentNEATConfig.updateConfig("SAVE.LOCATION", this.currentNeatConfigFile.getDirectoryPath()+"\\"+newValue.getName()+"_last_best.ser");
+
                 this.startTrainingButton.setDisable(false);
             } else {
                 this.startTrainingButton.setDisable(true);
@@ -947,23 +974,35 @@ public class MainController {
 
         this.testDatasetChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
-                this.testDataSet = loadDataset(newValue.getAsFile(), true);
+                this.testDataSet = loadDataset(newValue.getAsFile());
+
+                this.currentNEATConfig.updateConfig("TEST.INPUTS", this.testDataSet.getInputs());
+                this.currentNEATConfig.updateConfig("TEST.OUTPUTS", this.testDataSet.getOutputs());
+
+
                 this.fillTableViewWithData(this.testTableView, this.testDataSet.getHeadersForTableView(), this.testDataSet.getDataForTableView());
-                this.currentNEATConfig.updateConfig("INPUT.DATA", newValue.getFullPath());
-                this.runTestButton.setDisable(false);
+                this.testValueChart.getData().clear();
+                if(trainedModelsChoiceBox.getSelectionModel().getSelectedItem() != null) {
+                    this.runTestButton.setDisable(false);
+                }
             } else {
-                this.runTestButton.setDisable(true);
+                if(trainedModelsChoiceBox.getSelectionModel().getSelectedItem() == null)
+                    this.runTestButton.setDisable(true);
             }
         });
-        /*this.trainedModelsChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+        this.trainedModelsChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
+                this.testValueChart.getData().clear();
                 this.currentNEATConfig.updateConfig("AI.SOURCE", newValue.getFullPath());
-                this.runTestButton.setDisable(false);
+                if(testDatasetChoiceBox.getSelectionModel().getSelectedItem() != null) {
+                    this.runTestButton.setDisable(false);
+                }
             } else {
-                this.runTestButton.setDisable(true);
+                if(testDatasetChoiceBox.getSelectionModel().getSelectedItem() == null)
+                    this.runTestButton.setDisable(true);
             }
-        });*/
-
+        });
+        this.runTestButton.setDisable(true);
 
 
 
@@ -988,21 +1027,28 @@ public class MainController {
         trainigTab.setGraphic(new BorderPane(trainingProgressBar,null,null,null, null));
         testingTab.setGraphic(new BorderPane(testingProgressBar,null,null,null, null));
 
-        errorChartRefreshButton.setOnAction(event -> {
+        errorChartClearButton.setOnAction(event -> {
             this.errorChart.getData().clear();
             this.trainingCount = 0;
         });
 
-        valueGraphicChartButton.setOnAction(event -> {
-            this.valueGraphicChart.getData().clear();
+        trainValueGraphicChartClearButton.setOnAction(event -> {
+            this.trainValueGraphicChart.getData().clear();
+        });
+
+        this.testValueChartClearButton.setOnAction(event -> {
+            this.testValueChart.getData().clear();
         });
 
 
         //Panning works via either secondary (right) mouse or primary with ctrl held down
         configureChart(this.errorChart);
-        configureChart(this.valueGraphicChart);
-        valueGraphicChart.getXAxis().setAutoRanging( false );
-        valueGraphicChart.getYAxis().setAutoRanging( true );
+        configureChart(this.trainValueGraphicChart);
+        configureChart(this.testValueChart);
+        trainValueGraphicChart.getXAxis().setAutoRanging( false );
+        trainValueGraphicChart.getYAxis().setAutoRanging( true );
+        testValueChart.getXAxis().setAutoRanging( false );
+        testValueChart.getYAxis().setAutoRanging( true );
 
 
 
@@ -1126,7 +1172,7 @@ public class MainController {
 
 
 
-    private DataKeeper loadDataset(File datasetName, boolean needInit){
+    private DataKeeper loadDataset(File datasetName){
         try {
             /*Read training dataset file*/
             DataKeeper dataKeeper = new DataKeeper();
@@ -1134,10 +1180,9 @@ public class MainController {
             StringTokenizer stringTokenizer = new StringTokenizer(reader.readLine(),";");
             List<String> headers = new ArrayList<>();
 
-            if(needInit) {
-                this.inputNodesTextField.setText(stringTokenizer.nextToken()); //get number of inputs
-                this.outputNodesTextField.setText(stringTokenizer.nextToken()); // get number of outputs
-            }
+            dataKeeper.setInputs(stringTokenizer.nextToken());
+            dataKeeper.setOutputs(stringTokenizer.nextToken());
+
             String line = reader.readLine();
             stringTokenizer = new StringTokenizer(line,":");
             if(stringTokenizer.nextToken().equals("Legend")){
@@ -1160,7 +1205,7 @@ public class MainController {
             }
             dataKeeper.setHeaders(headers);
 
-            /*Read dataset values*/
+            /*Read dataset getNetOutputs*/
             List<List<Double>> tempDataSet = new ArrayList<>(50);
             line = reader.readLine();
             String value;
@@ -1349,23 +1394,11 @@ public class MainController {
 
     private void readProjectFile(File projectFile) throws IOException {
 
-        this.isNEATConfigSaved = true;
-
-
-        BufferedReader reader = new BufferedReader(new FileReader(projectFile));
-        StringTokenizer stringTokenizer = new StringTokenizer(reader.readLine(),":");
-        String token;
-
-        TreeItem<ProjectFileDescriptor> lastSelected = null;
-
-        TreeItem<ProjectFileDescriptor> rootProject = new TreeItemContextMenu<ProjectFileDescriptor>();
+        this.currentProjectTextField.setText(projectFile.getAbsolutePath());
 
 
 
-
-
-
-        ProjectFileDescriptor projectFileDescriptor = null;
+        /*ProjectFileDescriptor projectFileDescriptor = null;
         if(stringTokenizer.hasMoreTokens()){
             token = stringTokenizer.nextToken();
             if(token.equals("PROJECT_NAME")){
@@ -1396,11 +1429,14 @@ public class MainController {
         this.projectBorderPane.setCenter(this.projectTreeView);
 
         TreeItem<ProjectFileDescriptor> treeItem;
-        String line;
+        String line;*/
 
 
 
-        String pathToCurrentDataset = "";
+
+
+
+        /*String pathToCurrentDataset = "";
 
         while((line=reader.readLine())!=null){
             stringTokenizer = new StringTokenizer(line,":");
@@ -1414,7 +1450,7 @@ public class MainController {
                         treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), datasetFolderContext);
                         rootProject.getChildren().add(treeItem);
 
-                        if(lastOpenedProject.equals(treeItem.getValue())){
+                        if(lastOpenedProject.equals(treeItem.getValue().getName()+"."+treeItem.getValue().getExtension())){
                             projectTreeView.getSelectionModel().select(treeItem);
                         }
                     }
@@ -1452,8 +1488,11 @@ public class MainController {
         }
 
         this.currentProjectTextField.setText(projectFile.getAbsolutePath());
+        if(projectTreeView.getSelectionModel().getSelectedItem()!=null) {
+            openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getValue());
+        }*/
 
-
+        this.updateTreeView(projectFile);
     }
 
 
@@ -1496,7 +1535,7 @@ public class MainController {
 
         MenuItem loadNEAT = new MenuItem("Load");
         loadNEAT.setOnAction(event -> {
-            openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getValue());
+            openNEATFile(projectTreeView.getSelectionModel().getSelectedItem());
         });
 
         projectContextMenu.getItems().addAll(
@@ -1518,13 +1557,13 @@ public class MainController {
         MenuItem loadDataItem = new MenuItem("Load");
         loadDataItem.setOnAction(event -> {
             if(currentNeatConfigFile == null){
-                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent());
             }
             ProjectFileDescriptor projectFileDescriptor = projectTreeView.getSelectionModel().getSelectedItem().getValue();
             switch (projectFileDescriptor.getType()){
                 case TRAINED_MODEL:
                     if(currentNeatConfigFile == null){
-                        openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                        openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getParent());
                     }
                     this.infoTabPane.getSelectionModel().select(testingTab);
                     if(!trainedModelsChoiceBox.getItems().contains(this.projectTreeView.getSelectionModel().getSelectedItem().getValue())) {
@@ -1534,7 +1573,7 @@ public class MainController {
                     break;
                 case TEST_SET:
                     if(currentNeatConfigFile == null){
-                        openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                        openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getParent());
                     }
                     this.infoTabPane.getSelectionModel().select(testingTab);
 
@@ -1545,7 +1584,7 @@ public class MainController {
                     break;
                 case TRAINING_SET:
                     if(currentNeatConfigFile == null){
-                        openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getValue());
+                        openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getParent());
                     }
 
                     this.infoTabPane.getSelectionModel().select(trainigTab);
@@ -1591,10 +1630,13 @@ public class MainController {
             ProjectFileDescriptor projectFileDescriptor = this.projectTreeView.getSelectionModel().getSelectedItem().getValue();
             switch (projectFileDescriptor.type){
                 case TRAINING_SET:
-                    viewDataInNewWindow(projectFileDescriptor);
+                    this.viewDataInNewWindow(projectFileDescriptor);
                     break;
                 case TEST_SET:
-                    viewDataInNewWindow(projectFileDescriptor);
+                    this.viewDataInNewWindow(projectFileDescriptor);
+                    break;
+                case TRAINED_MODEL:
+                    this.viewNetTopologyInNewWindow(projectTreeView.getSelectionModel().getSelectedItem());
                     break;
             }
 
@@ -1608,6 +1650,13 @@ public class MainController {
 
 
 
+    }
+
+    private void viewNetTopologyInNewWindow(TreeItem<ProjectFileDescriptor> treeItem) {
+        ViewNetWindow viewNetWindow = ViewNetWindow.getInstance(this.scene, treeItem.getValue().getName());
+        viewNetWindow.show();
+        this.netVisualisator.setNetToVisualise(treeItem.getValue().getAsFile(), this.loadConfig(treeItem.getParent().getParent().getValue().getFullPath()));
+        this.netVisualisator.visualiseNet(viewNetWindow.getPaneToDraw());
     }
 
     private void configureContextMenu(ContextMenu contextMenu) {
@@ -1638,7 +1687,7 @@ public class MainController {
         return value.getAsFile().delete();
     }
 
-    private void openNEATFile(ProjectFileDescriptor projectFileDescriptor) {
+    private void openNEATFile(TreeItem<ProjectFileDescriptor> projectFileDescriptor) {
 
 
         if(!isNEATConfigSaved && currentNEATConfig != null){
@@ -1669,7 +1718,7 @@ public class MainController {
 
         }
 
-        File projectFile = projectFileDescriptor.getAsFile();
+        File projectFile = projectFileDescriptor.getValue().getAsFile();
         if(projectFile != null){
 
             this.clearAllInfoElements();
@@ -1685,17 +1734,17 @@ public class MainController {
             this.infoTabPane.setVisible(true);
 
 
-            TreeItem<ProjectFileDescriptor> treeItem = this.projectTreeView.getRoot().getChildren().stream().filter(projectFileDescriptorTreeItem -> {
+            /*TreeItem<ProjectFileDescriptor> treeItem = this.projectTreeView.getRoot().getChildren().stream().filter(projectFileDescriptorTreeItem -> {
                 return projectFileDescriptorTreeItem.getValue() == projectFileDescriptor;
-            }).findAny().orElse(null);
+            }).findAny().orElse(null);*/
 
 
-            if(treeItem != null) {
-                this.currentNeatConfigFile = treeItem.getValue();
-                fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TRAINING_SET, treeItem, trainDatasetChoiceBox);
-                fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TEST_SET, treeItem, testDatasetChoiceBox);
-                fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TRAINED_MODEL, treeItem, trainedModelsChoiceBox);
-            }
+
+            this.currentNeatConfigFile = projectFileDescriptor;
+            fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TRAINING_SET, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TRAINING_FOLDER).findFirst().get(), trainDatasetChoiceBox);
+            fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TEST_SET, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TESTING_FOLDER).findFirst().get(), testDatasetChoiceBox);
+            fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TRAINED_MODEL, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.MODEL_FOLDER).findFirst().get(), trainedModelsChoiceBox);
+
             fillFieldsUsingAIConfig(this.currentNEATConfig);
 
             isNEATConfigSaved = true;
@@ -1704,6 +1753,7 @@ public class MainController {
     }
 
     private void fillChoiceBoxWithData(ProjectFileDescriptor.TYPE type, TreeItem<ProjectFileDescriptor> treeItem, ChoiceBox<ProjectFileDescriptor> choiceBox) {
+        choiceBox.getItems().clear();
         treeItem.getChildren().stream().forEach(treeItem1 -> {
             if(treeItem1.getValue().getType() == type) choiceBox.getItems().add(treeItem1.getValue());
         });
@@ -1717,7 +1767,7 @@ public class MainController {
         testTableView.getItems().clear();
         testTableView.getColumns().clear();
         errorChart.getData().clear();
-        valueGraphicChart.getData().clear();
+        trainValueGraphicChart.getData().clear();
         this.trainingProgressBar.progressProperty().setValue(0);
         this.testingProgressBar.progressProperty().setValue(0);
     }
@@ -1811,6 +1861,7 @@ public class MainController {
                 readProjectFile(dialogue.getProjectFile());
             } catch (Exception ex){
                 AlertWindow.createAlertWindow(ex.getMessage()).show();
+                ex.printStackTrace();
             }
         }
     }
@@ -1821,17 +1872,18 @@ public class MainController {
         dialogue.setCurrentProject(this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getAsFile());
         dialogue.show();
         if (dialogue.getNewDatasetFolder() != null){
-            ProjectFileDescriptor projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.NEAT_CONFIG, dialogue.getNewDatasetFolder().getAbsolutePath()+"\\"+dialogue.getNewDatasetFolder().getName()+".neat", dialogue.getNewDatasetFolder().getName(), "neat");
+            /*ProjectFileDescriptor projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.NEAT_CONFIG, dialogue.getNewDatasetFolder().getParent()+"\\", dialogue.getNewDatasetFolder().getName().split("[.]")[0], "neat");
             TreeItem<ProjectFileDescriptor> treeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), datasetFolderContext);
-                this.projectTreeView.getRoot().getChildren().add(treeItem);
+            this.projectTreeView.getRoot().getChildren().add(treeItem);*/
+            this.updateTreeView(new File(currentProjectTextField.getText()));
         }
-        saveProject();
+
 
     }
 
     private void saveProject() {
-
-        ProjectFileDescriptor projectFileDescriptor = this.projectTreeView.getRoot().getValue();
+        //TODO refactor it
+        /*ProjectFileDescriptor projectFileDescriptor = this.projectTreeView.getRoot().getValue();
         try {
 
             FileWriter fileWriter = new FileWriter(projectFileDescriptor.getAsFile(), false);
@@ -1839,7 +1891,7 @@ public class MainController {
             fileWriter.write("PROJECT_NAME:"+this.projectTreeView.getRoot().getValue().getName()+"."+this.projectTreeView.getRoot().getValue().getExtension()+"\n");
             fileWriter.append("LAST_OPENED_DATASET:");
             if(currentNeatConfigFile != null) {
-                fileWriter.append(currentNeatConfigFile.getName() + "." + currentNeatConfigFile.getExtension()+"\n");
+                fileWriter.append(currentNeatConfigFile.getValue().getName() + "." + currentNeatConfigFile.getValue().getExtension()+"\n");
             } else {
                 fileWriter.append("\n");
             }
@@ -1868,7 +1920,7 @@ public class MainController {
 
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
 
     }
 
@@ -1916,7 +1968,7 @@ public class MainController {
     private void saveConfig(){
         try {
             initNEATConfigUsingGUI(this.currentNEATConfig);
-            currentNEATConfig.saveConfig(this.currentNeatConfigFile.getAsFile());
+            currentNEATConfig.saveConfig(this.currentNeatConfigFile.getValue().getAsFile());
             isNEATConfigSaved = true;
         } catch (IOException e) {
             AlertWindow.createAlertWindow("CANT_SAVE_FILE").show();
@@ -2073,36 +2125,106 @@ public class MainController {
 
 
     }
-    
+
+    private void updateTreeView(File projectFile){
+
+
+
+        TreeItem<ProjectFileDescriptor> treeItem;
+        String[] fileName = projectFile.getName().split("[.]");
+        ProjectFileDescriptor projectFileDescriptor =  new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.PROJECT, projectFile.getParent() ,fileName[0], fileName[1]);
+        treeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), projectContextMenu);
+        this.projectTreeView.setRoot(treeItem);
+        treeItem.setExpanded(true);
+
+        this.projectBorderPane.setCenter(this.projectTreeView);
+        /*BufferedReader reader = new BufferedReader(new FileReader(projectFile));
+        StringTokenizer stringTokenizer = new StringTokenizer(reader.readLine(),":");
+        String token;
+
+        TreeItem<ProjectFileDescriptor> lastSelected = null;
+
+        TreeItem<ProjectFileDescriptor> rootProject = new TreeItemContextMenu<ProjectFileDescriptor>();*/
+
+        File datasetsFolder = new File(projectFile.getParent()+"\\datasets\\");
+        File[] datasets = datasetsFolder.listFiles();
+        File[] files = null;
+
+
+        TreeItem<ProjectFileDescriptor> trainTreeItem;
+        TreeItem<ProjectFileDescriptor> testTreeItem;
+        TreeItem<ProjectFileDescriptor> trainenModelTreeItem;
+        for (int i = 0; i < datasets.length; i++) {
+            files = datasets[i].listFiles();
+            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINING_FOLDER, null ,"Training data", "");
+            trainTreeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic());
+            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TESTING_FOLDER, null ,"Test data", "");
+            testTreeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic());
+            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.MODEL_FOLDER, null ,"Models", "");
+            trainenModelTreeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic());
+            for (int j = 0; j < files.length; j++) {
+                fileName = files[j].getName().split("[.]");
+
+                switch (fileName[1]){
+                    case "neat":
+                        projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.NEAT_CONFIG, files[j].getParent() ,fileName[0], fileName[1]);
+                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), datasetFolderContext);
+                        this.projectTreeView.getRoot().getChildren().add(treeItem);
+                        treeItem.getChildren().addAll(trainTreeItem, testTreeItem, trainenModelTreeItem);
+                        break;
+                    case "trd":
+                        projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINING_SET, files[j].getParent() ,fileName[0], fileName[1]);
+                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu);
+                        trainTreeItem.getChildren().add(treeItem);
+                        break;
+                    case "ted":
+                        projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TEST_SET, files[j].getParent() ,fileName[0], fileName[1]);
+                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu);
+                        testTreeItem.getChildren().add(treeItem);
+                        break;
+                    case "ser":
+                        projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINED_MODEL, files[j].getParent() ,fileName[0], fileName[1]);
+                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu);
+                        trainenModelTreeItem.getChildren().add(treeItem);
+                        break;
+                }
+
+            }
+
+        }
+
+    }
+
+
     @FXML
     private void prepareNewData(ActionEvent actionEvent) {
-        DataPreparatorDialogue.getInstance(this.scene).setCurrentDatasetFolder(this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getAsFile().getParent()).show();
+        //DataPreparatorDialogue.getInstance(this.scene).setCurrentDatasetFolder(this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getDirectoryPath()).show();
+        //this.updateTreeView(new File(this.currentProjectTextField.getText()));
+
+        TreeItem<ProjectFileDescriptor> parentProject = null;
+        if(this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getType() == ProjectFileDescriptor.TYPE.NEAT_CONFIG){
+            parentProject = this.projectTreeView.getSelectionModel().getSelectedItem();
+        } else {
+            parentProject = this.currentNeatConfigFile;
+        }
+        DataPreparatorDialogue.getInstance(this.scene).setCurrentDatasetFolder(parentProject.getValue().getDirectoryPath()).show();
         String nameOfDataSet = DataPreparatorDialogue.getInstance(this.scene).getNameOfTrainingSet();
         ProjectFileDescriptor projectFileDescriptor;
         if(nameOfDataSet.length() != 0){
-            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINING_SET, this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getDirectoryPath(), nameOfDataSet, "trd");
-            this.projectTreeView.getSelectionModel().getSelectedItem().getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
+            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINING_SET, parentProject.getValue().getDirectoryPath(), nameOfDataSet, "trd");
+            //this.projectTreeView.getSelectionModel().getSelectedItem().getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
+            parentProject.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TRAINING_FOLDER).findFirst().orElse(null).getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
             this.trainDatasetChoiceBox.getItems().add(projectFileDescriptor);
+            //this.trainDatasetChoiceBox.getSelectionModel().select(projectFileDescriptor);
         }
         nameOfDataSet = DataPreparatorDialogue.getInstance(this.scene).getNameOfTestSet();
         if(nameOfDataSet.length() != 0){
-            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TEST_SET, this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getDirectoryPath(), nameOfDataSet, "ted");
-            this.projectTreeView.getSelectionModel().getSelectedItem().getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
+            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TEST_SET,parentProject.getValue().getDirectoryPath(), nameOfDataSet, "ted");
+            parentProject.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TESTING_FOLDER).findFirst().orElse(null).getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
+            //this.projectTreeView.getSelectionModel().getSelectedItem().getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
             this.testDatasetChoiceBox.getItems().add(projectFileDescriptor);
+            //this.testDatasetChoiceBox.getSelectionModel().select(projectFileDescriptor);
         }
-        saveProject();
-        /*if( nameOfDataSet != null ){
-            if(nameOfDataSet.length() != 0){
-                try {
-                    this.currentNEATConfig.saveConfig(this.projectFile);
-                } catch (IOException e) {
-                    AlertWindow.createAlertWindow("Не удалось сохранить новый конфиг");
-                }
-            }
-        }*/
-
-
-
     }
 
     public void generateNewSeed() {
@@ -2112,36 +2234,38 @@ public class MainController {
 
     public void trainModel(ActionEvent actionEvent) {
         //trainigTab.setContent(new SideBar(30, new TextField()));
-        if(trainThread != null)
-        if(trainThread.isAlive()){
-            trainThread.interrupt();
+        if(trainThread != null) {
+            if (trainThread.isAlive()) {
+                trainThread.interrupt();
+            }
         }
-        initNEATConfigUsingGUI(this.currentNEATConfig);
+        this.initNEATConfigUsingGUI(this.currentNEATConfig);
         this.currentNEATConfig.updateConfig("TRAINING.SET", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
+        this.currentNEATConfig.updateConfig("SAVE.LOCATION", this.currentNeatConfigFile.getValue().getDirectoryPath()+"\\"+this.trainDatasetChoiceBox.getValue().getName()+"_last_best.ser");
 
         try {
-            this.saveTempDataSet(this.currentNEATConfig.configElement("TRAINING.SET"));
+            this.saveTempDataSet(this.currentNEATConfig.configElement("TRAINING.SET"), this.trainDataSet);
             logger.debug(this.currentNEATConfig.configElement("TRAINING.SET"));
             //this.currentNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+this.trainDatasetChoiceBox.getValue()+"\\"+this.trainDatasetChoiceBox.getValue()+"@test_temp.dataset");
-            trainigTab.setDisable(false);
             infoTabPane.getSelectionModel().select(trainigTab);
+            NEATTrainingForJavaFX neatTrainingForJavaFX = new NEATTrainingForJavaFX();
+            neatTrainingForJavaFX.initialise(currentNEATConfig);
+            neatTrainingForJavaFX.setDatasetName(this.trainDatasetChoiceBox.getValue().getName());
 
-
-
-            if(this.valueGraphicChart.getData().isEmpty()){
+            if(this.trainValueGraphicChart.getData().isEmpty()){
                 //double tick = this.trainDataSet.getLegend().stream().mapToDouble(value -> {return value;}).sum() / this.trainDataSet.getLegend().size();
                 double tick = (this.trainDataSet.getLegend().get(this.trainDataSet.getLegend().size()-1) - this.trainDataSet.getLegend().get(0)) / (this.trainDataSet.getLegend().size()-1);
-                ((NumberAxis)valueGraphicChart.getXAxis()).setTickUnit(tick);
-                //((NumberAxis)valueGraphicChart.getXAxis()).setTickUnit(this.trainDataSet.legend.get(1)-this.trainDataSet.legend.get(0));
-                ((NumberAxis)valueGraphicChart.getXAxis()).setLowerBound(this.trainDataSet.legend.get(0)-((NumberAxis)valueGraphicChart.getXAxis()).getTickUnit());
-                ((NumberAxis)valueGraphicChart.getXAxis()).setUpperBound(this.trainDataSet.legend.get(this.trainDataSet.legend.size()-1)+((NumberAxis)valueGraphicChart.getXAxis()).getTickUnit());
-                valueGraphicChart.getXAxis().setLabel(this.trainDataSet.getLegendHeader());
+                ((NumberAxis) trainValueGraphicChart.getXAxis()).setTickUnit(tick);
+                //((NumberAxis)trainValueGraphicChart.getXAxis()).setTickUnit(this.trainDataSet.legend.get(1)-this.trainDataSet.legend.get(0));
+                ((NumberAxis) trainValueGraphicChart.getXAxis()).setLowerBound(this.trainDataSet.legend.get(0)-((NumberAxis) trainValueGraphicChart.getXAxis()).getTickUnit());
+                ((NumberAxis) trainValueGraphicChart.getXAxis()).setUpperBound(this.trainDataSet.legend.get(this.trainDataSet.legend.size()-1)+((NumberAxis) trainValueGraphicChart.getXAxis()).getTickUnit());
+                trainValueGraphicChart.getXAxis().setLabel(this.trainDataSet.getLegendHeader());
                 XYChart.Series expectedOutputDataXYChart = null;
                 for (int i = 0; i < Integer.parseInt(this.outputNodesTextField.getText()); i++) {
 
                     TableColumn tableColumn = this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1-i);
                     expectedOutputDataXYChart = new XYChart.Series();
-                    this.valueGraphicChart.getData().add(expectedOutputDataXYChart);
+                    this.trainValueGraphicChart.getData().add(expectedOutputDataXYChart);
                     expectedOutputDataXYChart.setName(tableColumn.getText() + " (Факт)");
                     for (int j = 0; j < this.trainTableView.getItems().size(); j++) {
                         XYChart.Data integerObjectData = new XYChart.Data<>(trainDataSet.legend.get(j), tableColumn.getCellData(j));
@@ -2154,7 +2278,8 @@ public class MainController {
 
 
 
-            NEATTrainingForJavaFX neatTrainingForJavaFX = new NEATTrainingForJavaFX();
+
+
             XYChart.Series errorSeries = new XYChart.Series();
             errorSeries.setName("Fitness of the " + ++this.trainingCount + " run");
             this.errorChart.getData().add(errorSeries);
@@ -2164,25 +2289,25 @@ public class MainController {
 
             XYChart.Series outputValuesSeries = new XYChart.Series();
             outputValuesSeries.setName(this.trainingCount + ". " + this.trainTableView.getColumns().get(this.trainTableView.getColumns().size()-1).getText());
-            this.valueGraphicChart.getData().add(outputValuesSeries);
+            this.trainValueGraphicChart.getData().add(outputValuesSeries);
 
 
 
            /*Platform.runLater(() -> {
-                *//*errorSeries.getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour[0]+";");
+                *//**//*errorSeries.getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour[0]+";");
                 Node[] nodes = errorChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
                 nodes[nodes.length-1].setStyle("-fx-background-color: "+ colour[0] +", white;");
                 for (int i = 0; i <outputValuesSeries.length ; i++) {
                     outputValuesSeries[i].getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour[i]+";");
-                    nodes = valueGraphicChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
+                    nodes = trainValueGraphicChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
                     nodes[nodes.length-1].setStyle("-fx-background-color: "+ colour[i] +", white;");
-                }*//*
+                }*//**//*
 
             });*/
 
 
 
-            neatTrainingForJavaFX.initialise(currentNEATConfig);
+
 
 
             AtomicInteger atomicInteger = new AtomicInteger(1);
@@ -2235,52 +2360,144 @@ public class MainController {
             });
             this.trainingProgressBar.progressProperty().bind(neatTrainingForJavaFX.statusProperty());
 
-            neatTrainingForJavaFX.isEndedProperty().addListener((observable, oldValue, newValue) -> {
-                if(newValue){
-                    Platform.runLater(() ->{
-                        try {
-                            netVisualisator.setNetToVisualise(neatTrainingForJavaFX.getBestEverChromosomes().get(neatTrainingForJavaFX.getBestEverChromosomes().size() - 1), currentNEATConfig);
-                            netVisualisator.visualiseNet(this.drawablePane);
-                        } catch (InitialisationFailedException e) {
-                            e.printStackTrace();
-                        }
-                    });
+            neatTrainingForJavaFX.isEndedProperty().addListener(new ChangeListener<Boolean>() {
+                @Override
+                public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                    if (newValue) {
+                        Platform.runLater(() -> {
+                            try {
+                                netVisualisator.setNetToVisualise(neatTrainingForJavaFX.getBestEverChromosomes().get(neatTrainingForJavaFX.getBestEverChromosomes().size() - 1), currentNEATConfig);
+                                netVisualisator.visualiseNet(MainController.this.drawablePane);
+                            } catch (InitialisationFailedException e) {
+                                e.printStackTrace();
+                            }
+                            ProjectFileDescriptor projectFileDescriptor = null;
+                            for (TreeItem<ProjectFileDescriptor> folder : currentNeatConfigFile.getChildren()) {
+                                if(folder.getValue().getType() == ProjectFileDescriptor.TYPE.MODEL_FOLDER) {
+                                    for (TreeItem<ProjectFileDescriptor> children : folder.getChildren()) {
+                                        if (children.getValue().getType() == ProjectFileDescriptor.TYPE.TRAINED_MODEL && children.getValue().getName().equals(neatTrainingForJavaFX.getDatasetName() + "_last_best")) {
+                                            projectFileDescriptor = children.getValue();
+                                            break;
+                                        }
+                                    }
+                                    if (projectFileDescriptor != null) {
+                                        if(!trainedModelsChoiceBox.getItems().contains(projectFileDescriptor)) {
+                                            trainedModelsChoiceBox.getItems().add(projectFileDescriptor);
+                                        }
+                                        trainedModelsChoiceBox.getSelectionModel().select(projectFileDescriptor);
+                                        break;
+                                    }
+                                    projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINED_MODEL, currentNeatConfigFile.getValue().getDirectoryPath(), neatTrainingForJavaFX.getDatasetName() + "_last_best", "ser");
+                                    folder.getChildren().add(new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), MainController.this.dataContextMenu));
+                                    trainedModelsChoiceBox.getItems().add(projectFileDescriptor);
+                                    trainedModelsChoiceBox.getSelectionModel().select(projectFileDescriptor);
+                                    neatTrainingForJavaFX.isEndedProperty().removeListener(this);
+                                    break;
+                                }
+
+                            }
+                        });
+                    }
                 }
             });
 
-            Thread trainThread = new Thread(neatTrainingForJavaFX);
-            trainThread.start();
-
-            ProjectFileDescriptor projectFileDescriptor = null;
-            for(TreeItem<ProjectFileDescriptor> treeItem : projectTreeView.getRoot().getChildren()){
-                if(treeItem.getValue() == currentNeatConfigFile) {
-                    for (TreeItem<ProjectFileDescriptor> children :treeItem.getChildren()){
-                        if(children.getValue().getType() == ProjectFileDescriptor.TYPE.TRAINED_MODEL && children.getValue().getName().equals(this.trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getName()+"_last_best")){
-                            projectFileDescriptor = children.getValue();
-                            break;
-                        }
-                    }
-                    if(projectFileDescriptor != null){
-                        trainedModelsChoiceBox.getSelectionModel().select(projectFileDescriptor);
-                        break;
-                    }
-                    projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINED_MODEL, this.trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getDirectoryPath() ,this.trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getName()+"_last_best", ".ser");
-                    treeItem.getChildren().add(new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu));
-                    trainedModelsChoiceBox.getSelectionModel().select(projectFileDescriptor);
-                    break;
-                }
-            }
-
+            this.trainThread = new Thread(neatTrainingForJavaFX);
+            this.trainThread.start();
 
 
         } catch (IOException e) {
+            AlertWindow.createAlertWindow("Can't open file!\n" + e.getMessage()).showAndWait();
             e.printStackTrace();
         } catch (InitialisationFailedException e) {
+            AlertWindow.createAlertWindow("Initialisation failed!\n" + e.getMessage()).showAndWait();
             e.printStackTrace();
         }
 
 
     }
+
+    public void testModel(ActionEvent actionEvent) {
+
+        if(testThread != null) {
+            if (testThread.isAlive()) {
+                testThread.interrupt();
+            }
+        }
+
+        this.currentNEATConfig.updateConfig("TEST.DATA", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+testDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
+        try {
+            this.saveTempDataSet(this.currentNEATConfig.configElement("TEST.DATA"), this.testDataSet);
+            logger.debug(this.currentNEATConfig.configElement("TEST.DATA"));
+
+            NEATPredictionEngineForJavaFX neatPredictionEngineForJavaFX = new NEATPredictionEngineForJavaFX();
+            neatPredictionEngineForJavaFX.initialise(this.currentNEATConfig);
+
+            if(this.testValueChart.getData().isEmpty()){
+                //double tick = this.testDataSet.getLegend().stream().mapToDouble(value -> {return value;}).sum() / this.testDataSet.getLegend().size();
+                double tick = (this.testDataSet.getLegend().get(this.testDataSet.getLegend().size()-1) - this.testDataSet.getLegend().get(0)) / (this.testDataSet.getLegend().size()-1);
+                ((NumberAxis) testValueChart.getXAxis()).setTickUnit(tick);
+                //((NumberAxis)testValueGraphicChart.getXAxis()).setTickUnit(this.testDataSet.legend.get(1)-this.testDataSet.legend.get(0));
+                ((NumberAxis) testValueChart.getXAxis()).setLowerBound(this.testDataSet.legend.get(0)-((NumberAxis) testValueChart.getXAxis()).getTickUnit());
+                ((NumberAxis) testValueChart.getXAxis()).setUpperBound(this.testDataSet.legend.get(this.testDataSet.legend.size()-1)+((NumberAxis) testValueChart.getXAxis()).getTickUnit());
+                testValueChart.getXAxis().setLabel(this.testDataSet.getLegendHeader());
+                XYChart.Series expectedOutputDataXYChart = null;
+                for (int i = 0; i < Integer.parseInt(this.outputNodesTextField.getText()); i++) {
+
+                    TableColumn tableColumn = this.testTableView.getColumns().get(this.testTableView.getColumns().size()-1-i);
+                    expectedOutputDataXYChart = new XYChart.Series();
+                    this.testValueChart.getData().add(expectedOutputDataXYChart);
+                    expectedOutputDataXYChart.setName(tableColumn.getText() + " (Факт)");
+                    for (int j = 0; j < this.testTableView.getItems().size(); j++) {
+                        if(tableColumn.getCellData(j) != null) {
+                            XYChart.Data integerObjectData = new XYChart.Data<>(testDataSet.legend.get(j), tableColumn.getCellData(j));
+                            integerObjectData.setNode(new StackPane());
+                            expectedOutputDataXYChart.getData().add(integerObjectData);
+                            Tooltip.install(integerObjectData.getNode(), new Tooltip(String.valueOf(tableColumn.getCellData(j))));
+                        }
+                    }
+                }
+            }
+
+            XYChart.Series outputValuesSeries = new XYChart.Series();
+            outputValuesSeries.setName(this.testTableView.getColumns().get(this.testTableView.getColumns().size()-1).getText());
+            this.testValueChart.getData().add(outputValuesSeries);
+
+            neatPredictionEngineForJavaFX.getOutsProperty().addListener((observable, oldValue, newValue) -> {
+                Platform.runLater(()->{
+                    /*List<Double> outputs = newValue.get(newValue.size() - 1);*/
+                    AtomicInteger counter = new AtomicInteger(0);
+                    for(List<Double> output : newValue) {
+                        counter.set(0);
+                        output.stream().forEach(value -> {
+                            Double fromLegend = trainDataSet.getLegend().get(counter.getAndIncrement());
+                            XYChart.Data<Number, Number> data = new XYChart.Data<>(fromLegend, value);
+                            data.setNode(new StackPane());
+                            Tooltip.install(data.getNode(), new Tooltip(String.valueOf(value)));
+                            outputValuesSeries.getData().add(data);
+                        });
+                    }
+
+
+                });
+            });
+
+            this.testThread = new Thread(neatPredictionEngineForJavaFX);
+            this.testThread.start();
+            
+
+        } catch (IOException e) {
+            AlertWindow.createAlertWindow("Can't open file!\n" + e.getMessage()).showAndWait();
+            e.printStackTrace();
+        } catch (InitialisationFailedException e) {
+            AlertWindow.createAlertWindow("Initialisation failed!\n" + e.getMessage()).showAndWait();
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            AlertWindow.createAlertWindow("Несовместимость модели и тестируемой выборки\n" + e.getMessage()).showAndWait();
+        }
+
+
+    }
+
 
     public void showMenu(ActionEvent actionEvent) {
 
@@ -2308,18 +2525,19 @@ public class MainController {
 
 
 
-    public File saveTempDataSet(String filePath) throws IOException {
+    public File saveTempDataSet(String filePath, DataKeeper dataSet) throws IOException {
         File file = new File(filePath);
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, false));
-        double value;
-        for (int i = 0; i < this.trainDataSet.getHeaders().size(); i++) {
+        Double value;
+        for (int i = 0; i < dataSet.getHeaders().size(); i++) {
             bufferedWriter.write(this.trainDataSet.getHeaders().get(i));
-            if(i != this.trainDataSet.getHeaders().size() - 1) bufferedWriter.write(";");
+            if(i != dataSet.getHeaders().size() - 1) bufferedWriter.write(";");
         }
         bufferedWriter.append("\n");
-        for(List<Double> list : this.trainDataSet.getData()){
+        for(List<Double> list : dataSet.getData()){
             for (int i = 0; i < list.size(); i++) {
                 value = list.get(i);
+
                 bufferedWriter.write(String.valueOf(value));
                 if(i != list.size()-1) bufferedWriter.write(";");
             }
@@ -2337,7 +2555,7 @@ public class MainController {
     }
 
     public void viewDataInNewWindow(ProjectFileDescriptor projectFileDescriptor){
-        DataKeeper dataKeeper = loadDataset(projectFileDescriptor.getAsFile(), false);
+        DataKeeper dataKeeper = loadDataset(projectFileDescriptor.getAsFile());
 
         ViewDataWindow viewDataWindow = ViewDataWindow.getInstance(this.scene, projectFileDescriptor.getType()+" "+projectFileDescriptor.getName());
 

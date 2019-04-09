@@ -6,6 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import org.neat4j.neat.core.DefaultConfig;
 import ru.filippov.GUI.windows.AlertWindow;
 
 import java.io.*;
@@ -71,23 +72,20 @@ public class NewDatasetDialogueController {
             AlertWindow.createAlertWindow(this.resourceBundle.getString("ALREADY_EXISTS")).show();
         } else {
 
-            File datasetsFolder = new File(newDatasetFolder.getParent());
-            if(!datasetsFolder.exists()) datasetsFolder.mkdir();
+            File neatFile = new File(newDatasetFolder.getAbsolutePath()+"\\"+this.datasetNameTextField.getText()+".neat");
 
-            newDatasetFolder.mkdir();
-            File defaultFile = new File(getClass().getClassLoader().getResource("NEATfiles/default.neat").getPath());
-            File neatFile = new File(newDatasetFolder.getAbsolutePath()+"/"+this.datasetNameTextField.getText()+".neat");
-            InputStream is = null;
-            OutputStream os = null;
-            try {
-                is = new FileInputStream(defaultFile);
-                os = new FileOutputStream(neatFile);
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = is.read(buffer)) > 0) {
-                    os.write(buffer, 0, length);
+            if(!newDatasetFolder.getParentFile().exists()) newDatasetFolder.getParentFile().mkdir();
+            if(!newDatasetFolder.exists()) newDatasetFolder.mkdir();
+
+            FileWriter writer = null;
+            try{
+                writer = new FileWriter(neatFile, false);
+                writer.write("");
+                for(String s : DefaultConfig.getDefaultConfig()){
+                    writer.append(s+"\n");
                 }
-                projectFile = newDatasetFolder;
+
+                projectFile = neatFile;
             } catch (FileNotFoundException e) {
                 projectFile = null;
                 e.printStackTrace();
@@ -95,11 +93,13 @@ public class NewDatasetDialogueController {
                 projectFile = null;
                 e.printStackTrace();
             } finally {
-                try {
-                    is.close();
-                    os.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if(writer!=null){
+                    try {
+                        writer.flush();
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             this.stage.close();

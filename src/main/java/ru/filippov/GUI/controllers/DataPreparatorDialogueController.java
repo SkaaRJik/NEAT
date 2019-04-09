@@ -22,7 +22,8 @@ import javafx.util.Callback;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.log4j.Logger;
 import org.neat4j.neat.data.normaliser.DataScaler;
-import org.neat4j.neat.data.normaliser.LinearScaler;
+import org.neat4j.neat.data.normaliser.LinearScalerGlobalValues;
+import org.neat4j.neat.data.normaliser.LinearScalerLocalValues;
 import org.neat4j.neat.data.normaliser.NonLinearScaler;
 import org.neat4j.neat.nn.core.functions.SigmoidFunction;
 import org.neat4j.neat.nn.core.functions.TanhFunction;
@@ -470,6 +471,7 @@ public class DataPreparatorDialogueController {
             try {
                 firstStep(getListDataFromTextArea());
             } catch (NumberFormatException e) {
+                e.printStackTrace();
                 AlertWindow.createAlertWindow(cantProcessData).show();
                 return;
             }
@@ -499,6 +501,7 @@ public class DataPreparatorDialogueController {
         try {
             if(!trainSetIndexes.isEmpty()) {
                 dataFile = new File(this.projectPath + this.trainDataNameTextField.getText() + ".trd");
+                dataFile.getParentFile().mkdir();
                 if(dataFile.exists()) {
                     AlertWindow.createAlertWindow("\"" + this.trainDataNameTextField.getText() + "\" train dataset - is already exists. \n Choose another name");
                     return;
@@ -507,6 +510,7 @@ public class DataPreparatorDialogueController {
             }
             if(!testSetIndexes.isEmpty()) {
                 dataFile = new File(this.projectPath + this.testDataNameTextField.getText() + ".ted");
+                dataFile.getParentFile().mkdir();
                 if(dataFile.exists()) {
                     AlertWindow.createAlertWindow("\"" + this.trainDataNameTextField.getText() + "\" test dataset - is already exists. \n Choose another name");
                     return;
@@ -520,6 +524,7 @@ public class DataPreparatorDialogueController {
             alert.show();
             this.stage.close();
         } catch (IOException e) {
+            e.printStackTrace();
             AlertWindow.createAlertWindow(e.getMessage()).show();
         }
 
@@ -943,8 +948,10 @@ public class DataPreparatorDialogueController {
         try {
             switch (chooseNormaliseMethodChoiceBox.getValue()) {
                 case "Линейный":
-                    dataScaler = new LinearScaler();
-                    normalisedUsedData = dataScaler.normalize(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
+                    //dataScaler = new LinearScalerGlobalValues();
+                    dataScaler = new LinearScalerLocalValues();
+                    //normalisedUsedData = dataScaler.normalize(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
+                    normalisedUsedData = dataScaler.normalize(usedData);
 
                     break;
                 case "Нелинейный":
@@ -1055,7 +1062,7 @@ public class DataPreparatorDialogueController {
     }
 
     public void setCurrentDatasetFolder(String datasetFolderName) {
-        this.projectPath = datasetFolderName + "\\";
+        this.projectPath = datasetFolderName+"\\";
     }
 
 

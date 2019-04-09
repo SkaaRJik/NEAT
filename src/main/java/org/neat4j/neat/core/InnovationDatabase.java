@@ -26,32 +26,20 @@ import java.util.Set;
 public class InnovationDatabase {
 	private final Random ran;
 	private HashMap innovations;
-	private static int innovationId = 1;
-	private static int neuronId = 1;
-	private static InnovationDatabase instance;
-	public static int totalHits = 0;
-	public static int totalMisses = 0;
+	private int innovationId = 1;
+	private int neuronId = 1;
+	public  int totalHits = 0;
+	public  int totalMisses = 0;
 
-	public static void refresh(){
+	public InnovationDatabase(Random ran){
+		this.ran = ran;
 		innovationId = 1;
 		neuronId = 1;
 		totalHits = 0;
 		totalMisses = 0;
-		if(instance !=null){
-			instance.innovations = new HashMap();
-		}
-	}
-
-	public static InnovationDatabase getInstance(Random random){
-		if(instance == null) instance = new InnovationDatabase(random);
-		return instance;
-	}
-
-	private InnovationDatabase(Random ran) {
-		this.ran = ran;
 		this.innovations = new HashMap();
 	}
-	
+
 	private int nextInnovationNumber() {
 		return (innovationId++);
 	}
@@ -64,10 +52,7 @@ public class InnovationDatabase {
 	 * Singleton accessor
 	 * @return
 	 */
-	public static InnovationDatabase database() {
-		return (instance);
-	}
-	
+
 	/**
 	 * Creates popsize chromosomes ready for creating a NEAT network. 
 	 * @param popSize - size of the population
@@ -284,5 +269,13 @@ public class InnovationDatabase {
 		}
 		
 		return (databaseEntry);
-	}	
+	}
+
+	public int getTotalHits() {
+		return totalHits;
+	}
+
+	public int getTotalMisses() {
+		return totalMisses;
+	}
 }

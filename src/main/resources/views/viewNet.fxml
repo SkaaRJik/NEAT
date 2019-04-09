@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Pane?>
+
+<BorderPane fx:id="viewPaneContainer" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" styleClass="visualisation-container" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.ViewNetWindowController">
+   <center>
+      <Pane fx:id="viewPane" prefHeight="200.0" prefWidth="200.0" styleClass="visualisation-content" BorderPane.alignment="CENTER" />
+   </center>
+</BorderPane>

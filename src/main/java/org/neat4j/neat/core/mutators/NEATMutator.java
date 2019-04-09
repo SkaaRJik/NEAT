@@ -36,6 +36,7 @@ public class NEATMutator implements Mutator {
 	private double perturb = 5;
 	private double biasPerturb = 0.1;
 	private double pNewActivationFunction;
+	final private InnovationDatabase innovationDatabase;
 
 	public double getpNewActivationFunction() {
 		return pNewActivationFunction;
@@ -50,16 +51,18 @@ public class NEATMutator implements Mutator {
 	private static final int MAX_LINK_ATTEMPTS = 5;
 	private final Random random;
 
-	public NEATMutator(Random random) {
+	public NEATMutator(Random random, InnovationDatabase innovationDatabase) {
 		this.random = random;
+		this.innovationDatabase = innovationDatabase;
 	}
 	
-	public NEATMutator(double pAddNode, double pAddLink, double pDisable, double pNewActivationFunction, Random random) {
+	public NEATMutator(double pAddNode, double pAddLink, double pDisable, double pNewActivationFunction, Random random, InnovationDatabase innovationDatabase) {
 		this.random = random;
 		this.pAddNode = pAddNode;
 		this.pAddLink = pAddLink;
 		this.pToggle = pDisable;
 		this.pNewActivationFunction = pNewActivationFunction;
+		this.innovationDatabase = innovationDatabase;
 	}
 	
 	public void setRecurrencyAllowed(boolean allowed) {
@@ -141,7 +144,7 @@ public class NEATMutator implements Mutator {
 		
 		return (mutated);
 	}
-	//TODO Add mutation of activation function and dont forget to see what way of saving neurons is.
+	//TODO Add mutation of activation function and dont forget to see what way of saving getNeurons is.
 	private Gene mutateNode(NEATNodeGene mutatee) {
 		double perturbRandVal = random.nextDouble();
 		double mutateBias = random.nextDouble();
@@ -230,7 +233,7 @@ public class NEATMutator implements Mutator {
 				}
 				if (!this.linkIllegal(from, to, links)) {
 					// set it to a random value
-					newLink = InnovationDatabase.database().submitLinkInnovation(from.id(), to.id());
+					newLink = innovationDatabase.submitLinkInnovation(from.id(), to.id());
 					((NEATLinkGene)newLink).setWeight(MathUtils.nextPlusMinusOne());
 					// add link between 2 unconnected nodes
 					genes[genes.length - 1] = newLink;
@@ -265,10 +268,10 @@ public class NEATMutator implements Mutator {
 				chosen = (NEATLinkGene)nodeLinks.get(linkIdx);
 				// disable old link
 				chosen.setEnabled(false);
-				newNode = InnovationDatabase.database().submitNodeInnovation(chosen);
+				newNode = innovationDatabase.submitNodeInnovation(chosen);
 				//newNode.setBias(MathUtils.nextPlusMinusOne());
-				newLower = InnovationDatabase.database().submitLinkInnovation(chosen.getFromId(), newNode.id());
-				newUpper = InnovationDatabase.database().submitLinkInnovation(newNode.id(), chosen.getToId());
+				newLower = innovationDatabase.submitLinkInnovation(chosen.getFromId(), newNode.id());
+				newUpper = innovationDatabase.submitLinkInnovation(newNode.id(), chosen.getToId());
 				// set weights according to Stanley et al's NEAT document
 				newLower.setWeight(1);
 				newUpper.setWeight(chosen.getWeight());

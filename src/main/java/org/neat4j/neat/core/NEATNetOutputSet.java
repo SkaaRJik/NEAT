@@ -8,6 +8,7 @@ import org.neat4j.neat.data.core.NetworkOutput;
 import org.neat4j.neat.data.core.NetworkOutputSet;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author MSimmerson
@@ -16,11 +17,11 @@ import java.util.ArrayList;
  */
 public class NEATNetOutputSet implements NetworkOutputSet {
 	private static final long serialVersionUID = 1L;
-	private ArrayList outputSet;
+	private List<NetworkOutput> outputSet;
 	private int idx;
 	
 	public NEATNetOutputSet() {
-		this.outputSet = new ArrayList();
+		this.outputSet = new ArrayList<>();
 		this.idx = 0;
 	}
 	/**
@@ -62,4 +63,6 @@ public class NEATNetOutputSet implements NetworkOutputSet {
 			this.outputSet.remove(idx);
 		}
 	}
+
+
 }

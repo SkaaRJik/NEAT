@@ -10,6 +10,9 @@ import org.neat4j.neat.data.core.NetworkOutputSet;
 import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.ga.core.Gene;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.List;
 
 /**
@@ -22,6 +25,8 @@ public class NEATChromosome implements Chromosome {
 	private double fitness;
 	private int specieId = -1;
 	private boolean nOrder = false;
+	private int inputs;
+	private int outputs;
 	private List<List<Double>> outputValues;
 	
 	public NEATChromosome(Gene[] genes) {
@@ -97,5 +102,40 @@ public class NEATChromosome implements Chromosome {
 		}
 		
 		return (returnVal);
+	}
+
+	/**
+	 * Reads a saved chromosome from fileName
+	 * @param fileName - location of chromosome
+	 * @return Recreate object
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	static public Object readObject(String fileName) throws IOException, ClassNotFoundException {
+		Object o = null;
+		FileInputStream fis = new FileInputStream(fileName);
+		ObjectInputStream ois = new ObjectInputStream(fis);
+		o = ois.readObject();
+		ois.close();
+		fis.close();
+
+
+		return (o);
+	}
+
+	public int getInputs() {
+		return inputs;
+	}
+
+	public void setInputs(int inputs) {
+		this.inputs = inputs;
+	}
+
+	public int getOutputs() {
+		return outputs;
+	}
+
+	public void setOutputs(int outputs) {
+		this.outputs = outputs;
 	}
 }

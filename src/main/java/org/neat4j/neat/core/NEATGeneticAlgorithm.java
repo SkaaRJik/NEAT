@@ -43,7 +43,6 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 	private final Random random;
 	private final int numberOfThreads;
 	private int offsetOfIndex;
-
 	private final Thread[] threads;
 
 	/**
@@ -117,11 +116,11 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 	/**
 	 * Creates the initial population
 	 */
-	public void createPopulation() {
+	public void createPopulation(InnovationDatabase innovationDatabase) {
 		int popSize = this.descriptor.gaPopulationSize();
 		int initialChromoSize = this.func.requiredChromosomeSize() + this.descriptor.getExtraFeatureCount();
 		this.pop = new NEATPopulation(popSize, initialChromoSize, this.descriptor.getInputNodes(), this.descriptor.getOutputNodes(), this.descriptor.featureSelectionEnabled(), this.descriptor.getExtraFeatureCount(), this.random);
-		this.pop.createPopulation();
+		this.pop.createPopulation(innovationDatabase);
 	}
 
 	/**

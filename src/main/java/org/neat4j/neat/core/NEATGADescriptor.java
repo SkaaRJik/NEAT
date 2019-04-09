@@ -262,7 +262,7 @@ public class NEATGADescriptor implements GADescriptor {
 		pXover = xover;
 	}
 	/* (non-Javadoc)
-	 * @see org.neat4j.ailibrary.ga.core.GADescriptor#gaPopulationSize()
+	 * @see org.neat4j.ailibrary.getGeneticAlgorithm.core.GADescriptor#gaPopulationSize()
 	 */
 	public int gaPopulationSize() {
 		return this.popSize;
@@ -273,7 +273,7 @@ public class NEATGADescriptor implements GADescriptor {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.neat4j.ailibrary.ga.core.GADescriptor#mutationProbability()
+	 * @see org.neat4j.ailibrary.getGeneticAlgorithm.core.GADescriptor#mutationProbability()
 	 */
 	public double mutationProbability() {
 		// TODO Auto-generated method stub
@@ -281,7 +281,7 @@ public class NEATGADescriptor implements GADescriptor {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.neat4j.ailibrary.ga.core.GADescriptor#crossOverProbability()
+	 * @see org.neat4j.ailibrary.getGeneticAlgorithm.core.GADescriptor#crossOverProbability()
 	 */
 	public double crossOverProbability() {
 		// TODO Auto-generated method stub
@@ -289,7 +289,7 @@ public class NEATGADescriptor implements GADescriptor {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.neat4j.ailibrary.ga.core.GADescriptor#elitistSize()
+	 * @see org.neat4j.ailibrary.getGeneticAlgorithm.core.GADescriptor#elitistSize()
 	 */
 	public int elitistSize() {
 		// TODO Auto-generated method stub

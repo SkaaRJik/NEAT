@@ -6,6 +6,8 @@
  */
 package org.neat4j.neat.ga.core;
 
+import org.neat4j.neat.core.InnovationDatabase;
+
 import java.io.Serializable;
 
 /**
@@ -14,6 +16,6 @@ import java.io.Serializable;
  */
 public interface Population extends Serializable {
 	public Chromosome[] genoTypes();
-	public void createPopulation();
+	public void createPopulation(InnovationDatabase innovationDatabase);
 	public void updatePopulation(Chromosome[] newGenoTypes);
 }

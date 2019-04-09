@@ -30,6 +30,7 @@ public class NEATPopulation implements Population {
 	private int extraFeatureCount = 0;
 	private final Random random;
 
+
 	public NEATPopulation(int popSize, int initialChromoSize, int inputs, int outputs, boolean featureSelection, int extraFeaturecount, Random random) {
 		this.popSize = popSize;
 		this.initialChromoSize = initialChromoSize;
@@ -38,6 +39,7 @@ public class NEATPopulation implements Population {
 		this.featureSelection = featureSelection;
 		this.extraFeatureCount = extraFeaturecount;
 		this.random = random;
+
 	}
 
 	public NEATPopulation(int popSize, int initialChromoSize, int inputs, int outputs, boolean featureSelection, Random random) {
@@ -51,11 +53,11 @@ public class NEATPopulation implements Population {
 	/**
 	 * Creates an intial population
 	 */
-	public void createPopulation() {
+	public void createPopulation(InnovationDatabase innovationDatabase) {
 		this.chromosomes = new Chromosome[this.popSize];
 		int i;
 		// use the innovation database to create the initial population
-		Chromosome[] templates = InnovationDatabase.getInstance(this.random).initialiseInnovations(this.popSize, this.inputs, this.outputs, this.featureSelection, this.extraFeatureCount);
+		Chromosome[] templates = innovationDatabase.initialiseInnovations(this.popSize, this.inputs, this.outputs, this.featureSelection, this.extraFeatureCount);
 		
 		for (i = 0; i < this.popSize; i++) {
 			this.chromosomes[i] = this.individualFromTemplate(templates[i]);

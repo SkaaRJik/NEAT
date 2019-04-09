@@ -7,10 +7,12 @@ import org.neat4j.neat.applications.test.MSENEATPredictionEngine;
 import org.neat4j.neat.core.*;
 import org.neat4j.neat.core.control.NEATNetManager;
 import org.neat4j.neat.core.fitness.InvalidFitnessFunction;
+import org.neat4j.neat.core.fitness.MSENEATFitnessFunction;
 import org.neat4j.neat.core.mutators.NEATMutator;
 import org.neat4j.neat.core.pselectors.InvalidParentSelectorFunction;
 import org.neat4j.neat.core.pselectors.TournamentSelector;
 import org.neat4j.neat.core.xover.InvalidCrossoverFunction;
+import org.neat4j.neat.core.xover.NEATCrossover;
 import org.neat4j.neat.data.core.NetworkDataSet;
 import org.neat4j.neat.ga.core.*;
 import org.neat4j.neat.nn.core.LearningEnvironment;
@@ -34,7 +36,10 @@ public class NEATGATrainingManager {
 	protected GeneticAlgorithm ga;
 	protected AIConfig config;
 	protected Random random;
-	public GeneticAlgorithm ga() {
+	protected InnovationDatabase innovationDatabase;
+
+
+	public GeneticAlgorithm getGeneticAlgorithm() {
 		return (this.ga);
 	}
 	/**
@@ -43,19 +48,18 @@ public class NEATGATrainingManager {
 	public void initialise(AIConfig config) throws InitialisationFailedException {
 		MathUtils.setSeed(Long.parseLong(config.configElement("GENERATOR.SEED")));
 		this.random = MathUtils.getRand();
+		innovationDatabase = new InnovationDatabase(this.random);
 		GADescriptor gaDescriptor = this.createDescriptor(config);
 		this.assigGA(this.createGeneticAlgorithm(gaDescriptor));
 		try {
 			this.assignConfig(config);
 			this.ga.pluginAllowedActivationFunctions(config);
-			this.ga.pluginFitnessFunction(this.createFunction(config));
-			this.ga.pluginCrossOver(this.createCrossOver(config));
-			this.ga.pluginMutator(new NEATMutator(this.random));
+			this.ga.pluginFitnessFunction(this.createFunction());
+			this.ga.pluginCrossOver(new NEATCrossover());
+			this.ga.pluginMutator(new NEATMutator(this.random, innovationDatabase));
 			this.ga.pluginParentSelector(new TournamentSelector(this.random));
-			this.ga.createPopulation();
+			this.ga.createPopulation(innovationDatabase);
 		} catch (InvalidFitnessFunction e) {
-			throw new InitialisationFailedException(e.getMessage());
-		} catch (InvalidCrossoverFunction e) {
 			throw new InitialisationFailedException(e.getMessage());
 		}  catch (Exception e) {
 			throw new InitialisationFailedException(e.getMessage());
@@ -90,7 +94,7 @@ public class NEATGATrainingManager {
 			}
 			i++;
 		}
-		cat.debug("Innovation Database Stats - Hits:" + InnovationDatabase.totalHits + " - totalMisses:" + InnovationDatabase.totalMisses);
+		cat.debug("Innovation Database Stats - Hits:" + innovationDatabase.getTotalHits() + " - totalMisses:" + innovationDatabase.getTotalMisses());
 	}
 	
 	/**
@@ -99,87 +103,54 @@ public class NEATGATrainingManager {
 	 */
 	public void saveBest() {
 		String pathToSave = config.configElement("SAVE.LOCATION");
-		this.save(pathToSave, this.ga.discoverdBestMember());
+		Chromosome chromosome = this.ga.discoverdBestMember();
+
+		chromosome.setInputs(Integer.parseInt(config.configElement("INPUT.NODES")));
+		chromosome.setOutputs(Integer.parseInt(config.configElement("OUTPUT.NODES")));
+		this.save(pathToSave, chromosome);
 	}
 	
 	/**
 	 *
 	 */
 	public GADescriptor createDescriptor(AIConfig config) {
-		int popSize = Integer.parseInt(config.configElement("POP.SIZE"));
-		double pXover = Double.parseDouble(config.configElement("PROBABILITY.CROSSOVER"));
-		double pAddLink = Double.parseDouble(config.configElement("PROBABILITY.ADDLINK"));
-		double pAddNode = Double.parseDouble(config.configElement("PROBABILITY.ADDNODE"));
-		double pToggleLink = Double.parseDouble(config.configElement("PROBABILITY.TOGGLELINK"));
-		double pMutation = Double.parseDouble(config.configElement("PROBABILITY.MUTATION"));
-		double pMutateBias = Double.parseDouble(config.configElement("PROBABILITY.MUTATEBIAS"));
-		double pWeightReplaced = Double.parseDouble(config.configElement("PROBABILITY.WEIGHT.REPLACED"));
-		double excessCoeff = Double.parseDouble(config.configElement("EXCESS.COEFFICIENT"));
-		double disjointCoeff = Double.parseDouble(config.configElement("DISJOINT.COEFFICIENT"));
-		double weightCoeff = Double.parseDouble(config.configElement("WEIGHT.COEFFICIENT"));
-		double threshold = Double.parseDouble(config.configElement("COMPATABILITY.THRESHOLD"));
-		double thresholdChange = Double.parseDouble(config.configElement("COMPATABILITY.CHANGE"));
-		int inputNodes = Integer.parseInt(config.configElement("INPUT.NODES"));
-		int outputNodes = Integer.parseInt(config.configElement("OUTPUT.NODES"));
-		String learnable = String.valueOf(config.configElement("LEARNABLE"));
-		String trainingSet = String.valueOf(config.configElement("TRAINING.SET"));
-		boolean naturalOrder = Boolean.valueOf((config.configElement("NATURAL.ORDER.STRATEGY"))).booleanValue();
-		int maxSpecieAge = Integer.parseInt(config.configElement("SPECIE.FITNESS.MAX"));
-		int specieAgeThreshold = Integer.parseInt(config.configElement("SPECIE.AGE.THRESHOLD"));
-		int specieYouthThreshold = Integer.parseInt(config.configElement("SPECIE.YOUTH.THRESHOLD"));
-		double agePenalty = Double.parseDouble(config.configElement("SPECIE.OLD.PENALTY"));
-		double youthBoost = Double.parseDouble(config.configElement("SPECIE.YOUTH.BOOST"));
-		int specieCount = Integer.parseInt(config.configElement("SPECIE.COUNT"));
-		double survialThreshold = Double.parseDouble(config.configElement("SURVIVAL.THRESHOLD"));
-		boolean featureSelection = Boolean.valueOf(config.configElement("FEATURE.SELECTION")).booleanValue();
-		int extraAlleles = Integer.parseInt(config.configElement("EXTRA.FEATURE.COUNT"));
-		boolean eleEvents = Boolean.valueOf(config.configElement("ELE.EVENTS")).booleanValue();
-		double eleSurvivalCount = Double.parseDouble(config.configElement("ELE.SURVIVAL.COUNT"));
-		int eleEventTime = Integer.parseInt(config.configElement("ELE.EVENT.TIME"));
-		boolean recurrencyAllowed = Boolean.valueOf(config.configElement("RECURRENCY.ALLOWED")).booleanValue();
-		boolean keepBestEver = Boolean.valueOf(config.configElement("KEEP.BEST.EVER")).booleanValue();
-		double terminationValue = Double.parseDouble(config.configElement("TERMINATION.VALUE"));
-		double maxPerturb = Double.parseDouble(config.configElement("MAX.PERTURB"));
-		double maxBiasPerturb = Double.parseDouble(config.configElement("MAX.BIAS.PERTURB"));
-		double pNewActivationFunction = Double.parseDouble(config.configElement("PROBABILITY.NEWACTIVATIONFUNCTION"));
-		boolean toggleTerminationValue = Boolean.parseBoolean(config.configElement("TERMINATION.VALUE.TOGGLE"));
 
 		NEATGADescriptor descriptor = new NEATGADescriptor();
-		descriptor.setPAddLink(pAddLink);
-		descriptor.setPAddNode(pAddNode);
-		descriptor.setPToggleLink(pToggleLink);
-		descriptor.setPMutateBias(pMutateBias);
-		descriptor.setPNewActivationFunction(pNewActivationFunction);
-		descriptor.setPXover(pXover);
-		descriptor.setPMutation(pMutation);
-		descriptor.setInputNodes(inputNodes);
-		descriptor.setOutputNodes(outputNodes);
-		descriptor.setNaturalOrder(naturalOrder);
-		descriptor.setPopulationSize(popSize);
-		descriptor.setDisjointCoeff(disjointCoeff);
-		descriptor.setExcessCoeff(excessCoeff);
-		descriptor.setWeightCoeff(weightCoeff);
-		descriptor.setThreshold(threshold);
-		descriptor.setCompatabilityChange(thresholdChange);
-		descriptor.setMaxSpecieAge(maxSpecieAge);
-		descriptor.setSpecieAgeThreshold(specieAgeThreshold);
-		descriptor.setSpecieYouthThreshold(specieYouthThreshold);
-		descriptor.setAgePenalty(agePenalty);
-		descriptor.setYouthBoost(youthBoost);
-		descriptor.setSpecieCount(specieCount);
-		descriptor.setPWeightReplaced(pWeightReplaced);
-		descriptor.setSurvivalThreshold(survialThreshold);
-		descriptor.setFeatureSelection(featureSelection);
-		descriptor.setExtraFeatureCount(extraAlleles);
-		descriptor.setEleEvents(eleEvents);
-		descriptor.setEleSurvivalCount(eleSurvivalCount);
-		descriptor.setEleEventTime(eleEventTime);
-		descriptor.setRecurrencyAllowed(recurrencyAllowed);
-		descriptor.setKeepBestEver(keepBestEver);
-		descriptor.setErrorTerminationValue(terminationValue);
-		descriptor.setMaxPerturb(maxPerturb);
-		descriptor.setMaxBiasPerturb(maxBiasPerturb);
-		descriptor.setToggleErrorTerminationValue(toggleTerminationValue);
+		descriptor.setPAddLink(Double.parseDouble(config.configElement("PROBABILITY.ADDLINK")));
+		descriptor.setPAddNode(Double.parseDouble(config.configElement("PROBABILITY.ADDNODE")));
+		descriptor.setPToggleLink(Double.parseDouble(config.configElement("PROBABILITY.TOGGLELINK")));
+		descriptor.setPMutateBias(Double.parseDouble(config.configElement("PROBABILITY.MUTATEBIAS")));
+		descriptor.setPNewActivationFunction(Double.parseDouble(config.configElement("PROBABILITY.NEWACTIVATIONFUNCTION")));
+		descriptor.setPXover(Double.parseDouble(config.configElement("PROBABILITY.CROSSOVER")));
+		descriptor.setPMutation(Double.parseDouble(config.configElement("PROBABILITY.MUTATION")));
+		descriptor.setInputNodes(Integer.parseInt(config.configElement("INPUT.NODES")));
+		descriptor.setOutputNodes(Integer.parseInt(config.configElement("OUTPUT.NODES")));
+		descriptor.setNaturalOrder(Boolean.valueOf((config.configElement("NATURAL.ORDER.STRATEGY"))).booleanValue());
+		descriptor.setPopulationSize(Integer.parseInt(config.configElement("POP.SIZE")));
+		descriptor.setDisjointCoeff(Double.parseDouble(config.configElement("DISJOINT.COEFFICIENT")));
+		descriptor.setExcessCoeff(Double.parseDouble(config.configElement("EXCESS.COEFFICIENT")));
+		descriptor.setWeightCoeff(Double.parseDouble(config.configElement("WEIGHT.COEFFICIENT")));
+		descriptor.setThreshold(Double.parseDouble(config.configElement("COMPATABILITY.THRESHOLD")));
+		descriptor.setCompatabilityChange(Double.parseDouble(config.configElement("COMPATABILITY.CHANGE")));
+		descriptor.setMaxSpecieAge(Integer.parseInt(config.configElement("SPECIE.FITNESS.MAX")));
+		descriptor.setSpecieAgeThreshold(Integer.parseInt(config.configElement("SPECIE.AGE.THRESHOLD")));
+		descriptor.setSpecieYouthThreshold(Integer.parseInt(config.configElement("SPECIE.YOUTH.THRESHOLD")));
+		descriptor.setAgePenalty(Double.parseDouble(config.configElement("SPECIE.OLD.PENALTY")));
+		descriptor.setYouthBoost(Double.parseDouble(config.configElement("SPECIE.YOUTH.BOOST")));
+		descriptor.setSpecieCount(Integer.parseInt(config.configElement("SPECIE.COUNT")));
+		descriptor.setPWeightReplaced(Double.parseDouble(config.configElement("PROBABILITY.WEIGHT.REPLACED")));
+		descriptor.setSurvivalThreshold(Double.parseDouble(config.configElement("SURVIVAL.THRESHOLD")));
+		descriptor.setFeatureSelection(Boolean.valueOf(config.configElement("FEATURE.SELECTION")).booleanValue());
+		descriptor.setExtraFeatureCount(Integer.parseInt(config.configElement("EXTRA.FEATURE.COUNT")));
+		descriptor.setEleEvents(Boolean.valueOf(config.configElement("ELE.EVENTS")).booleanValue());
+		descriptor.setEleSurvivalCount(Double.parseDouble(config.configElement("ELE.SURVIVAL.COUNT")));
+		descriptor.setEleEventTime(Integer.parseInt(config.configElement("ELE.EVENT.TIME")));
+		descriptor.setRecurrencyAllowed(Boolean.valueOf(config.configElement("RECURRENCY.ALLOWED")).booleanValue());
+		descriptor.setKeepBestEver(Boolean.valueOf(config.configElement("KEEP.BEST.EVER")).booleanValue());
+		descriptor.setErrorTerminationValue(Double.parseDouble(config.configElement("TERMINATION.VALUE")));
+		descriptor.setMaxPerturb(Double.parseDouble(config.configElement("MAX.PERTURB")));
+		descriptor.setMaxBiasPerturb(Double.parseDouble(config.configElement("MAX.BIAS.PERTURB")));
+		descriptor.setToggleErrorTerminationValue(Boolean.parseBoolean(config.configElement("TERMINATION.VALUE.TOGGLE")));
 		
 		return (descriptor);
 	}
@@ -198,61 +169,38 @@ public class NEATGATrainingManager {
 	/**
 	 *
 	 */
-	public FitnessFunction createFunction(AIConfig config) throws InvalidFitnessFunction {
-		String functionClass = config.configElement("OPERATOR.FUNCTION");
+	public FitnessFunction createFunction() throws InvalidFitnessFunction {
 		FitnessFunction function = null;
 		AIConfig nnConfig;
-		Class funcClass;
 		NEATNetManager netManager;
 		NeuralNet net = null;
 		NetworkDataSet dataSet = null;
 		LearningEnvironment env;
-		Constructor fConstructor;
-		
-		if (functionClass != null) {
-			try {
-				funcClass = Class.forName(functionClass);
-				if (NeuralFitnessFunction.class.isAssignableFrom(funcClass)) {
-					/*nnConfig = new NEATConfig();
-					//nnConfig  = new NEATLoader().loadConfig(nnConfigFile);
-					nnConfig.updateConfig("INPUT_SIZE", config.configElement("INPUT.NODES"));
-					nnConfig.updateConfig("OUTPUT_SIZE", config.configElement("OUTPUT.NODES"));
-					nnConfig.updateConfig("LEARNABLE", config.configElement("LEARNABLE"));*/
-					/*if(!config.configElement("TRAINING.SET").matches("/"))
-						config.updateConfig("TRAINING.SET", config.configElement("CONFIGURATION.FILEPATH")+"/"+config.configElement("TRAINING.SET"));
-					else
-						config.updateConfig("TRAINING.SET", config.configElement("TRAINING.SET"));
-					*/
-					netManager = new NEATNetManager();
-					netManager.initialise(config);
-					net = netManager.managedNet();
-					env = net.netDescriptor().learnable().learningEnvironment();
-					dataSet = (NetworkDataSet)env.learningParameter("TRAINING.SET");
-					fConstructor = funcClass.getConstructor(new Class[]{NeuralNet.class, NetworkDataSet.class});
-					function = (FitnessFunction) fConstructor.newInstance(new Object[]{net, dataSet});
-				} else {
-					throw new InvalidFitnessFunction("Invalid function class, " + functionClass + " must extend " + NeuralFitnessFunction.class.getName());
-				}
-			} catch (ClassNotFoundException e) {
-				throw new InvalidFitnessFunction("Invalid function class, " + functionClass + " must extend " + NeuralFitnessFunction.class.getName() + ":" + e.getMessage());
-			} catch (IllegalArgumentException e) {
-				throw new InvalidFitnessFunction("Invalid function class, " + functionClass + " must extend " + NeuralFitnessFunction.class.getName() + ":" + e.getMessage());
-			} catch (InstantiationException e) {
-				throw new InvalidFitnessFunction("Invalid function class, " + functionClass + " must extend " + NeuralFitnessFunction.class.getName() + ":" + e.getMessage());
-			} catch (IllegalAccessException e) {
-				throw new InvalidFitnessFunction("Invalid function class, " + functionClass + " must extend " + NeuralFitnessFunction.class.getName() + ":" + e.getMessage());
-			} catch (InvocationTargetException e) {
-				throw new InvalidFitnessFunction("Invalid function class, " + functionClass + " must extend " + NeuralFitnessFunction.class.getName() + ":" + e.getMessage());
-			} catch (SecurityException e) {
-				throw new InvalidFitnessFunction("Invalid function class, " + functionClass + " must extend " + NeuralFitnessFunction.class.getName() + ":" + e.getMessage());
-			} catch (NoSuchMethodException e) {
-				throw new InvalidFitnessFunction("Invalid function class, " + functionClass + " must extend " + NeuralFitnessFunction.class.getName() + ":" + e.getMessage());
-			} catch (InitialisationFailedException e) {
-				e.printStackTrace();
-				throw new InvalidFitnessFunction("Could not create Firness function, configuration was invalid:" + e.getMessage());
-			} 
-		} else {
-			throw new InvalidFitnessFunction("Function class was null");
+
+		try {
+
+				/*nnConfig = new NEATConfig();
+				//nnConfig  = new NEATLoader().loadConfig(nnConfigFile);
+				nnConfig.updateConfig("INPUT_SIZE", config.configElement("INPUT.NODES"));
+				nnConfig.updateConfig("OUTPUT_SIZE", config.configElement("OUTPUT.NODES"));
+				nnConfig.updateConfig("LEARNABLE", config.configElement("LEARNABLE"));*/
+				/*if(!config.configElement("TRAINING.SET").matches("/"))
+					config.updateConfig("TRAINING.SET", config.configElement("CONFIGURATION.FILEPATH")+"/"+config.configElement("TRAINING.SET"));
+				else
+					config.updateConfig("TRAINING.SET", config.configElement("TRAINING.SET"));
+				*/
+				netManager = new NEATNetManager();
+				netManager.initialise(config);
+				net = netManager.managedNet();
+				env = net.netDescriptor().learnable().learningEnvironment();
+				dataSet = (NetworkDataSet)env.learningParameter("TRAINING.SET");
+				function = new MSENEATFitnessFunction(net, dataSet);
+
+		}  catch (IllegalArgumentException e) {
+			throw new InvalidFitnessFunction("Invalid function class, " + function.getClass() + " must extend " + NeuralFitnessFunction.class.getName() + ":" + e.getMessage());
+		}  catch (InitialisationFailedException e) {
+			e.printStackTrace();
+			throw new InvalidFitnessFunction("Could not create Firness function, configuration was invalid:" + e.getMessage());
 		}
 		
 		return (function);
@@ -286,28 +234,7 @@ public class NEATGATrainingManager {
 
 
 
-	public CrossOver createCrossOver(AIConfig config) throws InvalidCrossoverFunction {
-		String xOverClass = config.configElement("OPERATOR.XOVER");
-		CrossOver xOver;
-		
-		if (xOverClass != null) {
-			try {
-				xOver = (CrossOver)Class.forName(xOverClass).newInstance();
-			} catch (InstantiationException e) {
-				throw new InvalidCrossoverFunction("Cross Over class, " + xOverClass + ":" + e.getMessage());
-			} catch (IllegalAccessException e) {
-				throw new InvalidCrossoverFunction("Cross Over class, " + xOverClass + ":" + e.getMessage());
-			} catch (ClassNotFoundException e) {
-				throw new InvalidCrossoverFunction("Cross Over class, " + xOverClass + ":" + e.getMessage());
-			} catch (Exception e) {
-				throw new InvalidCrossoverFunction("Cross Over class, " + xOverClass + ":" + e.getMessage());
-			}
-		} else {
-			throw new InvalidCrossoverFunction("Cross Over class was null");
-		}
-		
-		return (xOver);
-	}
+
 
 
 	public boolean save(String fileName, Chromosome genoType) {
@@ -348,7 +275,7 @@ public class NEATGATrainingManager {
 		NEATGATrainingManager gam = new NEATGATrainingManager();
 		try {
 
-			AIConfig config = new NEATLoader().loadConfig("F:\\JavaProjects\\NEAT4JONERANDOM\\src\\main\\resources\\new\\new_neat.ga");
+			AIConfig config = new NEATLoader().loadConfig("F:\\JavaProjects\\NEAT4JONERANDOM\\src\\main\\resources\\new\\new_neat.getGeneticAlgorithm");
 			gam.initialise(config);
 			gam.evolve();
 

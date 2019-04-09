@@ -1,93 +1,90 @@
 package org.neat4j.neat.applications.test;
 
-import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.applications.core.ApplicationEngine;
 import org.neat4j.neat.applications.core.NEATApplicationEngine;
-import org.neat4j.neat.applications.gui.NEATFrame;
+import org.neat4j.neat.core.NEATChromosome;
 import org.neat4j.neat.core.NEATLoader;
 import org.neat4j.neat.core.NEATNetDescriptor;
 import org.neat4j.neat.core.NEATNeuralNet;
 import org.neat4j.neat.core.control.NEATNetManager;
-import org.neat4j.neat.data.core.NetworkDataSet;
-import org.neat4j.neat.data.core.NetworkInput;
-import org.neat4j.neat.data.core.NetworkInputSet;
-import org.neat4j.neat.data.core.NetworkOutputSet;
+import org.neat4j.neat.data.core.*;
 import org.neat4j.neat.data.csv.CSVDataLoader;
 import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.nn.core.NeuralNet;
 
-import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MSENEATPredictionEngine extends NEATApplicationEngine {
-	private static final Category cat = Category.getInstance(NEATApplicationEngine.class);
-	private double[] outs;
-	private void showNet() {
-		NEATFrame frame = new NEATFrame((NEATNeuralNet)this.net());
-		frame.showNet();
-	}
+	private static final Logger cat = Logger.getLogger(NEATApplicationEngine.class);
+	protected List<List<Double>> outs;
 
-	public void initialise(AIConfig config) throws InitialisationFailedException {
-		String aiSource= config.configElement("AI.SOURCE");
-		// what type is the AI?
-		String aiType = config.configElement("AI.TYPE");
+
+	public void initialise(AIConfig config) throws InitialisationFailedException, IllegalArgumentException {
 		try {
-			if (GA.equalsIgnoreCase(aiType)) {
-				Chromosome chromo = (Chromosome)this.readObject(aiSource);
-				// need to create a nn based on this chromo.
-				this.setNet(this.createNet(config));
-				((NEATNetDescriptor)(this.net().netDescriptor())).updateStructure(chromo);
-				((NEATNeuralNet)this.net()).updateNetStructure();
-				//this.showNet();
-			} else {
-				throw new InitialisationFailedException("Illegal AI Type:" + aiType);
+			Chromosome chromo = (Chromosome) NEATChromosome.readObject(config.configElement("AI.SOURCE"));
+			// need to create a nn based on this chromo.
+			this.net = this.createNet(config);
+			((NEATNetDescriptor)(this.net().netDescriptor())).updateStructure(chromo);
+			((NEATNeuralNet)this.net()).updateNetStructure();
+			//this.showNet();
+			String testInputs = config.configElement("TEST.INPUTS");
+			String testOutputs = config.configElement("TEST.OUTPUTS");
+
+			List inputs = this.net.inputLayer();
+			List outputs = this.net.outputLayer();
+
+			if(inputs.size() != Integer.parseInt(testInputs) || outputs.size() !=Integer.parseInt(testOutputs) ){
+				throw new IllegalArgumentException("Trained model: Inputs = " +inputs.size() + " Outputs = " + outputs.size() + "\n" +
+						"Test data: Inputs = " +testInputs + " Outputs = " + testOutputs);
 			}
-			
+
+
 			// now setup the input data
-			String dataFile = config.configElement("INPUT.DATA");
+			String dataFile = config.configElement("TEST.DATA");
 			if (dataFile != null) {
-				this.setNetData(new CSVDataLoader(dataFile, 0).loadData());
+				this.netData = new CSVDataLoader(dataFile, outputs.size()).loadData();
 			}
+
+			/*this.net.outputLayer().layerNeurons().length;
+			this.net.*/
+
 		} catch (IOException e) {
-			throw new InitialisationFailedException("Problem loading " + aiSource + ":" + e.getMessage());
+			throw new InitialisationFailedException("Problem loading " + config.configElement("AI.SOURCE") + ":" + e.getMessage());
 		} catch (ClassNotFoundException e) {
-			throw new InitialisationFailedException("Cannot find class for " + aiSource + ":" + e.getMessage());
-		} catch (ClassCastException e) {
-			throw new InitialisationFailedException("Incompatable AI source and type" + aiSource + ":" + aiType);
+			throw new InitialisationFailedException("Cannot find class for " + config.configElement("AI.SOURCE") + ":" + e.getMessage());
 		}
 	}
 
 	public NeuralNet createNet(AIConfig config) throws InitialisationFailedException {
-		String nnConfigFile;
-		AIConfig nnConfig;
+
 		NEATNetManager netManager;
-		
-		//nnConfigFile = config.configElement("NN.CONFIG");
-		//nnConfig  = new NEATLoader().loadConfig(config);
-		//nnConfig.updateConfig("INPUT_SIZE", config.configElement("INPUT.NODES"));
-		//nnConfig.updateConfig("OUTPUT_SIZE", config.configElement("OUTPUT.NODES"));
 		netManager = new NEATNetManager();
 		netManager.initialise(config);
 		
-		return ((NEATNeuralNet)netManager.managedNet());
+		return netManager.managedNet();
 	}
 
-	public void runApplication() {
+	public void startTesting() {
 		NetworkDataSet dataSet = this.netData();
 		NetworkInputSet ipSet = dataSet.inputSet();
 		NetworkInput ip;
 		NetworkOutputSet opSet = null;
+		NetworkOutput outSet;
 		int i;
-		this.outs = new double[ipSet.size()];
+		this.outs = new ArrayList<>(ipSet.size());
+
 		for (i = 0; i < ipSet.size(); i++) {
 			ip = ipSet.inputAt(i);
-			opSet = this.net().execute(ip);
-			this.outs[i] = opSet.nextOutput().values()[0];
-			cat.info("Output for " + ip.toString() + " is "+ opSet.nextOutput().values()[0]);
+			opSet = this.net.execute(ip);
+			this.outs.add(opSet.nextOutput().getNetOutputs());
+			//cat.info("Output for " + ip.toString() + " is "+ opSet.nextOutput().getNetOutputs());
 		}
-		try(FileWriter writer = new FileWriter("outs.txt", false))
+		/*try(FileWriter writer = new FileWriter("outs.txt", false))
 		{
 			for (i = 0; i < this.outs.length; i++) {
 				writer.append(String.valueOf(this.outs[i]).replace(".", ",")+"\n");
@@ -95,11 +92,11 @@ public class MSENEATPredictionEngine extends NEATApplicationEngine {
 
 
 			writer.flush();
-		}
-		catch(IOException ex){
+		}*/
+		/*catch(IOException ex){
 
 			System.out.println(ex.getMessage());
-		}
+		}*/
 	}
 
 	public static void main(String[] args) {
@@ -107,7 +104,7 @@ public class MSENEATPredictionEngine extends NEATApplicationEngine {
 		AIConfig config = new NEATLoader().loadConfig("E:\\Java Programs\\IdeaProjects\\NEAT\\projects\\new_neat\\new_neat.neat");
 		try {
 			fpe.initialise(config);
-			fpe.runApplication();
+			fpe.startTesting();
 		} catch (InitialisationFailedException e) {
 			cat.error("Failed to initialise MSENEATPredictionEngine:" + e.getMessage());
 		}

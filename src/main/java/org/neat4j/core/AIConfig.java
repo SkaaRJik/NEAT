@@ -13,13 +13,13 @@ import java.io.IOException;
  */
 public interface AIConfig {
 	/**
-	 * Allows access to given configuration values
+	 * Allows access to given configuration getNetOutputs
 	 * @param elementKey
 	 * @return The configuration value for the given key
 	 */
 	public String configElement(String elementKey);
 	/**
-	 * Allows updating of configuration values
+	 * Allows updating of configuration getNetOutputs
 	 * @param elementKey
 	 * @param elementValue
 	 */

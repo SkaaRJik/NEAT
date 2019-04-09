@@ -13,7 +13,7 @@ public class GameApplicationEngine implements ApplicationEngine {
 	/**
 	 * @see org.neat4j.ailibrary.applications.core.ApplicationEngine#runApplication()
 	 */
-	public void runApplication() {
+	public void startTesting() {
 		// TODO Auto-generated method stub
 
 	}

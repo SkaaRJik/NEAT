@@ -6,7 +6,7 @@ import java.io.Serializable;
  * @author MSimmerson
  *
  * 
- * Used to describe a link between two neurons
+ * Used to describe a link between two getNeurons
  */
 public class Synapse implements Serializable{
 	private Neuron from;

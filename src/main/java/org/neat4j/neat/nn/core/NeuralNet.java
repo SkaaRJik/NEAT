@@ -1,11 +1,12 @@
 package org.neat4j.neat.nn.core;
 
+import org.neat4j.neat.core.NEATNeuron;
 import org.neat4j.neat.data.core.NetworkInput;
 import org.neat4j.neat.data.core.NetworkOutputSet;
 
 import java.io.Serializable;
 import java.util.Collection;
-
+import java.util.List;
 
 
 /**
@@ -16,8 +17,9 @@ public interface NeuralNet extends Serializable
 {
 	public void createNetStructure(NeuralNetDescriptor descriptor);
 	public NeuralNetDescriptor netDescriptor();
-	public Collection hiddenLayers();
-	public NeuralNetLayer outputLayer();
+	List<NEATNeuron> hiddenLayers();
+	List<NEATNeuron> outputLayer();
+	List<NEATNeuron> inputLayer();
 	public void seedNet(double[] weights);
 	public int requiredWeightCount();
 	public int netID();

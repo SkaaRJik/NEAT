@@ -154,9 +154,9 @@ public class ExperimentServer implements AIController {
 		for (i = 0; i < newGenoTypes.length; i++) {
 			newGenoTypes[i] = this.finishedExperiments[i].result();
 		}
-		((NEATGeneticAlgorithm)(this.tm.ga())).runEvolutionCycle(newGenoTypes);
+		((NEATGeneticAlgorithm)(this.tm.getGeneticAlgorithm())).runEvolutionCycle(newGenoTypes);
 		this.tm.saveBest();
-		this.pop = this.tm.ga().population();
+		this.pop = this.tm.getGeneticAlgorithm().population();
 	}
 	
 	private void createExperiments()  {
@@ -184,11 +184,11 @@ public class ExperimentServer implements AIController {
 	public void initialise(AIConfig config) throws InitialisationFailedException {
 		this.tm = new NEATGATrainingManager();
 		this.tm.initialise(config);
-		this.pop = tm.ga().population();
+		this.pop = tm.getGeneticAlgorithm().population();
 		this.experiments = new Experiment[this.pop.genoTypes().length];
 		this.expQ = new ArrayBlockingQueue(this.experiments.length);
 		this.finishedExperiments = new Experiment[this.pop.genoTypes().length];
-		this.func = ((NEATGeneticAlgorithm)tm.ga()).getGaEvaluator();
+		this.func = ((NEATGeneticAlgorithm)tm.getGeneticAlgorithm()).getGaEvaluator();
 		this.createExperiments();
 	}
 	
@@ -202,7 +202,7 @@ public class ExperimentServer implements AIController {
 	
 	public static void main(String[] args) {
 		BasicConfigurator.configure();
-		AIConfig config = new NEATLoader().loadConfig("F:\\JavaProjects\\NotMine\\NEAT4J\\target\\classes\\xor\\xor_neat.ga");
+		AIConfig config = new NEATLoader().loadConfig("F:\\JavaProjects\\NotMine\\NEAT4J\\target\\classes\\xor\\xor_neat.getGeneticAlgorithm");
 		ExperimentServer es = new ExperimentServer();
 		try {
 			es.initialise(config);
@@ -233,7 +233,7 @@ class MonitorTask extends TimerTask {
 		this.conn = conn;
 		this.exp = exp;
 		if (this.conn == null || this.exp == null) {
-			throw new IllegalArgumentException("Illegal values when setting up monior:" + this.conn + ":" + this.exp);
+			throw new IllegalArgumentException("Illegal getNetOutputs when setting up monior:" + this.conn + ":" + this.exp);
 		}
 	}
 	

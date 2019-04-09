@@ -14,6 +14,7 @@ import org.neat4j.neat.core.NEATNetDescriptor;
 import org.neat4j.neat.data.core.NetworkDataSet;
 import org.neat4j.neat.data.csv.CSVDataLoader;
 import org.neat4j.neat.nn.core.*;
+import org.neat4j.neat.nn.core.learning.GALearnable;
 
 import java.lang.reflect.Constructor;
 
@@ -62,22 +63,16 @@ public class NEATNetManager implements AIController {
 }
 
 	public Learnable createLearnable(AIConfig config, int numOutputs) {
-		Learnable learnable = null;
-		String learnableClassName = config.configElement("LEARNABLE");
-		if (learnableClassName != null) {
-			cat.debug("learnableClassName:" + learnableClassName);
-			// learning env
-			LearningEnvironment le = new LearningEnvironment();
-			NetworkDataSet dSet = this.dataSet("TRAINING.SET", config, numOutputs);
-			le.addEnvironmentParameter("TRAINING.SET", dSet);
-			try {
-				Class lClass = Class.forName(learnableClassName);
-				Constructor c = lClass.getConstructor(new Class[]{LearningEnvironment.class});
-				learnable = (Learnable) c.newInstance(new Object[]{le});
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+
+
+
+		// learning env
+		LearningEnvironment le = new LearningEnvironment();
+		NetworkDataSet dSet = this.dataSet("TRAINING.SET", config, numOutputs);
+		le.addEnvironmentParameter("TRAINING.SET", dSet);
+		Learnable learnable = new GALearnable(le);
+		cat.debug("learnableClassName:" + learnable.getClass().getName());
+
 		
 		return (learnable);
 	}	

@@ -5,6 +5,7 @@
 package org.neat4j.neat.ga.core;
 
 import org.neat4j.core.AIConfig;
+import org.neat4j.neat.core.InnovationDatabase;
 
 import java.io.Serializable;
 
@@ -14,7 +15,7 @@ import java.io.Serializable;
  */
 public interface GeneticAlgorithm extends Serializable {
 	public GADescriptor getDescriptor();
-	public void createPopulation();
+	public void createPopulation(InnovationDatabase innovationDatabase);
 	public void runEpoch();
 	public Chromosome discoverdBestMember();
 	public void pluginMutator(Mutator mut);

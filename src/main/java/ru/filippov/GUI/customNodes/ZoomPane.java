@@ -18,18 +18,18 @@ import javafx.scene.layout.StackPane;
 
 public class ZoomPane{
 
-    public static Parent createZoomPane(final Pane group) {
+    public static Parent createZoomPane(final Pane paneToDraw) {
         final double SCALE_DELTA = 1.1;
         final StackPane zoomPane = new StackPane();
 
 
-        zoomPane.getChildren().add(group);
+        zoomPane.getChildren().add(paneToDraw);
 
         final ScrollPane scroller = new ScrollPane();
         final Group scrollContent = new Group(zoomPane);
 
         zoomPane.getStyleClass().add("visualisation-content");
-        group.getStyleClass().add("visualisation-content");
+        paneToDraw.getStyleClass().add("visualisation-content");
         scrollContent.getStyleClass().add("visualisation-content");
         scroller.getStyleClass().add("visualisation-content");
 
@@ -63,8 +63,8 @@ public class ZoomPane{
                 // units
                 Point2D scrollOffset = figureScrollOffset(scrollContent, scroller);
 
-                group.setScaleX(group.getScaleX() * scaleFactor);
-                group.setScaleY(group.getScaleY() * scaleFactor);
+                paneToDraw.setScaleX(paneToDraw.getScaleX() * scaleFactor);
+                paneToDraw.setScaleY(paneToDraw.getScaleY() * scaleFactor);
 
                 // move viewport so that old center remains in the center after the
                 // scaling

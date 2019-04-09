@@ -20,6 +20,12 @@ public interface Chromosome extends Comparable, Serializable {
 	void updateFitness(double fitness);
 	double fitness();
 
+	int getInputs();
+	void setInputs(int inputs);
+	int getOutputs();
+	void setOutputs(int outputs);
+
+
 	void setOutputValues(List<List<Double>> opSet);
 	List<List<Double>> getOutputValues();
 }
