@@ -7,6 +7,8 @@ import com.jfoenix.controls.base.IFXLabelFloatControl;
 import com.jfoenix.skins.JFXTextFieldSkin;
 import com.jfoenix.skins.ValidationPane;
 import com.jfoenix.validation.RequiredFieldValidator;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
 import de.jensd.fx.glyphs.materialicons.MaterialIcon;
@@ -24,6 +26,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -343,6 +346,11 @@ public class MainController {
 
     @FXML private MaterialDesignIconView openNEATMenuIcon;
     @FXML private BorderPane neatMenuBorderPane;
+    private VBox neatMenuBorderPaneContainer;
+    private HBox neatMenuHeader;
+    private JFXButton saveNeatButton;
+    private Label neatNameLabel;
+
     private ScrollPane parametresScrollPane;
     private VBox titlesPaneContainer;
     private TitledPane GASettingsTitledPane;
@@ -382,7 +390,7 @@ public class MainController {
     private TitledPane networkControlTitledPane;
     private JFXTextField inputNodesTextField;
     private JFXTextField outputNodesTextField;
-    private JFXTextField maxPertrubTextField;
+    private JFXTextField maxWeightPertrubTextField;
     private JFXTextField maxBiasPertrubTextField;
     private JFXToggleButton featureSelectionToggle;
     private JFXToggleButton reccurencyAllowedToggle;
@@ -543,7 +551,7 @@ public class MainController {
                             openNEATFile(treeCell.getTreeItem());
                             break;
                         case TRAINED_MODEL:
-                            if(currentNeatConfigFile == null){
+                            if(currentNeatConfigFile == null || currentNEATConfig == null){
                                 openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getParent());
                             }
                             this.infoTabPane.getSelectionModel().select(testingTab);
@@ -551,9 +559,11 @@ public class MainController {
                                 this.trainedModelsChoiceBox.getItems().add(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
                             }
                             this.trainedModelsChoiceBox.getSelectionModel().select(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+                            logger.debug("projectTreeView double click : projectTreeView " + this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getFullPath() );
+                            logger.debug("projectTreeView double click : model " + this.trainedModelsChoiceBox.getSelectionModel().getSelectedItem().getFullPath() );
                             break;
                         case TEST_SET:
-                            if(currentNeatConfigFile == null){
+                            if(currentNeatConfigFile == null || currentNEATConfig == null ){
                                 openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getParent());
                             }
                             this.infoTabPane.getSelectionModel().select(testingTab);
@@ -562,9 +572,12 @@ public class MainController {
                                 this.testDatasetChoiceBox.getItems().add(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
                             }
                             this.testDatasetChoiceBox.getSelectionModel().select(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+
+                            logger.debug("projectTreeView double click : projectTreeView " + this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getFullPath() );
+                            logger.debug("projectTreeView double click : testDatasetChoiceBox " + this.testDatasetChoiceBox.getSelectionModel().getSelectedItem().getFullPath() );
                             break;
                         case TRAINING_SET:
-                            if(currentNeatConfigFile == null){
+                            if(currentNeatConfigFile == null || currentNEATConfig == null ){
                                 openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getParent());
                             }
 
@@ -574,6 +587,9 @@ public class MainController {
                                 this.trainDatasetChoiceBox.getItems().add(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
                             }
                             this.trainDatasetChoiceBox.getSelectionModel().select(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
+
+                            logger.debug("projectTreeView double click : projectTreeView " + this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getFullPath() );
+                            logger.debug("projectTreeView double click : trainDatasetChoiceBox " + this.trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getFullPath() );
                             break;
                     }
                     e.consume();
@@ -623,7 +639,7 @@ public class MainController {
         this.newActivationFunctionProbabilityTextField.setAlignment(Pos.CENTER);
         this.toggleLinkProbabilityTextField.setAlignment(Pos.CENTER);
         this.weightReplaceProbabilityTextField.setAlignment(Pos.CENTER);
-        
+
         tempVbox.getChildren().addAll(
                 hBox,
             this.mutationProbabilityTextField,
@@ -752,7 +768,7 @@ public class MainController {
                 this.specieYouthThresholdTextField,
                 this.specieOldPenaltyTextField,
                 this.specieYouthBoostTextField,
-                this.specieFitnessMaxTextField     
+                this.specieFitnessMaxTextField
         );
         this.speciationControlTitledPane.setContent(tempVbox);
 
@@ -761,18 +777,18 @@ public class MainController {
         this.networkControlTitledPane = new TitledPane();
         this.inputNodesTextField = new JFXTextField();
         this.outputNodesTextField = new JFXTextField();
-        this.maxPertrubTextField = new JFXTextField();
+        this.maxWeightPertrubTextField = new JFXTextField();
         this.maxBiasPertrubTextField = new JFXTextField();
         this.featureSelectionToggle = new JFXToggleButton();
         this.reccurencyAllowedToggle = new JFXToggleButton();
         this.inputNodesTextField.setLabelFloat(true);
         this.outputNodesTextField.setLabelFloat(true);
-        this.maxPertrubTextField.setLabelFloat(true);
+        this.maxWeightPertrubTextField.setLabelFloat(true);
         this.maxBiasPertrubTextField.setLabelFloat(true);
         tempVbox.getChildren().addAll(
                 this.inputNodesTextField,
                 this.outputNodesTextField,
-                this.maxPertrubTextField,
+                this.maxWeightPertrubTextField,
                 this.maxBiasPertrubTextField,
                 this.featureSelectionToggle,
                 this.reccurencyAllowedToggle
@@ -861,6 +877,21 @@ public class MainController {
         this.neatMenuBorderPane.setPrefWidth(MIN_WIDTH_NEAT_MENU);
         this.neatMenuBorderPane.setMaxWidth(MIN_WIDTH_NEAT_MENU);
 
+        saveNeatButton = new JFXButton();
+        saveNeatButton.setOnAction(event -> {
+            saveConfig();
+        });
+
+        saveNeatButton.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SAVE));
+        neatNameLabel = new Label("");
+        neatMenuHeader = new HBox(neatNameLabel, saveNeatButton);
+        neatMenuHeader.setAlignment(Pos.CENTER);
+        neatMenuHeader.setSpacing(10);
+        neatMenuBorderPaneContainer = new VBox( this.neatMenuHeader, this.parametresScrollPane);
+        neatMenuBorderPaneContainer.setAlignment(Pos.CENTER);
+        neatMenuBorderPaneContainer.setSpacing(10);
+
+
         this.neatSplitPane.getDividers().get(0).positionProperty().setValue(1);
 
         openNEATMenu = new Timeline(
@@ -881,7 +912,7 @@ public class MainController {
         this.projectBorderPane.setMinWidth(MIN_WIDTH_PROJECT_MENU);
         this.projectBorderPane.setPrefWidth(MIN_WIDTH_PROJECT_MENU);
         this.projectBorderPane.setMaxWidth(MIN_WIDTH_PROJECT_MENU);
-        
+
         openProjectMenu = new Timeline(
                 new KeyFrame(Duration.millis(SPEED_OF_SLIDE_MENU), event -> menuSlide(openProjectMenu,projectSplitPane, projectBorderPane,1, 1))
         );
@@ -922,7 +953,7 @@ public class MainController {
         addReqieredFieldValidator(this.specieFitnessMaxTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.inputNodesTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.outputNodesTextField, requiredFieldValidator);
-        addReqieredFieldValidator(this.maxPertrubTextField, requiredFieldValidator);
+        addReqieredFieldValidator(this.maxWeightPertrubTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.maxBiasPertrubTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.eleSurvivalCountTextField, requiredFieldValidator);
         addReqieredFieldValidator(this.eleEventTimeTextField, requiredFieldValidator);
@@ -993,7 +1024,6 @@ public class MainController {
         this.trainedModelsChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
                 this.testValueChart.getData().clear();
-                this.currentNEATConfig.updateConfig("AI.SOURCE", newValue.getFullPath());
                 if(testDatasetChoiceBox.getSelectionModel().getSelectedItem() != null) {
                     this.runTestButton.setDisable(false);
                 }
@@ -1330,7 +1360,7 @@ public class MainController {
         this.networkControlTitledPane.setText(resourceBundle.getString("NETWORK_CONTROL"));
         this.inputNodesTextField.setPromptText(resourceBundle.getString("INPUT_NODES"));
         this.outputNodesTextField.setPromptText(resourceBundle.getString("OUTPUT_NODES"));
-        this.maxPertrubTextField.setPromptText(resourceBundle.getString("MAX_WEIGHT_PERTURB"));
+        this.maxWeightPertrubTextField.setPromptText(resourceBundle.getString("MAX_WEIGHT_PERTURB"));
         this.maxBiasPertrubTextField.setPromptText(resourceBundle.getString("MAX_BIAS_PERTURB"));
         this.featureSelectionToggle.setText(resourceBundle.getString("FEATURE_SELECTION"));
         this.reccurencyAllowedToggle.setText(resourceBundle.getString("RECURRENCY_ALLOWED"));
@@ -1535,7 +1565,13 @@ public class MainController {
 
         MenuItem loadNEAT = new MenuItem("Load");
         loadNEAT.setOnAction(event -> {
-            openNEATFile(projectTreeView.getSelectionModel().getSelectedItem());
+            //openNEATFile(projectTreeView.getSelectionModel().getSelectedItem());
+
+            Node n = projectTreeView.getSelectionModel().getSelectedItem().getGraphic();
+            Event.fireEvent(n ,new MouseEvent(MouseEvent.MOUSE_CLICKED,
+                    n.getLayoutX(), n.getLayoutY(), n.getLayoutX(), n.getLayoutY(), MouseButton.PRIMARY, 2,
+                    false, false, false, false, false,
+                    false, false, false, true, true, null));
         });
 
         projectContextMenu.getItems().addAll(
@@ -1556,15 +1592,19 @@ public class MainController {
 
         MenuItem loadDataItem = new MenuItem("Load");
         loadDataItem.setOnAction(event -> {
-            if(currentNeatConfigFile == null){
-                openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent());
+            if(currentNeatConfigFile == null  || currentNEATConfig == null ){
+                //openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent());
+                logger.debug("loadDataItem ContextMenu Load : currentNeatConfigFile == null  || currentNEATConfig == null " );
+                Node n = projectTreeView.getSelectionModel().getSelectedItem().getGraphic();
+                Event.fireEvent(n ,new MouseEvent(MouseEvent.MOUSE_CLICKED,
+                        n.getLayoutX(), n.getLayoutY(), n.getLayoutX(), n.getLayoutY(), MouseButton.PRIMARY, 2,
+                        false, false, false, false, false,
+                        false, false, false, true, true, null));
+
             }
             ProjectFileDescriptor projectFileDescriptor = projectTreeView.getSelectionModel().getSelectedItem().getValue();
             switch (projectFileDescriptor.getType()){
                 case TRAINED_MODEL:
-                    if(currentNeatConfigFile == null){
-                        openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getParent());
-                    }
                     this.infoTabPane.getSelectionModel().select(testingTab);
                     if(!trainedModelsChoiceBox.getItems().contains(this.projectTreeView.getSelectionModel().getSelectedItem().getValue())) {
                         this.trainedModelsChoiceBox.getItems().add(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
@@ -1572,23 +1612,14 @@ public class MainController {
                     this.trainedModelsChoiceBox.getSelectionModel().select(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
                     break;
                 case TEST_SET:
-                    if(currentNeatConfigFile == null){
-                        openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getParent());
-                    }
                     this.infoTabPane.getSelectionModel().select(testingTab);
-
                     if(!testDatasetChoiceBox.getItems().contains(this.projectTreeView.getSelectionModel().getSelectedItem().getValue())) {
                         this.testDatasetChoiceBox.getItems().add(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
                     }
                     this.testDatasetChoiceBox.getSelectionModel().select(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
                     break;
                 case TRAINING_SET:
-                    if(currentNeatConfigFile == null){
-                        openNEATFile(projectTreeView.getSelectionModel().getSelectedItem().getParent().getParent());
-                    }
-
                     this.infoTabPane.getSelectionModel().select(trainigTab);
-
                     if(!trainDatasetChoiceBox.getItems().contains(this.projectTreeView.getSelectionModel().getSelectedItem().getValue())) {
                         this.trainDatasetChoiceBox.getItems().add(this.projectTreeView.getSelectionModel().getSelectedItem().getValue());
                     }
@@ -1660,11 +1691,24 @@ public class MainController {
     }
 
     private void configureContextMenu(ContextMenu contextMenu) {
+
+        MenuItem save = new MenuItem("Save");
+        save.setOnAction(event -> {
+            switch (projectTreeView.getSelectionModel().getSelectedItem().getValue().getType()){
+                case TRAINED_MODEL:
+                    saveModel(projectTreeView.getSelectionModel().getSelectedItem());
+                    break;
+            }
+        });
+
         contextMenu.setOnShowing(event -> {
                     projectBorderPane.setMaxWidth(MAX_WIDTH_PROJECT_MENU);
                     projectBorderPane.setPrefWidth(MAX_WIDTH_PROJECT_MENU);
                     projectBorderPane.setOnMouseEntered(null);
                     projectBorderPane.setOnMouseExited(null);
+                    if(this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getType() == ProjectFileDescriptor.TYPE.TRAINED_MODEL){
+                        contextMenu.getItems().add(1, save);
+                    }
             }
         );
 
@@ -1673,7 +1717,9 @@ public class MainController {
             projectBorderPane.setMaxWidth(MIN_WIDTH_PROJECT_MENU);
             projectBorderPane.setPrefWidth(MIN_WIDTH_PROJECT_MENU);
             enableSlideMenu(openProjectMenuIcon, projectBorderPane, MAX_WIDTH_PROJECT_MENU, closeProjectMenu, openProjectMenu);
-
+            if(this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getType() == ProjectFileDescriptor.TYPE.TRAINED_MODEL){
+                contextMenu.getItems().remove(save);
+            }
         });
     }
 
@@ -1728,9 +1774,15 @@ public class MainController {
             this.trainedModelsChoiceBox.getItems().clear();
 
             this.currentNEATConfig = this.loadConfig(projectFile.getAbsolutePath());
+            logger.debug("openNEATFile() : Current NEAT Config = " + this.currentNEATConfig);
             //this.currentProjectTextField.setText(projectFile.getParent());
             //this.neatOptionsLabel.setText(neatOptionGASettings);
-            this.neatMenuBorderPane.setCenter(this.parametresScrollPane);
+
+
+
+            this.parametresScrollPane.setVisible(true);
+            neatMenuBorderPaneContainer.setVisible(false);
+            this.neatMenuBorderPane.setCenter(neatMenuBorderPaneContainer);
             this.infoTabPane.setVisible(true);
 
 
@@ -1741,11 +1793,14 @@ public class MainController {
 
 
             this.currentNeatConfigFile = projectFileDescriptor;
-            fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TRAINING_SET, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TRAINING_FOLDER).findFirst().get(), trainDatasetChoiceBox);
-            fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TEST_SET, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TESTING_FOLDER).findFirst().get(), testDatasetChoiceBox);
-            fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TRAINED_MODEL, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.MODEL_FOLDER).findFirst().get(), trainedModelsChoiceBox);
+            logger.debug("Current NEAT Config Tree item= " +  this.currentNeatConfigFile.getValue().getFullPath());
+            fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TRAINING_SET, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TRAINING_FOLDER).findFirst().orElse(null), trainDatasetChoiceBox);
+            fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TEST_SET, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TESTING_FOLDER).findFirst().orElse(null), testDatasetChoiceBox);
+            fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TRAINED_MODEL, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.MODEL_FOLDER).findFirst().orElse(null), trainedModelsChoiceBox);
 
             fillFieldsUsingAIConfig(this.currentNEATConfig);
+
+            this.neatNameLabel.setText("Current NEAT Config : " + this.currentNeatConfigFile.getValue().getName());
 
             isNEATConfigSaved = true;
 
@@ -1758,6 +1813,9 @@ public class MainController {
             if(treeItem1.getValue().getType() == type) choiceBox.getItems().add(treeItem1.getValue());
         });
         choiceBox.getSelectionModel().selectFirst();
+        if(choiceBox.getSelectionModel().getSelectedItem()!=null) {
+            logger.debug("fillChoiceBoxWithData() : Current " + type + " : " + choiceBox.getSelectionModel().getSelectedItem().getFullPath());
+        }
     }
 
     private void clearAllInfoElements() {
@@ -1768,8 +1826,6 @@ public class MainController {
         testTableView.getColumns().clear();
         errorChart.getData().clear();
         trainValueGraphicChart.getData().clear();
-        this.trainingProgressBar.progressProperty().setValue(0);
-        this.testingProgressBar.progressProperty().setValue(0);
     }
 
     private void clearGUIConfig(){
@@ -1794,7 +1850,7 @@ public class MainController {
         specieOldPenaltyTextField.setText("");
         specieYouthBoostTextField.setText("");
         specieFitnessMaxTextField.setText("");
-        maxPertrubTextField.setText("");
+        maxWeightPertrubTextField.setText("");
         maxBiasPertrubTextField.setText("");
         featureSelectionToggle.setSelected(false);
         reccurencyAllowedToggle.setSelected(false);
@@ -1877,6 +1933,29 @@ public class MainController {
             this.projectTreeView.getRoot().getChildren().add(treeItem);*/
             this.updateTreeView(new File(currentProjectTextField.getText()));
         }
+
+
+    }
+
+
+    private void saveModel(TreeItem<ProjectFileDescriptor> model){
+
+        SaveModelDialogue saveModelDialogue = SaveModelDialogue.getInstance(this.scene);
+        saveModelDialogue.setModelToSave(model.getValue().getAsFile());
+        saveModelDialogue.show();
+
+        if(saveModelDialogue.getNameOfNewModel().length() != 0){
+            ProjectFileDescriptor value = model.getValue();
+            ProjectFileDescriptor newModel = new ProjectFileDescriptor(value.getType(), value.getDirectoryPath(), saveModelDialogue.getNameOfNewModel(), value.getExtension());
+
+            TreeItemContextMenu<ProjectFileDescriptor> treeItemContextMenu = new TreeItemContextMenu<>(newModel, newModel.getGraphic(), dataContextMenu);
+            model.getParent().getChildren().add(treeItemContextMenu);
+        }
+
+
+
+
+
 
 
     }
@@ -2000,7 +2079,7 @@ public class MainController {
          NEATConfig.updateConfig("SPECIE.FITNESS.MAX", specieFitnessMaxTextField.getText());
          NEATConfig.updateConfig("INPUT.NODES", inputNodesTextField.getText());
          NEATConfig.updateConfig("OUTPUT.NODES", outputNodesTextField.getText());
-         NEATConfig.updateConfig("MAX.PERTURB", maxPertrubTextField.getText());
+         NEATConfig.updateConfig("MAX.PERTURB", maxWeightPertrubTextField.getText());
          NEATConfig.updateConfig("MAX.BIAS.PERTURB", maxBiasPertrubTextField.getText());
          NEATConfig.updateConfig("FEATURE.SELECTION", String.valueOf(featureSelectionToggle.isSelected()));
          NEATConfig.updateConfig("RECURRENCY.ALLOWED", String.valueOf(reccurencyAllowedToggle.isSelected()));
@@ -2013,6 +2092,8 @@ public class MainController {
          NEATConfig.updateConfig("NUMBER.EPOCHS", numberEpochsTextField.getText());
          NEATConfig.updateConfig("TERMINATION.VALUE.TOGGLE", String.valueOf(terminationValueToggle.isSelected()));
          NEATConfig.updateConfig("TERMINATION.VALUE", terminationValueTextField.getText());
+
+
         TitledPane titledPane = null;
         JFXToggleButton jfxToggleButton = null;
         for (int i = 0; i < activationFunctionAccordion.getPanes().size(); i++) {
@@ -2026,9 +2107,10 @@ public class MainController {
 
             for (int j = 0; j < vBox.getChildren().size(); j++) {
                 jfxToggleButton = ((JFXToggleButton) vBox.getChildren().get(j));
-                if(j!=0) stringBuilder.append(";");
-                if(jfxToggleButton.isSelected())
+                if(jfxToggleButton.isSelected()) {
                     stringBuilder.append(ActivationFunctionFinder.getFunctionClassNameByName(jfxToggleButton.getText()));
+                    stringBuilder.append(";");
+                }
             }
             switch (i){
                 case 0:
@@ -2050,7 +2132,7 @@ public class MainController {
 
          //runnableNEATConfig.updateConfig("");
     }
-    
+
     private void fillFieldsUsingAIConfig(AIConfig NEATConfig){
         mutationProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.MUTATION"));
         crossoverProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.CROSSOVER"));
@@ -2073,7 +2155,7 @@ public class MainController {
         specieOldPenaltyTextField.setText(NEATConfig.configElement("SPECIE.OLD.PENALTY"));
         specieYouthBoostTextField.setText(NEATConfig.configElement("SPECIE.YOUTH.BOOST"));
         specieFitnessMaxTextField.setText(NEATConfig.configElement("SPECIE.FITNESS.MAX"));
-        maxPertrubTextField.setText(NEATConfig.configElement("MAX.PERTURB"));
+        maxWeightPertrubTextField.setText(NEATConfig.configElement("MAX.PERTURB"));
         maxBiasPertrubTextField.setText(NEATConfig.configElement("MAX.BIAS.PERTURB"));
         featureSelectionToggle.setSelected(Boolean.parseBoolean(NEATConfig.configElement("FEATURE.SELECTION")));
         reccurencyAllowedToggle.setSelected(Boolean.parseBoolean(NEATConfig.configElement("RECURRENCY.ALLOWED")));
@@ -2237,21 +2319,30 @@ public class MainController {
         if(trainThread != null) {
             if (trainThread.isAlive()) {
                 trainThread.interrupt();
+                logger.debug("trainModel() : Train thread was interrupted");
             }
         }
         this.initNEATConfigUsingGUI(this.currentNEATConfig);
+        this.trainingProgressBar.progressProperty().bind(new SimpleObjectProperty<Double>((double) 0));
+
+        logger.debug("trainModel() : Work with NEAT Config = " + this.currentNEATConfig);
+
         this.currentNEATConfig.updateConfig("TRAINING.SET", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
         this.currentNEATConfig.updateConfig("SAVE.LOCATION", this.currentNeatConfigFile.getValue().getDirectoryPath()+"\\"+this.trainDatasetChoiceBox.getValue().getName()+"_last_best.ser");
 
         try {
             this.saveTempDataSet(this.currentNEATConfig.configElement("TRAINING.SET"), this.trainDataSet);
-            logger.debug(this.currentNEATConfig.configElement("TRAINING.SET"));
+            logger.debug("trainModel() : tempDataset name " + this.currentNEATConfig.configElement("TRAINING.SET"));
             //this.currentNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+this.trainDatasetChoiceBox.getValue()+"\\"+this.trainDatasetChoiceBox.getValue()+"@test_temp.dataset");
-            infoTabPane.getSelectionModel().select(trainigTab);
             NEATTrainingForJavaFX neatTrainingForJavaFX = new NEATTrainingForJavaFX();
             neatTrainingForJavaFX.initialise(currentNEATConfig);
-            neatTrainingForJavaFX.setDatasetName(this.trainDatasetChoiceBox.getValue().getName());
 
+
+
+
+
+
+            logger.debug("trainModel() : name of current dataset " + this.trainDatasetChoiceBox.getValue().getName());
             if(this.trainValueGraphicChart.getData().isEmpty()){
                 //double tick = this.trainDataSet.getLegend().stream().mapToDouble(value -> {return value;}).sum() / this.trainDataSet.getLegend().size();
                 double tick = (this.trainDataSet.getLegend().get(this.trainDataSet.getLegend().size()-1) - this.trainDataSet.getLegend().get(0)) / (this.trainDataSet.getLegend().size()-1);
@@ -2345,20 +2436,18 @@ public class MainController {
                     int n = neatTrainingForJavaFX.getBestEverChromosomes().size();
                         Chromosome bestChromo = neatTrainingForJavaFX.getBestEverChromosomes().get(n - 1);
                         try {
-                            //if(neatTrainingForJavaFX.statusProperty().getValue() > 0.99) {
-                                netVisualisator.setNetToVisualise(bestChromo, currentNEATConfig);
-                                //netVisualisator.visualiseNet(netVisualisationCanvas);
-                                netVisualisator.visualiseNet(this.drawablePane);
-                            //}
-                            if(neatTrainingForJavaFX.statusProperty().getValue() == 1){
-
-                            }
+                            netVisualisator.setNetToVisualise(bestChromo, currentNEATConfig);
+                            netVisualisator.visualiseNet(this.drawablePane);
                         } catch (InitialisationFailedException e) {
                             e.printStackTrace();
                         }
                 });
             });
             this.trainingProgressBar.progressProperty().bind(neatTrainingForJavaFX.statusProperty());
+
+
+            final TreeItem<ProjectFileDescriptor> currentTreeItem = this.currentNeatConfigFile;
+            final String currentDataSetName = this.trainDatasetChoiceBox.getValue().getName();
 
             neatTrainingForJavaFX.isEndedProperty().addListener(new ChangeListener<Boolean>() {
                 @Override
@@ -2368,34 +2457,41 @@ public class MainController {
                             try {
                                 netVisualisator.setNetToVisualise(neatTrainingForJavaFX.getBestEverChromosomes().get(neatTrainingForJavaFX.getBestEverChromosomes().size() - 1), currentNEATConfig);
                                 netVisualisator.visualiseNet(MainController.this.drawablePane);
+
                             } catch (InitialisationFailedException e) {
                                 e.printStackTrace();
                             }
-                            ProjectFileDescriptor projectFileDescriptor = null;
-                            for (TreeItem<ProjectFileDescriptor> folder : currentNeatConfigFile.getChildren()) {
-                                if(folder.getValue().getType() == ProjectFileDescriptor.TYPE.MODEL_FOLDER) {
-                                    for (TreeItem<ProjectFileDescriptor> children : folder.getChildren()) {
-                                        if (children.getValue().getType() == ProjectFileDescriptor.TYPE.TRAINED_MODEL && children.getValue().getName().equals(neatTrainingForJavaFX.getDatasetName() + "_last_best")) {
-                                            projectFileDescriptor = children.getValue();
-                                            break;
-                                        }
-                                    }
-                                    if (projectFileDescriptor != null) {
-                                        if(!trainedModelsChoiceBox.getItems().contains(projectFileDescriptor)) {
-                                            trainedModelsChoiceBox.getItems().add(projectFileDescriptor);
-                                        }
-                                        trainedModelsChoiceBox.getSelectionModel().select(projectFileDescriptor);
-                                        break;
-                                    }
-                                    projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINED_MODEL, currentNeatConfigFile.getValue().getDirectoryPath(), neatTrainingForJavaFX.getDatasetName() + "_last_best", "ser");
-                                    folder.getChildren().add(new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), MainController.this.dataContextMenu));
-                                    trainedModelsChoiceBox.getItems().add(projectFileDescriptor);
-                                    trainedModelsChoiceBox.getSelectionModel().select(projectFileDescriptor);
-                                    neatTrainingForJavaFX.isEndedProperty().removeListener(this);
-                                    break;
-                                }
 
+
+                            TreeItem<ProjectFileDescriptor> folder = currentTreeItem.getChildren()
+                                    .parallelStream()
+                                    .filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.MODEL_FOLDER)
+                                    .findFirst()
+                                    .orElse(null);
+
+                            ProjectFileDescriptor projectFileDescriptor = folder.getChildren()
+                                    .parallelStream().map(treeItem -> treeItem.getValue())
+                                    .filter(projectFileDescriptor1 -> projectFileDescriptor1.getType() == ProjectFileDescriptor.TYPE.TRAINED_MODEL
+                                            && projectFileDescriptor1.getName().equals(currentDataSetName + "_last_best"))
+                                    .findFirst()
+                                    .orElse(null);
+
+
+                            if (projectFileDescriptor != null) {
+                                if(!trainedModelsChoiceBox.getItems().contains(projectFileDescriptor)) {
+                                    trainedModelsChoiceBox.getItems().add(projectFileDescriptor);
+                                }
+                                trainedModelsChoiceBox.getSelectionModel().select(projectFileDescriptor);
+                            } else {
+                                projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINED_MODEL, currentTreeItem.getValue().getDirectoryPath(), currentDataSetName + "_last_best", "ser");
+                                folder.getChildren().add(new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), MainController.this.dataContextMenu));
+                                trainedModelsChoiceBox.getItems().add(projectFileDescriptor);
+                                trainedModelsChoiceBox.getSelectionModel().select(projectFileDescriptor);
                             }
+                            neatTrainingForJavaFX.isEndedProperty().removeListener(this);
+
+
+
                         });
                     }
                 }
@@ -2421,13 +2517,17 @@ public class MainController {
         if(testThread != null) {
             if (testThread.isAlive()) {
                 testThread.interrupt();
+                logger.debug("testModel() : Test thread was interrupted");
             }
         }
-
+        this.testingProgressBar.progressProperty().bind(new SimpleObjectProperty<Double>((double) 0));
+        logger.debug("testModel() : Current test data " + testDatasetChoiceBox.getSelectionModel().getSelectedItem().getFullPath());
         this.currentNEATConfig.updateConfig("TEST.DATA", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+testDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
+        logger.debug("testModel() : Current temp test data " + currentNEATConfig.configElement("TEST.DATA"));
         try {
             this.saveTempDataSet(this.currentNEATConfig.configElement("TEST.DATA"), this.testDataSet);
-            logger.debug(this.currentNEATConfig.configElement("TEST.DATA"));
+            this.currentNEATConfig.updateConfig("AI.SOURCE", this.trainedModelsChoiceBox.getValue().getFullPath());
+            logger.debug("testModel() : Current model " + this.currentNEATConfig.configElement("AI.SOURCE"));
 
             NEATPredictionEngineForJavaFX neatPredictionEngineForJavaFX = new NEATPredictionEngineForJavaFX();
             neatPredictionEngineForJavaFX.initialise(this.currentNEATConfig);
@@ -2461,13 +2561,12 @@ public class MainController {
             XYChart.Series outputValuesSeries = new XYChart.Series();
             outputValuesSeries.setName(this.testTableView.getColumns().get(this.testTableView.getColumns().size()-1).getText());
             this.testValueChart.getData().add(outputValuesSeries);
-
+            AtomicInteger counter = new AtomicInteger(0);
             neatPredictionEngineForJavaFX.getOutsProperty().addListener((observable, oldValue, newValue) -> {
                 Platform.runLater(()->{
                     /*List<Double> outputs = newValue.get(newValue.size() - 1);*/
-                    AtomicInteger counter = new AtomicInteger(0);
+                    counter.set(0);
                     for(List<Double> output : newValue) {
-                        counter.set(0);
                         output.stream().forEach(value -> {
                             Double fromLegend = trainDataSet.getLegend().get(counter.getAndIncrement());
                             XYChart.Data<Number, Number> data = new XYChart.Data<>(fromLegend, value);
@@ -2493,6 +2592,7 @@ public class MainController {
             e.printStackTrace();
         } catch (IllegalArgumentException e) {
             AlertWindow.createAlertWindow("Несовместимость модели и тестируемой выборки\n" + e.getMessage()).showAndWait();
+            e.printStackTrace();
         }
 
 

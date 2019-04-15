@@ -5,7 +5,6 @@
 <?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <?import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.ChoiceBox?>
@@ -245,7 +244,7 @@
                                              <center>
                                                 <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                                                    <children>
-                                                      <Pane maxWidth="1024" fx:id="drawablePane" styleClass="group" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                                      <Pane fx:id="drawablePane" maxWidth="1024" styleClass="group" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                                    </children>
                                                 </AnchorPane>
                                              </center>
@@ -271,7 +270,7 @@
                                              <children>
                                                 <HBox layoutX="-231.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="-231.0" AnchorPane.rightAnchor="-15.0" AnchorPane.topAnchor="0.0">
                                                    <children>
-                                                      <Label fx:id="neatOptionsLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" prefHeight="25.0" prefWidth="232.0" text="Параметры алгоритма" wrapText="true" />
+                                                      <Label fx:id="neatOptionsLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" prefHeight="25.0" prefWidth="232.0" text="Параметры алгоритма:" wrapText="true" />
                                                       <JFXButton fx:id="pinButton" alignment="CENTER" maxHeight="12.0" maxWidth="12.0" prefHeight="0.0" prefWidth="0.0" rotate="90.0" style="-fx-border-color: transparent;" text=" " HBox.hgrow="NEVER">
                                                          <HBox.margin>
                                                             <Insets left="5.0" />
@@ -280,6 +279,7 @@
                                                             <MaterialDesignIconView fx:id="pinIcon" glyphName="PIN" size="18" wrappingWidth="10.0" />
                                                          </graphic>
                                                       </JFXButton>
+                                                      <Label fx:id="neatOptionsLabel1" alignment="CENTER_RIGHT" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="25.0" prefWidth="232.0" text="Параметры алгоритма:" wrapText="true" />
                                                    </children>
                                                 </HBox>
                                              </children>

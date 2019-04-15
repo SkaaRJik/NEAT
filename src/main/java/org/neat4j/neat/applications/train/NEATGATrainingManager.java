@@ -47,6 +47,7 @@ public class NEATGATrainingManager {
 	 */
 	public void initialise(AIConfig config) throws InitialisationFailedException {
 		MathUtils.setSeed(Long.parseLong(config.configElement("GENERATOR.SEED")));
+		config.updateConfig("NATURAL.ORDER.STRATEGY", "true");
 		this.random = MathUtils.getRand();
 		innovationDatabase = new InnovationDatabase(this.random);
 		GADescriptor gaDescriptor = this.createDescriptor(config);

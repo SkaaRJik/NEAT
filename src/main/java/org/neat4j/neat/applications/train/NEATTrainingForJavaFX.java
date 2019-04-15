@@ -21,15 +21,6 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
     ObservableList<Chromosome> bestEverChromosomes;
     ListProperty<Chromosome> bestEverChromosomesProperty;
     private int currentEpoch;
-    String datasetName;
-
-    public String getDatasetName() {
-        return datasetName;
-    }
-
-    public void setDatasetName(String datasetName) {
-        this.datasetName = datasetName;
-    }
 
     @Override
     public void run() {
