@@ -88,18 +88,22 @@
 
 .visualisation-item:input-hidden-connection {
     -fx-stroke: linear-gradient(to right, #866ED8, #5DD0C0);
+    -fx-stroke-line-cap: round;
 }
 
 .visualisation-item:input-output-connection {
     -fx-stroke: linear-gradient(to right, #3714B0, #D0006E);
+    -fx-stroke-line-cap: round;
 }
 
 .visualisation-item:hidden-hidden-connection {
     -fx-stroke: #00A08A;
+    -fx-stroke-line-cap: round;
 }
 
 .visualisation-item:hidden-output-connection {
     -fx-stroke: linear-gradient(to right, #00A08A, #D0006E);
+    -fx-stroke-line-cap: round;
 }
 
 .visualisation-item:input-text{
@@ -134,10 +138,22 @@
     -fx-shape: "m21,157.8c0,-22.09945 38.48619,-40 86,-40c47.51381,0 86,17.90055 86,40c0,22.09945 -38.48619,40 -86,40c-47.51381,0 -86,-17.90055 -86,-40z";
 }
 
+
+
+
 .visualisation-item:active{
-    -fx-border-color: #FFD200;
-    -fx-background-color: #FFDD40;
-    -fx-stroke: #FFD200;
+
     -fx-border-width: 2px;
     -fx-stroke-width: 5px;
+    -fx-effect: dropshadow(three-pass-box, rgba(255,255,255,1.0), 5, 0, 0, 0);
+    animation: shadow 1s infinite alternate;
+}
+
+@keyframes shadow {
+    from {
+        -fx-effect: dropshadow(three-pass-box, rgba(255,255,255,0.8), 10, 0, 0, 0);
+    }
+    to {
+        -fx-effect: dropshadow(three-pass-box, rgba(255,255,255,0.8), 20, 0, 0, 0);
+    }
 }

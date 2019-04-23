@@ -49,34 +49,37 @@ public class LinearScalerLocalValues implements DataScaler {
     public List<List<Double>> normalize(List<List<Double>> dataToNormalize, double minRange, double maxRange) {
         double min = 0;
         double max = 0;
-        for (int i = 0; i < dataToNormalize.size(); i++) {
-            for(int j = 0 ; j < dataToNormalize.get(i).size(); j++){
-                if(i == 0 && j == 0){
-                    min = dataToNormalize.get(i).get(j);
-                    max = dataToNormalize.get(i).get(j);
+
+        List<List<Double>> output = new ArrayList<>(dataToNormalize.size());
+        List<Double> row = null;
+
+        for (int i = 0; i < dataToNormalize.get(0).size(); i++) {
+            for(int j = 0 ; j < dataToNormalize.size(); j++){
+                if(i==0){
+                    output.add(new ArrayList<>(dataToNormalize.get(0).size()));
+                }
+                if(j == 0){
+                    min = dataToNormalize.get(j).get(i);
+                    max = dataToNormalize.get(j).get(i);
                     continue;
                 }
-                if(dataToNormalize.get(i).get(j) != null) {
-                    min = Double.min(min, dataToNormalize.get(i).get(j));
-                    max = Double.max(max, dataToNormalize.get(i).get(j));
+                if(dataToNormalize.get(j).get(i) != null) {
+                    min = Double.min(min, dataToNormalize.get(j).get(i));
+                    max = Double.max(max, dataToNormalize.get(j).get(i));
                 }
             }
-        }
-        List<List<Double>> output = new ArrayList<>(dataToNormalize.size());
-        List<Double> row;
-        for (int i = 0; i < dataToNormalize.size(); i++) {
-            row = new ArrayList<Double>(dataToNormalize.get(i).size());
-            for(int j = 0 ; j < dataToNormalize.get(i).size(); j++){
-                if(dataToNormalize.get(i).get(j) == null) {
-                    row.add(null);
+
+            for(int j = 0 ; j < dataToNormalize.size(); j++){
+                if(dataToNormalize.get(j).get(i) == null) {
+                    output.get(j).add(null);
                     continue;
                 }
                 if(minRange >= 0)
-                    row.add(((dataToNormalize.get(i).get(j)-min)/(max-min))*(maxRange-minRange)+minRange);
+                    output.get(j).add(((dataToNormalize.get(j).get(i)-min)/(max-min))*(maxRange-minRange)+minRange);
                 else
-                    row.add(((dataToNormalize.get(i).get(j)-min)/(max-min))*(maxRange*2) + minRange);
+                    output.get(j).add(((dataToNormalize.get(j).get(i)-min)/(max-min))*(maxRange*2) + minRange);
             }
-            output.add(row);
+
         }
         return output;
     }

@@ -164,6 +164,7 @@ public class AdvancedNetVisualisator {
                         synapseId = mainNeuron.neuron.id() + "_" + synapse.getTo().getID();
                         activateSynapse(synapseId);
                     }
+                    ((Region) event.getSource()).toFront();
 
                 }
 

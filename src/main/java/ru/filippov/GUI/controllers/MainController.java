@@ -312,8 +312,9 @@ public class MainController {
 
 
     private ContextMenu projectContextMenu;
-    private ContextMenu datasetFolderContext;
+    private ContextMenu NEATContext;
     private ContextMenu dataContextMenu;
+    private ContextMenu folderContextMenu;
 
     @FXML
     private SplitPane projectSplitPane;
@@ -395,7 +396,7 @@ public class MainController {
     private JFXToggleButton featureSelectionToggle;
     private JFXToggleButton reccurencyAllowedToggle;
     private TitledPane extinctionControlTitledPane;
-    private JFXToggleButton eleEventsToogle;
+    private JFXToggleButton eleEventsToggle;
     private JFXTextField eleSurvivalCountTextField;
     private JFXTextField eleEventTimeTextField;
     private TitledPane epochControlTitledPane;
@@ -462,6 +463,7 @@ public class MainController {
     @FXML
     private Tooltip openTestDatasetTooltip;
 
+    @FXML JFXTextField testErrorTextField;
     @FXML
     private JFXButton runTestButton;
     @FXML
@@ -497,6 +499,8 @@ public class MainController {
     List<ProjectFileDescriptor> testSets;
 
     int trainingCount = 0;
+
+
 
     public void init() {
         this.scene = this.currentProjectLabel.getParent().getScene();
@@ -799,19 +803,19 @@ public class MainController {
         tempVbox = new VBox();
         tempVbox.setSpacing(25);
         this.extinctionControlTitledPane = new TitledPane();
-        this.eleEventsToogle = new JFXToggleButton();
+        this.eleEventsToggle = new JFXToggleButton();
         this.eleSurvivalCountTextField = new JFXTextField();
         this.eleEventTimeTextField = new JFXTextField();
         this.eleSurvivalCountTextField.setLabelFloat(true);
         this.eleEventTimeTextField.setLabelFloat(true);
         tempVbox.getChildren().addAll(
-                this.eleEventsToogle,
+                this.eleEventsToggle,
                 this.eleSurvivalCountTextField,
                 this.eleEventTimeTextField
         );
         this.extinctionControlTitledPane.setContent(tempVbox);
 
-        this.eleEventsToogle.selectedProperty().addListener((observable, oldValue, newValue) ->{
+        this.eleEventsToggle.selectedProperty().addListener((observable, oldValue, newValue) ->{
             if(newValue){
                 eleEventTimeTextField.setVisible(true);
                 eleSurvivalCountTextField.setVisible(true);
@@ -820,7 +824,7 @@ public class MainController {
                 eleSurvivalCountTextField.setVisible(false);
             }
         });
-        this.eleEventsToogle.selectedProperty().setValue(false);
+        this.eleEventsToggle.selectedProperty().setValue(false);
         eleEventTimeTextField.setVisible(false);
         eleSurvivalCountTextField.setVisible(false);
 
@@ -1212,7 +1216,7 @@ public class MainController {
 
             dataKeeper.setInputs(stringTokenizer.nextToken());
             dataKeeper.setOutputs(stringTokenizer.nextToken());
-
+            String legendLabel;
             String line = reader.readLine();
             stringTokenizer = new StringTokenizer(line,":");
             if(stringTokenizer.nextToken().equals("Legend")){
@@ -1221,7 +1225,9 @@ public class MainController {
                     dataKeeper.setLegendHeader(stringTokenizer.nextToken());
                     List<Double> legend = new ArrayList<>(stringTokenizer.countTokens());
                     while (stringTokenizer.hasMoreTokens()) {
-                        legend.add(Double.valueOf(stringTokenizer.nextToken()));
+                        legendLabel = stringTokenizer.nextToken();
+                        if("null".equals(legendLabel)) continue;
+                        legend.add(Double.valueOf(legendLabel));
                     }
                     dataKeeper.setLegend(legend);
                 }
@@ -1244,7 +1250,8 @@ public class MainController {
                 List<Double> row = new ArrayList<>();
                 while(stringTokenizer.hasMoreTokens()){
                     value = stringTokenizer.nextToken();
-                    if(value.equals("") || value.equals("null")){
+                    if("null".equals(value)) continue;
+                    if(value.equals("")){
                         row.add(null);
                     } else {
                         row.add(Double.valueOf(value));
@@ -1366,7 +1373,7 @@ public class MainController {
         this.reccurencyAllowedToggle.setText(resourceBundle.getString("RECURRENCY_ALLOWED"));
 
         this.extinctionControlTitledPane.setText(resourceBundle.getString("EXTINCTION_CONTROL"));
-        this.eleEventsToogle.setText(resourceBundle.getString("EXTINCTION_EVENT"));
+        this.eleEventsToggle.setText(resourceBundle.getString("EXTINCTION_EVENT"));
         this.eleSurvivalCountTextField.setPromptText(resourceBundle.getString("EXTINCTION_SURVIVAL_COUNT"));
         this.eleEventTimeTextField.setPromptText(resourceBundle.getString("EXTINCTION_EVENT_TIME"));
 
@@ -1477,7 +1484,7 @@ public class MainController {
                         String[] fileName = token.split("[.]");
                         pathToCurrentDataset = projectFile.getParent()+"\\datasets\\"+fileName[0]+"\\";
                         projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.NEAT_CONFIG, pathToCurrentDataset ,fileName[0], fileName[1]);
-                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), datasetFolderContext);
+                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), NEATContext);
                         rootProject.getChildren().add(treeItem);
 
                         if(lastOpenedProject.equals(treeItem.getValue().getName()+"."+treeItem.getValue().getExtension())){
@@ -1584,9 +1591,9 @@ public class MainController {
         });
 
 
-        datasetFolderContext = new ContextMenu();
-        configureContextMenu(datasetFolderContext);
-        datasetFolderContext.getItems().addAll(loadNEAT, new SeparatorMenuItem(), newDatasetItem, new SeparatorMenuItem(), deleteNEAT);
+        NEATContext = new ContextMenu();
+        configureContextMenu(NEATContext);
+        NEATContext.getItems().addAll(loadNEAT, new SeparatorMenuItem(), newDatasetItem, new SeparatorMenuItem(), deleteNEAT);
 
 
 
@@ -1678,6 +1685,15 @@ public class MainController {
         configureContextMenu(this.dataContextMenu);
         this.dataContextMenu.getItems().addAll(viewDataItem, loadDataItem, new SeparatorMenuItem(), deleteDataItem);
 
+        this.folderContextMenu = new ContextMenu();
+        configureContextMenu(this.folderContextMenu);
+
+        MenuItem create = new MenuItem("New data");
+        create.setOnAction(event -> {prepareNewData(event);});
+
+        this.folderContextMenu.getItems().add(create);
+
+
 
 
 
@@ -1693,21 +1709,21 @@ public class MainController {
     private void configureContextMenu(ContextMenu contextMenu) {
 
         MenuItem save = new MenuItem("Save");
-        save.setOnAction(event -> {
-            switch (projectTreeView.getSelectionModel().getSelectedItem().getValue().getType()){
-                case TRAINED_MODEL:
-                    saveModel(projectTreeView.getSelectionModel().getSelectedItem());
-                    break;
-            }
-        });
+
+        save.setOnAction(event -> saveModel(projectTreeView.getSelectionModel().getSelectedItem()));
+
+
+
 
         contextMenu.setOnShowing(event -> {
                     projectBorderPane.setMaxWidth(MAX_WIDTH_PROJECT_MENU);
                     projectBorderPane.setPrefWidth(MAX_WIDTH_PROJECT_MENU);
                     projectBorderPane.setOnMouseEntered(null);
                     projectBorderPane.setOnMouseExited(null);
-                    if(this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getType() == ProjectFileDescriptor.TYPE.TRAINED_MODEL){
-                        contextMenu.getItems().add(1, save);
+                    switch (this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getType()){
+                        case TRAINED_MODEL:
+                            contextMenu.getItems().add(1, save);
+                            break;
                     }
             }
         );
@@ -1717,8 +1733,10 @@ public class MainController {
             projectBorderPane.setMaxWidth(MIN_WIDTH_PROJECT_MENU);
             projectBorderPane.setPrefWidth(MIN_WIDTH_PROJECT_MENU);
             enableSlideMenu(openProjectMenuIcon, projectBorderPane, MAX_WIDTH_PROJECT_MENU, closeProjectMenu, openProjectMenu);
-            if(this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getType() == ProjectFileDescriptor.TYPE.TRAINED_MODEL){
-                contextMenu.getItems().remove(save);
+            switch (this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getType()){
+                case TRAINED_MODEL:
+                    contextMenu.getItems().remove(save);
+                    break;
             }
         });
     }
@@ -1854,7 +1872,7 @@ public class MainController {
         maxBiasPertrubTextField.setText("");
         featureSelectionToggle.setSelected(false);
         reccurencyAllowedToggle.setSelected(false);
-        eleEventsToogle.setSelected(false);
+        eleEventsToggle.setSelected(false);
         eleSurvivalCountTextField.setText("");
         eleEventTimeTextField.setText("");
         keepBestEverToggle.setSelected(false);
@@ -1913,7 +1931,6 @@ public class MainController {
         dialogue.show();
         if(dialogue.getProjectFile() != null ){
             try {
-
                 readProjectFile(dialogue.getProjectFile());
             } catch (Exception ex){
                 AlertWindow.createAlertWindow(ex.getMessage()).show();
@@ -1929,9 +1946,9 @@ public class MainController {
         dialogue.show();
         if (dialogue.getNewDatasetFolder() != null){
             /*ProjectFileDescriptor projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.NEAT_CONFIG, dialogue.getNewDatasetFolder().getParent()+"\\", dialogue.getNewDatasetFolder().getName().split("[.]")[0], "neat");
-            TreeItem<ProjectFileDescriptor> treeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), datasetFolderContext);
+            TreeItem<ProjectFileDescriptor> treeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), NEATContext);
             this.projectTreeView.getRoot().getChildren().add(treeItem);*/
-            this.updateTreeView(new File(currentProjectTextField.getText()));
+            this.updateTreeView(this.projectTreeView.getRoot().getValue().getAsFile());
         }
 
 
@@ -2083,7 +2100,7 @@ public class MainController {
          NEATConfig.updateConfig("MAX.BIAS.PERTURB", maxBiasPertrubTextField.getText());
          NEATConfig.updateConfig("FEATURE.SELECTION", String.valueOf(featureSelectionToggle.isSelected()));
          NEATConfig.updateConfig("RECURRENCY.ALLOWED", String.valueOf(reccurencyAllowedToggle.isSelected()));
-         NEATConfig.updateConfig("ELE.EVENTS", String.valueOf(eleEventsToogle.isSelected()));
+         NEATConfig.updateConfig("ELE.EVENTS", String.valueOf(eleEventsToggle.isSelected()));
          NEATConfig.updateConfig("ELE.SURVIVAL.COUNT", eleSurvivalCountTextField.getText());
          NEATConfig.updateConfig("ELE.EVENT.TIME", eleEventTimeTextField.getText());
          NEATConfig.updateConfig("KEEP.BEST.EVER", String.valueOf(keepBestEverToggle.isSelected()));
@@ -2159,7 +2176,7 @@ public class MainController {
         maxBiasPertrubTextField.setText(NEATConfig.configElement("MAX.BIAS.PERTURB"));
         featureSelectionToggle.setSelected(Boolean.parseBoolean(NEATConfig.configElement("FEATURE.SELECTION")));
         reccurencyAllowedToggle.setSelected(Boolean.parseBoolean(NEATConfig.configElement("RECURRENCY.ALLOWED")));
-        eleEventsToogle.setSelected(Boolean.parseBoolean(NEATConfig.configElement("ELE.EVENTS")));
+        eleEventsToggle.setSelected(Boolean.parseBoolean(NEATConfig.configElement("ELE.EVENTS")));
         eleSurvivalCountTextField.setText(NEATConfig.configElement("ELE.SURVIVAL.COUNT"));
         eleEventTimeTextField.setText(NEATConfig.configElement("ELE.EVENT.TIME"));
         keepBestEverToggle.setSelected(Boolean.parseBoolean(NEATConfig.configElement("KEEP.BEST.EVER")));
@@ -2230,6 +2247,7 @@ public class MainController {
 
         File datasetsFolder = new File(projectFile.getParent()+"\\datasets\\");
         File[] datasets = datasetsFolder.listFiles();
+        if(datasets == null) return;
         File[] files = null;
 
 
@@ -2239,9 +2257,9 @@ public class MainController {
         for (int i = 0; i < datasets.length; i++) {
             files = datasets[i].listFiles();
             projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINING_FOLDER, null ,"Training data", "");
-            trainTreeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic());
+            trainTreeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), folderContextMenu);
             projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TESTING_FOLDER, null ,"Test data", "");
-            testTreeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic());
+            testTreeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), folderContextMenu);
             projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.MODEL_FOLDER, null ,"Models", "");
             trainenModelTreeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic());
             for (int j = 0; j < files.length; j++) {
@@ -2250,7 +2268,7 @@ public class MainController {
                 switch (fileName[1]){
                     case "neat":
                         projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.NEAT_CONFIG, files[j].getParent() ,fileName[0], fileName[1]);
-                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), datasetFolderContext);
+                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), NEATContext);
                         this.projectTreeView.getRoot().getChildren().add(treeItem);
                         treeItem.getChildren().addAll(trainTreeItem, testTreeItem, trainenModelTreeItem);
                         break;
@@ -2284,10 +2302,17 @@ public class MainController {
         //this.updateTreeView(new File(this.currentProjectTextField.getText()));
 
         TreeItem<ProjectFileDescriptor> parentProject = null;
-        if(this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getType() == ProjectFileDescriptor.TYPE.NEAT_CONFIG){
-            parentProject = this.projectTreeView.getSelectionModel().getSelectedItem();
-        } else {
-            parentProject = this.currentNeatConfigFile;
+        switch (this.projectTreeView.getSelectionModel().getSelectedItem().getValue().getType()){
+            case NEAT_CONFIG:
+                parentProject = this.projectTreeView.getSelectionModel().getSelectedItem();
+                break;
+            case TESTING_FOLDER:
+            case TRAINING_FOLDER:
+                parentProject = this.projectTreeView.getSelectionModel().getSelectedItem().getParent();
+                break;
+            default:
+                parentProject = this.currentNeatConfigFile;
+                break;
         }
         DataPreparatorDialogue.getInstance(this.scene).setCurrentDatasetFolder(parentProject.getValue().getDirectoryPath()).show();
         String nameOfDataSet = DataPreparatorDialogue.getInstance(this.scene).getNameOfTrainingSet();
@@ -2522,6 +2547,7 @@ public class MainController {
         }
         this.testingProgressBar.progressProperty().bind(new SimpleObjectProperty<Double>((double) 0));
         logger.debug("testModel() : Current test data " + testDatasetChoiceBox.getSelectionModel().getSelectedItem().getFullPath());
+        this.initNEATConfigUsingGUI(currentNEATConfig);
         this.currentNEATConfig.updateConfig("TEST.DATA", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+testDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
         logger.debug("testModel() : Current temp test data " + currentNEATConfig.configElement("TEST.DATA"));
         try {
@@ -2565,19 +2591,29 @@ public class MainController {
             neatPredictionEngineForJavaFX.getOutsProperty().addListener((observable, oldValue, newValue) -> {
                 Platform.runLater(()->{
                     /*List<Double> outputs = newValue.get(newValue.size() - 1);*/
-                    counter.set(0);
-                    for(List<Double> output : newValue) {
-                        output.stream().forEach(value -> {
-                            Double fromLegend = trainDataSet.getLegend().get(counter.getAndIncrement());
-                            XYChart.Data<Number, Number> data = new XYChart.Data<>(fromLegend, value);
-                            data.setNode(new StackPane());
-                            Tooltip.install(data.getNode(), new Tooltip(String.valueOf(value)));
-                            outputValuesSeries.getData().add(data);
-                        });
+                    if(newValue!=null) {
+                        counter.set(0);
+                        for (List<Double> output : newValue) {
+                            output.stream().forEach(value -> {
+                                Double fromLegend = testDataSet.getLegend().get(counter.getAndIncrement());
+                                XYChart.Data<Number, Number> data = new XYChart.Data<>(fromLegend, value);
+                                data.setNode(new StackPane());
+                                Tooltip.install(data.getNode(), new Tooltip(String.valueOf(value)));
+                                outputValuesSeries.getData().add(data);
+                            });
+                        }
                     }
-
-
                 });
+            });
+
+            ChangeListener<Double> neatErrorTestingListener = getListener();
+
+            neatPredictionEngineForJavaFX.getErrorProperty().addListener(neatErrorTestingListener);
+
+            neatPredictionEngineForJavaFX.getIsFinished().addListener((observable, oldValue, newValue) -> {
+                if(newValue){
+                    neatPredictionEngineForJavaFX.getErrorProperty().removeListener(neatErrorTestingListener);
+                }
             });
 
             this.testThread = new Thread(neatPredictionEngineForJavaFX);
@@ -2596,6 +2632,19 @@ public class MainController {
         }
 
 
+    }
+
+    private ChangeListener<Double> getListener() {
+        return new ChangeListener<Double>() {
+            @Override
+            public void changed(ObservableValue<? extends Double> observable, Double oldValue, Double newValue) {
+                if(newValue!=null){
+                    Platform.runLater(()-> {
+                        testErrorTextField.setText(String.valueOf(newValue));
+                    });
+                }
+            }
+        };
     }
 
 

@@ -11,6 +11,7 @@ import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Parent;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
@@ -108,15 +109,17 @@ public class DataPreparatorDialogueController {
     List<List<Double>> normalisedUsedData;
     Set<Integer> trainSetIndexes;
     Set<Integer> testSetIndexes;
+    Set<Integer> inputsIndexes;
+    Set<Integer> outputsIndexes;
 
     int trainSize = 0;
     int testSize = 0;
 
     String projectPath;
-    String legend;
 
 
-    private String stringFromFile;
+
+    private SimpleObjectProperty<String> stringFromFile = new SimpleObjectProperty<>();
 
     private String finish = "Завершить";
     private String next = "Далее";
@@ -135,10 +138,26 @@ public class DataPreparatorDialogueController {
     private String useChoiceBox = "Use drop out list on main window, to select it";
     private String reloadData = "Upload your data again to apply encoding";
     private boolean legendIsSelected = false;
+    String legendLabel;
+    List<String> legend;
 
     public void init(){
 
         this.stage = ((Stage) this.tabPane.getScene().getWindow());
+
+        stringFromFile.addListener((observable, oldValue, newValue) -> {
+            if (newValue!=null){
+                if(newValue.length()!=0){
+                    this.dataTextArea.setText(stringFromFile.getValue());
+                    nextButton.setDisable(false);
+                }
+                else {
+                    nextButton.setDisable(true);
+                }
+            } else {
+                nextButton.setDisable(true);
+            }
+        });
 
         this.encodingChoiceBox.getItems().addAll("UTF-8", "cp1251");
         switch (Locale.getDefault().getLanguage()){
@@ -154,8 +173,13 @@ public class DataPreparatorDialogueController {
             if(newValue!=null){
                 if(newValue.length()!=0) {
                     if(fileTextField.getText().length()!=0) {
-                        this.dataTextArea.setText(reloadData);
-                        this.nextButton.setDisable(true);
+                        if(fileTextField.getText().length() != 0) {
+                            try {
+                                stringFromFile.set(readData(new File(this.fileTextField.getText())));
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                 }
             }
@@ -165,6 +189,8 @@ public class DataPreparatorDialogueController {
             if(this.dataTextArea.getText().length() != 0) {
                 checkLoadDataTab1ToGoNext();
                 fillSeparators();
+            } else {
+                nextButton.setDisable(true);
             }
         });
 
@@ -194,6 +220,8 @@ public class DataPreparatorDialogueController {
             }
             if(i == this.tabPane.getTabs().size()-1) this.nextButton.setText(this.finish);
             else this.nextButton.setText(next);
+
+            this.nextButton.setDisable(false);
 
         });
 
@@ -506,7 +534,7 @@ public class DataPreparatorDialogueController {
                     AlertWindow.createAlertWindow("\"" + this.trainDataNameTextField.getText() + "\" train dataset - is already exists. \n Choose another name");
                     return;
                 }
-                this.writeDataIntoFile(dataFile, this.normalisedTrainDataTableView);
+                this.writeDataIntoFile(dataFile, this.normalisedTrainDataTableView, trainSetIndexes);
             }
             if(!testSetIndexes.isEmpty()) {
                 dataFile = new File(this.projectPath + this.testDataNameTextField.getText() + ".ted");
@@ -515,13 +543,14 @@ public class DataPreparatorDialogueController {
                     AlertWindow.createAlertWindow("\"" + this.trainDataNameTextField.getText() + "\" test dataset - is already exists. \n Choose another name");
                     return;
                 }
-                this.writeDataIntoFile(dataFile, this.normalisedTestDataTableView);
+                this.writeDataIntoFile(dataFile, this.normalisedTestDataTableView, testSetIndexes);
             }
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle(success);
             alert.setHeaderText(dataWasCreated);
             alert.setContentText(useChoiceBox);
             alert.show();
+            this.refresh();
             this.stage.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -612,7 +641,8 @@ public class DataPreparatorDialogueController {
         ArrayList<TableColumn<List<Double>, ?>> outputTableColumns = new ArrayList<>(this.selectUsableDataTableView.getColumns().size());
 
 
-
+        this.inputsIndexes = new HashSet<>();
+        this.outputsIndexes = new HashSet<>();
         int counter = 0;
         for( int i = 0 ; i < selectUsableDataTableView.getColumns().size() ; i++){
             column = selectUsableDataTableView.getColumns().get(i);
@@ -634,8 +664,10 @@ public class DataPreparatorDialogueController {
                     return new SimpleObjectProperty<Double>((p.getValue().get(finalJ)));
                 });
                 if(((ChoiceBox)((BorderPane) column.getGraphic()).getCenter()).getValue().equals("Output")){
+                    this.outputsIndexes.add(finalJ);
                     outputTableColumns.add(newColumn);
                 } else {
+                    this.inputsIndexes.add(finalJ);
                     this.selectTrainingDataTableView.getColumns().add(newColumn);
                 }
                 counter++;
@@ -664,7 +696,7 @@ public class DataPreparatorDialogueController {
 
         this.usedData = new ArrayList<>(this.selectUsableDataTableView.getItems().size());
         ObservableList<TableColumn<List<Double>, ?>> columns = FXCollections.observableArrayList(selectUsableDataTableView.getColumns());/*new ObservableList<TableColumn<List<Double>, ?>>(selectUsableDataTableView.getItems().size());*/
-        StringBuilder stringLegend = new StringBuilder("Legend:");
+        List<String> legend = new ArrayList<>(this.selectUsableDataTableView.getItems().size());
         TableColumn<List<Double>, ?> column;
         ArrayList<TableColumn<List<Double>, ?>> outputTableColumns = new ArrayList<>(this.selectUsableDataTableView.getColumns().size());
         int counter = 0;
@@ -673,11 +705,11 @@ public class DataPreparatorDialogueController {
             if(((ChoiceBox)((BorderPane) column.getGraphic()).getCenter()).getValue().equals("Unused")){
                 columns.remove(column);
             } else if(((ChoiceBox)((BorderPane) column.getGraphic()).getCenter()).getValue().equals("Legend")) {
-                stringLegend.append(((Label)((BorderPane) column.getGraphic()).getTop()).getText()+";");
+                legendLabel = (((Label)((BorderPane) column.getGraphic()).getTop()).getText());
                 for(List<Double> item : selectUsableDataTableView.getItems()){
-                    stringLegend.append(column.getCellObservableValue(item).getValue()+";");
+                    legend.add(String.valueOf(column.getCellObservableValue(item).getValue()));
                 }
-                stringLegend.deleteCharAt(stringLegend.length()-1);
+
 
                 columns.remove(column);
 
@@ -720,7 +752,7 @@ public class DataPreparatorDialogueController {
             }
         }
 
-        this.legend = stringLegend.toString();
+        this.legend = legend;
         normaliseDataAccordion.setVisible(false);
         nextButton.setDisable(true);
 
@@ -830,7 +862,7 @@ public class DataPreparatorDialogueController {
         if(i-1 >= 0) {
             tabPane.getSelectionModel().select(i-1);
             tabPane.getTabs().get(i).setDisable(true);
-            if(i-1 <= 0) this.previousButton.setDisable(true);
+            //if(i-1 <= 0) this.previousButton.setDisable(true);
             if(i==this.tabPane.getTabs().size()-1) this.nextButton.setText(this.next);
         }
     }
@@ -840,19 +872,42 @@ public class DataPreparatorDialogueController {
 
     }
 
+    public void clearNamesOfDatasets(){
+        this.trainDataNameTextField.setText("");
+        this.testDataNameTextField.setText("");
+        this.tabPane.getSelectionModel().select(loadDataTab);
+    }
+
     public void refresh() {
 
-        stringFromFile = "";
+        this.inputs = 0;
+        this.outputs = 0;
+        this.legendIsSelected = false;
+        this.selectTrainingDataTableView.getColumns().clear();
+        this.selectTrainingDataTableView.getItems().clear();
+
+        this.selectUsableDataTableView.getItems().clear();
+        this.selectUsableDataTableView.getColumns().clear();
+
+        this.normalisedTestDataTableView.getItems().clear();
+        this.normalisedTestDataTableView.getColumns().clear();
+
+        this.normalisedTrainDataTableView.getItems().clear();
+        this.normalisedTrainDataTableView.getColumns().clear();
+
+        this.normalisedTrainDataTableView.getItems().clear();
+        this.normalisedTrainDataTableView.getColumns().clear();
+
+        stringFromFile.set(null);
 
         this.previousButton.setDisable(true);
         this.tabPane.getSelectionModel().select(0);
         this.fileTextField.setText("");
         this.dataTextArea.setText("");
         this.nextButton.setDisable(true);
-        this.trainDataNameTextField.setText("");
 
-        this.trainDataNameTextField.setText("");
-        this.testDataNameTextField.setText("");
+
+
 
     }
 
@@ -875,8 +930,7 @@ public class DataPreparatorDialogueController {
 
             fillSeparators();
             try {
-                stringFromFile = readData(dataFile);
-                dataTextArea.setText(stringFromFile);
+                stringFromFile.set(readData(dataFile));
                 encodingChoiceBox.setDisable(false);
                 dataTextArea.requestFocus();
             } catch (IOException e) {
@@ -950,8 +1004,8 @@ public class DataPreparatorDialogueController {
                 case "Линейный":
                     //dataScaler = new LinearScalerGlobalValues();
                     dataScaler = new LinearScalerLocalValues();
-                    //normalisedUsedData = dataScaler.normalize(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
-                    normalisedUsedData = dataScaler.normalize(usedData);
+                    normalisedUsedData = dataScaler.normalize(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
+                    //normalisedUsedData = dataScaler.normalize(usedData);
 
                     break;
                 case "Нелинейный":
@@ -1066,11 +1120,22 @@ public class DataPreparatorDialogueController {
     }
 
 
-    boolean writeDataIntoFile(File dest, TableView<List<Double>> tableView) throws IOException{
+    boolean writeDataIntoFile(File dest, TableView<List<Double>> tableView, Set<Integer> indexes) throws IOException{
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(dest));
         writer.write(this.inputs+";"+this.outputs+"\n");
-        writer.append(this.legend+"\n");
+        if(legendLabel != null)
+            writer.append("Legend:"+this.legendLabel+";");
+        else{
+            writer.append("Legend:");
+        }
+        for(int index : indexes){
+            writer.append(this.legend.get(index)+";");
+        }
+        writer.append("\n");
+
+
+        //writer.append(this.legend+"\n");
         for(int i = 0 ; i < tableView.getColumns().size(); i++) {
             writer.append(tableView.getColumns().get(i).getText());
             if(i != tableView.getColumns().size()-1) {
@@ -1078,17 +1143,40 @@ public class DataPreparatorDialogueController {
             }
         }
         writer.append("\n");
-        ObservableList<List<Double>> items = tableView.getItems();
 
-        for(List<Double> row : items){
-            for (int i = 0; i < row.size(); i++) {
+        ObservableList<List<Double>> items = tableView.getItems();
+        for (List<Double> row : items){
+            for (int inp : inputsIndexes){
+                writer.append(String.valueOf( row.get(inp))+";");
+            }
+            for (int out : outputsIndexes){
+                writer.append(String.valueOf( row.get(out))+";");
+            }
+            writer.append("\n");
+        }
+
+
+        /*ObservableList<List<Double>> items = tableView.getItems();
+        List<List> doubles = new ArrayList<>(items.size());
+        for (int i = 0; i < items.size(); i++) {
+            doubles.add(new ArrayList(items.get(0).size()));
+        }
+        TableColumn<List<Double>, ?> column;
+        List<Double> row;
+        for(int i = 0 ; i < items.size() ; i++){
+            row = items.get(i);
+            for(int j = 0 ; j < tableView.getColumns().size(); j++ ) {
+                column =  tableView.getColumns().get(j);
+                writer.append(String.valueOf( column.getCellObservableValue(row).getValue())+";");
+            }
+            *//*for (int i = 0; i < row.size(); i++) {
                 writer.append(String.valueOf(row.get(i)));
                 if(i != row.size()-1) {
                     writer.append(";");
                 }
-            }
+            }*//*
             writer.append("\n");
-        }
+        }*/
         writer.flush();
         writer.close();
 

@@ -320,7 +320,7 @@
                                           </JFXButton>
                                        </right>
                                        <left>
-                                          <Label text="Label" BorderPane.alignment="CENTER">
+                                          <Label text="Натренированная модель" BorderPane.alignment="CENTER">
                                              <BorderPane.margin>
                                                 <Insets left="5.0" right="5.0" />
                                              </BorderPane.margin>
@@ -349,7 +349,7 @@
                                           </JFXButton>
                                        </right>
                                        <left>
-                                          <Label text="Label" BorderPane.alignment="CENTER">
+                                          <Label prefWidth="180.0" text="Тестовый сет" BorderPane.alignment="CENTER">
                                              <BorderPane.margin>
                                                 <Insets left="5.0" right="5.0" />
                                              </BorderPane.margin>
@@ -361,6 +361,11 @@
                                        <content>
                                           <VBox spacing="10.0">
                                              <children>
+                                                <JFXTextField fx:id="testErrorTextField" labelFloat="true" promptText="Ошибка">
+                                                   <VBox.margin>
+                                                      <Insets top="15.0" />
+                                                   </VBox.margin>
+                                                </JFXTextField>
                                                 <TitledPane>
                                                    <content>
                                                       <TableView fx:id="testTableView" prefHeight="200.0" prefWidth="200.0" />

@@ -67,7 +67,7 @@ public class DataPreparatorDialogue {
     }
 
     public void show() {
-        instance.controller.refresh();
+        instance.controller.clearNamesOfDatasets();
         instance.stage.showAndWait();
     }
 
