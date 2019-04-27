@@ -33,7 +33,7 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="305.0" prefWidth="600.0">
                      <children>
-                        <BorderPane layoutX="200.0" layoutY="60.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <BorderPane fx:id="loadDataBorderPane" layoutX="200.0" layoutY="60.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <top>
                               <BorderPane prefHeight="0.0" prefWidth="600.0" BorderPane.alignment="CENTER">
                                  <center>
@@ -325,6 +325,9 @@
                      </children>
                   </HBox>
                </right>
+               <center>
+                  <Label fx:id="dataTextAreaError" style="-fx-text-fill: red;" wrapText="true" BorderPane.alignment="CENTER" />
+               </center>
             </BorderPane>
          </children>
       </AnchorPane>

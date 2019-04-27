@@ -522,6 +522,11 @@ public class MainController {
             Arrays.stream(this.tempDirectory.listFiles()).forEach(file1 -> file1.delete());
         });
 
+        trainTitledPane.setText(null);
+        BorderPane borderPane = new BorderPane(null, null, new JFXButton("", new FontAwesomeIconView(FontAwesomeIcon.COGS)), null, new Label("Датасет"));
+        borderPane.prefWidthProperty().bind(trainTitledPane.widthProperty().subtract(40));
+        trainTitledPane.setGraphic(borderPane);
+
 
         this.trainingCount = 0;
 
@@ -1007,7 +1012,7 @@ public class MainController {
             }
         });
 
-        this.testDatasetChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+        /*this.testDatasetChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
                 this.testDataSet = loadDataset(newValue.getAsFile());
 
@@ -1024,8 +1029,8 @@ public class MainController {
                 if(trainedModelsChoiceBox.getSelectionModel().getSelectedItem() == null)
                     this.runTestButton.setDisable(true);
             }
-        });
-        this.trainedModelsChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+        });*/
+        /*this.trainedModelsChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
                 this.testValueChart.getData().clear();
                 if(testDatasetChoiceBox.getSelectionModel().getSelectedItem() != null) {
@@ -1035,8 +1040,8 @@ public class MainController {
                 if(testDatasetChoiceBox.getSelectionModel().getSelectedItem() == null)
                     this.runTestButton.setDisable(true);
             }
-        });
-        this.runTestButton.setDisable(true);
+        });*/
+
 
 
 
@@ -1070,19 +1075,19 @@ public class MainController {
             this.trainValueGraphicChart.getData().clear();
         });
 
-        this.testValueChartClearButton.setOnAction(event -> {
+        /*this.testValueChartClearButton.setOnAction(event -> {
             this.testValueChart.getData().clear();
-        });
+        });*/
 
 
         //Panning works via either secondary (right) mouse or primary with ctrl held down
         configureChart(this.errorChart);
         configureChart(this.trainValueGraphicChart);
-        configureChart(this.testValueChart);
+        //configureChart(this.testValueChart);
         trainValueGraphicChart.getXAxis().setAutoRanging( false );
         trainValueGraphicChart.getYAxis().setAutoRanging( true );
-        testValueChart.getXAxis().setAutoRanging( false );
-        testValueChart.getYAxis().setAutoRanging( true );
+        /*testValueChart.getXAxis().setAutoRanging( false );
+        testValueChart.getYAxis().setAutoRanging( true );*/
 
 
 
@@ -1787,7 +1792,6 @@ public class MainController {
 
             this.clearAllInfoElements();
             this.clearGUIConfig();
-            this.testDatasetChoiceBox.getItems().clear();
             this.trainDatasetChoiceBox.getItems().clear();
             this.trainedModelsChoiceBox.getItems().clear();
 
@@ -1840,8 +1844,8 @@ public class MainController {
 
         trainTableView.getItems().clear();
         trainTableView.getColumns().clear();
-        testTableView.getItems().clear();
-        testTableView.getColumns().clear();
+        //testTableView.getItems().clear();
+        //testTableView.getColumns().clear();
         errorChart.getData().clear();
         trainValueGraphicChart.getData().clear();
     }

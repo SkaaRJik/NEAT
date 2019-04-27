@@ -59,8 +59,10 @@ public class LinearScalerLocalValues implements DataScaler {
                     output.add(new ArrayList<>(dataToNormalize.get(0).size()));
                 }
                 if(j == 0){
-                    min = dataToNormalize.get(j).get(i);
-                    max = dataToNormalize.get(j).get(i);
+                    if(dataToNormalize.get(j).get(i) != null) {
+                        min = dataToNormalize.get(j).get(i);
+                        max = dataToNormalize.get(j).get(i);
+                    }
                     continue;
                 }
                 if(dataToNormalize.get(j).get(i) != null) {

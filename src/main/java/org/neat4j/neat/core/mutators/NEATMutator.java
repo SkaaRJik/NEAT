@@ -155,17 +155,29 @@ public class NEATMutator implements Mutator {
 
 		if (mutateFunctionRandVal < this.pNewActivationFunction){
 			ActivationFunction activationFunction = mutated.getActivationFunction();
+			ActivationFunction lastActivationFunction = mutated.getActivationFunction();
 			if(mutated.getType() == NEATNodeGene.TYPE.INPUT) {
-				if(ActivationFunctionContainer.getInputActivationFunctions().size() > 1)
-					activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(random);
+				if(ActivationFunctionContainer.getInputActivationFunctions().size() > 1) {
+					do{
+						activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(random);
+					}
+					while (activationFunction.getFunctionName().equals(lastActivationFunction.getFunctionName()));
+
+				}
 			}
 			else if(mutated.getType() == NEATNodeGene.TYPE.HIDDEN){
 				if(ActivationFunctionContainer.getHiddenActivationFunctions().size() > 1)
-					activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(random);
+					do{
+						activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(random);
+					}
+					while (activationFunction.getFunctionName().equals(lastActivationFunction.getFunctionName()));
 			}
 			else if(mutated.getType() == NEATNodeGene.TYPE.OUTPUT){
 				if(ActivationFunctionContainer.getOutputActivationFunctions().size() > 1)
-					activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(random);
+					do{
+						activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(random);
+					}
+					while (activationFunction.getFunctionName().equals(lastActivationFunction.getFunctionName()));
 			}
 
 

@@ -6,9 +6,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="NEATJavaFX" />
         <module name="NEAT" />
         <module name="NEAT4J" />
-        <module name="NEATJavaFX" />
       </profile>
     </annotationProcessing>
   </component>

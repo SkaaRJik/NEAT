@@ -16,7 +16,6 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
-<?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
@@ -29,7 +28,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0" prefWidth="640.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
    <top>
       <AnchorPane prefHeight="0.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <children>
@@ -179,12 +178,7 @@
                                                    <children>
                                                       <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                                          <content>
-                                                            <TableView fx:id="trainTableView">
-                                                              <columns>
-                                                                <TableColumn prefWidth="75.0" text="C1" />
-                                                                <TableColumn prefWidth="75.0" text="C2" />
-                                                              </columns>
-                                                            </TableView>
+                                                            <TableView fx:id="trainTableView" />
                                                          </content>
                                                       </ScrollPane>
                                                    </children>
@@ -198,8 +192,9 @@
                                           </JFXButton>
                                           <FlowPane hgap="10.0" vgap="10.0">
                                              <children>
-                                                <JFXTextField fx:id="lastErrorTextField" labelFloat="true" promptText="Error" />
-                                                <JFXTextField fx:id="currentEpochTextField" editable="false" labelFloat="true" layoutX="10.0" layoutY="10.0" promptText="Current epoch" />
+                                                <JFXTextField fx:id="lastErrorTextField" labelFloat="true" promptText="Ошибка обучения" />
+                                                <JFXTextField fx:id="currentEpochTextField" editable="false" labelFloat="true" layoutX="10.0" layoutY="10.0" promptText="Текущая эпоха" />
+                                                <JFXTextField fx:id="testErrorTextField" labelFloat="true" promptText="Ошибка тестирования" />
                                              </children>
                                           </FlowPane>
                                           <FlowPane hgap="10.0" vgap="10.0">
@@ -270,7 +265,7 @@
                                              <children>
                                                 <HBox layoutX="-231.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="-231.0" AnchorPane.rightAnchor="-15.0" AnchorPane.topAnchor="0.0">
                                                    <children>
-                                                      <Label fx:id="neatOptionsLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" prefHeight="25.0" prefWidth="232.0" text="Параметры алгоритма:" wrapText="true" />
+                                                      <Label fx:id="neatOptionsLabel" alignment="CENTER_RIGHT" contentDisplay="CENTER" prefHeight="25.0" prefWidth="232.0" text="Параметры алгоритма" wrapText="true" />
                                                       <JFXButton fx:id="pinButton" alignment="CENTER" maxHeight="12.0" maxWidth="12.0" prefHeight="0.0" prefWidth="0.0" rotate="90.0" style="-fx-border-color: transparent;" text=" " HBox.hgrow="NEVER">
                                                          <HBox.margin>
                                                             <Insets left="5.0" />
@@ -279,7 +274,6 @@
                                                             <MaterialDesignIconView fx:id="pinIcon" glyphName="PIN" size="18" wrappingWidth="10.0" />
                                                          </graphic>
                                                       </JFXButton>
-                                                      <Label fx:id="neatOptionsLabel1" alignment="CENTER_RIGHT" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="25.0" prefWidth="232.0" text="Параметры алгоритма:" wrapText="true" />
                                                    </children>
                                                 </HBox>
                                              </children>
@@ -292,7 +286,7 @@
                         </SplitPane>
                      </content>
                 </Tab>
-                  <Tab fx:id="testingTab" text="Testing">
+                  <Tab fx:id="testingTab" text="Forcasting">
                      <content>
                         <AnchorPane>
                            <children>
@@ -327,68 +321,9 @@
                                           </Label>
                                        </left>
                                     </BorderPane>
-                                    <BorderPane prefHeight="0.0" prefWidth="518.0">
-                                       <center>
-                                          <AnchorPane BorderPane.alignment="CENTER">
-                                             <children>
-                                                <ChoiceBox fx:id="testDatasetChoiceBox" prefHeight="31.0" prefWidth="518.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                                             </children>
-                                          </AnchorPane>
-                                       </center>
-                                       <right>
-                                          <JFXButton contentDisplay="CENTER" mnemonicParsing="false" onAction="#openTestDataset" styleClass="JFXButton" text=" " wrapText="true" BorderPane.alignment="CENTER">
-                                             <tooltip>
-                                                <Tooltip fx:id="openTestDatasetTooltip" text="Empty Tooltip" />
-                                             </tooltip>
-                                             <graphic>
-                                                <FontAwesomeIconView glyphName="FOLDER_ALT" size="18.0" />
-                                             </graphic>
-                                             <BorderPane.margin>
-                                                <Insets left="5.0" right="5.0" />
-                                             </BorderPane.margin>
-                                          </JFXButton>
-                                       </right>
-                                       <left>
-                                          <Label prefWidth="180.0" text="Тестовый сет" BorderPane.alignment="CENTER">
-                                             <BorderPane.margin>
-                                                <Insets left="5.0" right="5.0" />
-                                             </BorderPane.margin>
-                                          </Label>
-                                       </left>
-                                    </BorderPane>
-                                    <JFXButton fx:id="runTestButton" onAction="#testModel" />
                                     <ScrollPane fitToWidth="true">
                                        <content>
                                           <VBox spacing="10.0">
-                                             <children>
-                                                <JFXTextField fx:id="testErrorTextField" labelFloat="true" promptText="Ошибка">
-                                                   <VBox.margin>
-                                                      <Insets top="15.0" />
-                                                   </VBox.margin>
-                                                </JFXTextField>
-                                                <TitledPane>
-                                                   <content>
-                                                      <TableView fx:id="testTableView" prefHeight="200.0" prefWidth="200.0" />
-                                                   </content>
-                                                </TitledPane>
-                                                <HBox alignment="CENTER">
-                                                   <children>
-                                                      <LineChart fx:id="testValueChart">
-                                                        <xAxis>
-                                                          <NumberAxis side="BOTTOM" />
-                                                        </xAxis>
-                                                        <yAxis>
-                                                          <NumberAxis side="LEFT" />
-                                                        </yAxis>
-                                                      </LineChart>
-                                                      <JFXButton fx:id="testValueChartClearButton">
-                                                         <graphic>
-                                                            <MaterialDesignIconView glyphName="REFRESH" size="20.0" />
-                                                         </graphic>
-                                                      </JFXButton>
-                                                   </children>
-                                                </HBox>
-                                             </children>
                                              <padding>
                                                 <Insets top="5.0" />
                                              </padding>

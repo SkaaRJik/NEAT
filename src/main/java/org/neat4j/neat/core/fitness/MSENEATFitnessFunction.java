@@ -67,8 +67,6 @@ public class MSENEATFitnessFunction extends NEATFitnessFunction {
 				else if(nodeGene.getType() == NEATNodeGene.TYPE.OUTPUT) nodeGene.setLabel(this.evaluationData().expectedOutputSet().getHeaders().get(outputsIndex++));;
 			}
 		}
-
-
 		return (Math.sqrt(error / eOpSet.size()));
 	}
 }

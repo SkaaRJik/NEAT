@@ -4,6 +4,8 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTextField;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,7 +13,6 @@ import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.Parent;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
@@ -22,8 +23,12 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.log4j.Logger;
+
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.neat4j.neat.data.normaliser.DataScaler;
-import org.neat4j.neat.data.normaliser.LinearScalerGlobalValues;
 import org.neat4j.neat.data.normaliser.LinearScalerLocalValues;
 import org.neat4j.neat.data.normaliser.NonLinearScaler;
 import org.neat4j.neat.nn.core.functions.SigmoidFunction;
@@ -46,12 +51,15 @@ public class DataPreparatorDialogueController {
 
     @FXML    private TabPane tabPane;
     @FXML    private Tab loadDataTab;
+    private TableView<List<Double>> dataFromExcelTableView = new TableView<>();
+    @FXML    private BorderPane loadDataBorderPane;
     @FXML    private TextField fileTextField;
     @FXML    private JFXComboBox<String> encodingChoiceBox;
     @FXML    private TextArea dataTextArea;
     @FXML    private JFXTextField decimalSeparatorTextField;
     @FXML    private JFXTextField dataSeparatorTextField;
     @FXML    private CheckBox containsHeadersCheckBox;
+    @FXML    private Label dataTextAreaError;
 
     @FXML    private Tab selectUsableDataTab;
     @FXML    private TableView<List<Double>> selectUsableDataTableView;
@@ -96,6 +104,17 @@ public class DataPreparatorDialogueController {
     @FXML    private JFXButton nextButton;
     @FXML    private JFXButton cancelButton;
 
+    Workbook workBook = null;
+
+
+
+    enum Mode {
+        XLSX,
+        CSV
+    }
+
+    SimpleObjectProperty<Mode> currentLoadMode = new SimpleObjectProperty<>();
+
     private Stage stage;
     ResourceBundle resourceBundle;
 
@@ -119,7 +138,7 @@ public class DataPreparatorDialogueController {
 
 
 
-    private SimpleObjectProperty<String> stringFromFile = new SimpleObjectProperty<>();
+    private StringProperty stringFromFile;
 
     private String finish = "Завершить";
     private String next = "Далее";
@@ -141,41 +160,17 @@ public class DataPreparatorDialogueController {
     String legendLabel;
     List<String> legend;
 
-    public void init(){
 
-        this.stage = ((Stage) this.tabPane.getScene().getWindow());
 
-        stringFromFile.addListener((observable, oldValue, newValue) -> {
-            if (newValue!=null){
-                if(newValue.length()!=0){
-                    this.dataTextArea.setText(stringFromFile.getValue());
-                    nextButton.setDisable(false);
-                }
-                else {
-                    nextButton.setDisable(true);
-                }
-            } else {
-                nextButton.setDisable(true);
-            }
-        });
-
-        this.encodingChoiceBox.getItems().addAll("UTF-8", "cp1251");
-        switch (Locale.getDefault().getLanguage()){
-            case "ru":
-                this.encodingChoiceBox.getSelectionModel().select("cp1251");
-                break;
-            default:
-                this.encodingChoiceBox.getSelectionModel().select("UTF-8");
-                break;
-        }
-
-        this.encodingChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+    ChangeListener<String> encoderListener = new ChangeListener<String>() {
+        @Override
+        public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
             if(newValue!=null){
                 if(newValue.length()!=0) {
                     if(fileTextField.getText().length()!=0) {
                         if(fileTextField.getText().length() != 0) {
                             try {
-                                stringFromFile.set(readData(new File(this.fileTextField.getText())));
+                                stringFromFile.set(readCSVData(new File(fileTextField.getText())));
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -183,16 +178,26 @@ public class DataPreparatorDialogueController {
                     }
                 }
             }
-        });
+        }
+    };
 
-        this.dataTextArea.textProperty().addListener((observable, oldValue, newValue) -> {
-            if(this.dataTextArea.getText().length() != 0) {
-                checkLoadDataTab1ToGoNext();
-                fillSeparators();
-            } else {
-                nextButton.setDisable(true);
+    ChangeListener<Number> xlsxListener = new ChangeListener<Number>() {
+        @Override
+        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+            if(newValue!=null) {
+                loadXLSXSheet(newValue, workBook);
             }
-        });
+        }
+    };
+
+
+
+    public void init(){
+
+        this.stage = ((Stage) this.tabPane.getScene().getWindow());
+
+        stringFromFile = dataTextArea.textProperty();
+        initLoadDataTab();
 
         this.stage.getScene().setOnKeyPressed(keyEvent -> {
             switch (keyEvent.getCode()){
@@ -212,6 +217,9 @@ public class DataPreparatorDialogueController {
             }
 
         });
+
+
+
 
         this.tabPane.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             int i = this.tabPane.getSelectionModel().getSelectedIndex();
@@ -392,6 +400,81 @@ public class DataPreparatorDialogueController {
 
         configureDataNameTextField(trainDataNameTextField);
         configureDataNameTextField(testDataNameTextField);
+    }
+
+    private void initLoadDataTab() {
+        stringFromFile.addListener((observable, oldValue, newValue) -> {
+            if (newValue!=null){
+                if(newValue.length()!=0){
+                    if(!newValue.contains("null")) {
+                        nextButton.setDisable(false);
+                        dataTextAreaError.setText("");
+                    }
+                    else{
+                        dataTextAreaError.setText("Данные содержат NULL");
+                        nextButton.setDisable(true);
+                    }
+                }
+                else {
+                    nextButton.setDisable(true);
+                }
+            } else {
+                nextButton.setDisable(true);
+            }
+        });
+
+        this.currentLoadMode.addListener((observable, oldValue, newValue) -> {
+            if(!newValue.equals(oldValue)){
+                switch (newValue){
+                    case CSV:
+                        this.encodingChoiceBox.getSelectionModel().selectedIndexProperty().removeListener(this.xlsxListener);
+                        this.encodingChoiceBox.getItems().clear();
+                        this.encodingChoiceBox.getItems().addAll("UTF-8", "cp1251");
+                        switch (Locale.getDefault().getLanguage()){
+                            case "ru":
+                                this.encodingChoiceBox.getSelectionModel().select("cp1251");
+                                break;
+                            default:
+                                this.encodingChoiceBox.getSelectionModel().select("UTF-8");
+                                break;
+                        }
+                        this.encodingChoiceBox.getSelectionModel().selectedItemProperty().addListener(this.encoderListener);
+                        break;
+                    case XLSX:
+                        encodingChoiceBox.getSelectionModel().selectedItemProperty().removeListener(this.encoderListener);
+                        encodingChoiceBox.getItems().clear();
+                        for (int i = 0; i < workBook.getNumberOfSheets(); i++) {
+                            encodingChoiceBox.getItems().add(workBook.getSheetName(i));
+                        }
+
+                        encodingChoiceBox.getSelectionModel().selectedIndexProperty().addListener(this.xlsxListener);
+                        break;
+                }
+            }
+        });
+
+
+        this.fileTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue!= null){
+                if(!newValue.isEmpty()){
+                    this.encodingChoiceBox.setVisible(true);
+                }
+                else {
+                    this.encodingChoiceBox.setVisible(false);
+                }
+            } else {
+                this.encodingChoiceBox.setVisible(false);
+            }
+        });
+
+
+        this.dataTextArea.textProperty().addListener((observable, oldValue, newValue) -> {
+            if(this.dataTextArea.getText().length() != 0) {
+                fillSeparators();
+            } else {
+                nextButton.setDisable(true);
+            }
+        });
     }
 
     private void configureDataNameTextField(JFXTextField dataNameTextField) {
@@ -883,6 +966,10 @@ public class DataPreparatorDialogueController {
         this.inputs = 0;
         this.outputs = 0;
         this.legendIsSelected = false;
+
+        this.trainSetIndexes.clear();
+        this.testSetIndexes.clear();
+
         this.selectTrainingDataTableView.getColumns().clear();
         this.selectTrainingDataTableView.getItems().clear();
 
@@ -917,6 +1004,7 @@ public class DataPreparatorDialogueController {
         fileChooser.setInitialDirectory(new File(Paths.get("").toAbsolutePath().toString()+"\\projects\\"));
         fileChooser.getExtensionFilters().addAll(//
                 new FileChooser.ExtensionFilter("csv", "*.csv"),
+                new FileChooser.ExtensionFilter("Excel", "*.xls*"),
                 new FileChooser.ExtensionFilter("txt", "*.txt"),
                 new FileChooser.ExtensionFilter("All Files", "*.*")); //
         fileChooser.setTitle(this.chooseFile);
@@ -930,9 +1018,25 @@ public class DataPreparatorDialogueController {
 
             fillSeparators();
             try {
-                stringFromFile.set(readData(dataFile));
-                encodingChoiceBox.setDisable(false);
-                dataTextArea.requestFocus();
+                if(dataFile.getName().split("[.]")[1].contains("xls")){
+                    readXLSXfile(dataFile);
+                }
+                else {
+                    this.currentLoadMode.set(Mode.CSV);
+                    stringFromFile.set(readCSVData(dataFile));
+                    encodingChoiceBox.setDisable(false);
+                    dataTextArea.requestFocus();
+                }
+                Pattern patternNumber = Pattern.compile("[\\d][.,][\\d]");
+                Matcher matcher = patternNumber.matcher(stringFromFile.get());
+                if(matcher.find()){
+
+                    Matcher newMatcher = Pattern.compile("[.,]").matcher(matcher.group());
+                    if(newMatcher.find()){
+                        this.decimalSeparatorTextField.setText(newMatcher.group());
+                    }
+                }
+
             } catch (IOException e) {
                 this.dataTextArea.setText(e.getMessage());
                 e.printStackTrace();
@@ -961,29 +1065,88 @@ public class DataPreparatorDialogueController {
 
     }
 
-    public String readData(File dataFile) throws IOException {
+    public String readCSVData(File dataFile) throws IOException {
+
         BufferedReader reader = new BufferedReader(
                 new InputStreamReader(
                         new FileInputStream(dataFile), this.encodingChoiceBox.getSelectionModel().getSelectedItem()));
         StringBuilder stringBuilder = new StringBuilder();
         String line;
-        Pattern pattern = Pattern.compile("[^\\d ;,.{}()\\s\\n]?");
+
+
+
 
         boolean readingHeader = true;
         while ((line = reader.readLine()) != null) {
             if(readingHeader){
-                Matcher matcher = pattern.matcher(line);
-                if(matcher.find()){
-                    containsHeadersCheckBox.setSelected(matcher.group().length() != 0);
-                }
+                Matcher matcher = Pattern.compile("[\\D][;,.]").matcher(line);
+                containsHeadersCheckBox.setSelected(matcher.find());
                 readingHeader = false;
             }
             stringBuilder.append(line+"\n");
         }
         reader.close();
         return stringBuilder.toString();
-
     }
+
+    public void readXLSXfile(File dataFile){
+        //инициализируем потоки
+        String result = "";
+
+        try {
+
+            this.workBook = WorkbookFactory.create(dataFile);
+            //разбираем первый лист входного файла на объектную модель
+
+            currentLoadMode.set(Mode.XLSX);
+            encodingChoiceBox.getSelectionModel().select(0);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadXLSXSheet(Number newValue, Workbook workBook) {
+        Sheet sheet = workBook.getSheetAt((Integer) newValue);
+        Iterator<Row> it = sheet.iterator();
+        org.apache.poi.ss.usermodel.Cell cell;
+        Row row;
+        StringBuilder stringBuilder = new StringBuilder();
+        this.containsHeadersCheckBox.setSelected(false);
+        for(int i = 0; it.hasNext(); i++ ){
+
+            row = it.next();
+            Iterator<org.apache.poi.ss.usermodel.Cell> cells = row.iterator();
+            while(cells.hasNext()) {
+                cell = cells.next();
+                //перебираем возможные типы ячеек
+                switch (cell.getCellType()) {
+                    case STRING:
+                        if(i == 0){
+                            stringBuilder.append(cell.getStringCellValue().replaceAll("\n", " ")+";");
+                            this.containsHeadersCheckBox.setSelected(true);
+                        }
+                        break;
+                    case NUMERIC:
+                    case FORMULA:
+                        stringBuilder.append(cell.getNumericCellValue()+";");
+                        break;
+                    case BLANK:
+                        stringBuilder.append("null;");
+                        break;
+                    default:
+                        stringBuilder.append(";");
+                        break;
+                }
+            }
+            stringBuilder.deleteCharAt(stringBuilder.length()-1);
+            stringBuilder.append("\n");
+        }
+        this.stringFromFile.set(stringBuilder.toString());
+    }
+
+
+
 
     private void checkLoadDataTab1ToGoNext(){
         if(this.tabPane.getSelectionModel().getSelectedIndex() == 0) {
@@ -1102,8 +1265,6 @@ public class DataPreparatorDialogueController {
 
                 }
             }
-
-
             trainSetIndexes.add(i);
         }
 
