@@ -1,58 +1,24 @@
 package org.neat4j.neat.data.normaliser;
 
+import org.neat4j.neat.data.core.DataKeeper;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class LinearScalerLocalValues implements DataScaler {
-    @Override
-    public List<List<Double>> normalize(List<List<Double>> dataToNormalize) {
+public class LinearScaler implements DataScaler {
 
 
-        Double[][] array = dataToNormalize.stream().map(doubles -> { return doubles.stream().toArray(Double[]::new);}).toArray(Double[][]::new);
-
-
-
-        double min = 0;
-        double max = 0;
-        for (int i = 0; i < array[0].length; i++) {
-            for(int j = 0 ; j < array.length; j++){
-                if(j == 0){
-                    min = array[j][i];
-                    max = array[j][i];
-                    continue;
-                }
-                if(array[j][i] != null) {
-                    min = Double.min(min, array[j][i]);
-                    max = Double.max(max, array[j][i]);
-                }
-            }
-
-            for(int j = 0 ; j < array.length; j++) {
-                if (array[j][i] != null) {
-                    array[j][i] = (array[j][i] - min) / (max - min);
-                } else {
-                    array[j][i] = null;
-                }
-            }
-
-
-        }
-        List<List<Double>> output = new ArrayList<>(dataToNormalize.size());
-        for (int i = 0; i < array.length; i++) {
-            output.add(Arrays.asList(array[i]));
-        }
-        return output;
-    }
+    List<Double> mins;
+    List<Double> maxs;
 
     @Override
-    public List<List<Double>> normalize(List<List<Double>> dataToNormalize, double minRange, double maxRange) {
+    public DataKeeper normalise(List<List<Double>> dataToNormalize, double minRange, double maxRange) {
         double min = 0;
         double max = 0;
-
         List<List<Double>> output = new ArrayList<>(dataToNormalize.size());
-        List<Double> row = null;
-
+        mins = new ArrayList<>(dataToNormalize.get(0).size());
+        maxs = new ArrayList<>(dataToNormalize.get(0).size());
         for (int i = 0; i < dataToNormalize.get(0).size(); i++) {
             for(int j = 0 ; j < dataToNormalize.size(); j++){
                 if(i==0){
@@ -70,7 +36,8 @@ public class LinearScalerLocalValues implements DataScaler {
                     max = Double.max(max, dataToNormalize.get(j).get(i));
                 }
             }
-
+            mins.add(min);
+            maxs.add(max);
             for(int j = 0 ; j < dataToNormalize.size(); j++){
                 if(dataToNormalize.get(j).get(i) == null) {
                     output.get(j).add(null);
@@ -83,6 +50,12 @@ public class LinearScalerLocalValues implements DataScaler {
             }
 
         }
-        return output;
+
+
+        return new DataKeeper(output, this);
     }
+
+
+
+
 }

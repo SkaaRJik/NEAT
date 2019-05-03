@@ -2,7 +2,7 @@
  * Created on Oct 6, 2004
  *
  */
-package org.neat4j.neat.data.csv;
+package org.neat4j.neat.data.set;
 
 import org.neat4j.neat.data.core.NetworkInput;
 import org.neat4j.neat.data.core.NetworkInputSet;
@@ -14,14 +14,14 @@ import java.util.List;
  * @author MSimmerson
  *
  */
-public class CSVInputSet implements NetworkInputSet {
+public class InputSetImpl implements NetworkInputSet {
 
 
 	private List<String> headers;
 	private List inputs;
 	private int idx;
 	
-	public CSVInputSet(List<String> headers ,ArrayList inputs) {
+	public InputSetImpl(List<String> headers , ArrayList inputs) {
 		this.headers = headers;
 		this.inputs = inputs;
 		this.idx = 0;

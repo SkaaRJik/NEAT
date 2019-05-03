@@ -25,6 +25,9 @@ public interface Chromosome extends Comparable, Serializable {
 	int getOutputs();
 	void setOutputs(int outputs);
 
+	Double getValidationError();
+	void setValidationError(Double error);
+
 
 	void setOutputValues(List<List<Double>> opSet);
 	List<List<Double>> getOutputValues();

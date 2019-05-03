@@ -56,6 +56,10 @@
     -fx-background: rgb(141,174,243);
 }
 
+.table-row-cell:null-row {
+    -fx-background: rgb(141,174,243);
+}
+
 #menu {
     -fx-background-color: #88F;
     -fx-spacing: 5;

@@ -2,22 +2,31 @@
  * Created on Oct 12, 2004
  *
  */
-package org.neat4j.neat.data.csv;
+package org.neat4j.neat.data.set;
 
 import org.neat4j.neat.data.core.NetworkOutput;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author MSimmerson
  *
  */
-public class CSVExpectedOutput implements NetworkOutput {
+public class ExpectedOutputImpl implements NetworkOutput {
 	private List<Double> values;
 	
-	public CSVExpectedOutput(List<Double> eOut) {
+	public ExpectedOutputImpl(List<Double> eOut) {
 		this.values = new ArrayList<>(eOut);
+
+		//System.arraycopy(eOut, 0, this.values, 0, this.values.length);
+	}
+
+	public ExpectedOutputImpl(double[] eOut) {
+		this.values = new ArrayList<Double>(eOut.length);
+		Arrays.stream(eOut).forEach(value -> values.add(value));
 
 		//System.arraycopy(eOut, 0, this.values, 0, this.values.length);
 	}

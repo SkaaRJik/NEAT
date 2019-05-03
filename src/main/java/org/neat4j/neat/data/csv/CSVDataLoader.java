@@ -6,6 +6,7 @@ package org.neat4j.neat.data.csv;
 
 import org.apache.log4j.Category;
 import org.neat4j.neat.data.core.*;
+import org.neat4j.neat.data.set.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.StringTokenizer;
  * @author MSimmerson
  *
  */
+@Deprecated
 public class CSVDataLoader implements DataLoader {
 	private static final Category cat = Category.getInstance(CSVDataLoader.class);
 	private String fileName;
@@ -27,15 +29,16 @@ public class CSVDataLoader implements DataLoader {
 	}
 	/**
 	 * @see org.neat4j.ailibrary.nn.data.DataLoader#loadData()
+	 * @return
 	 */
 	public NetworkDataSet loadData() {
 		cat.info("Loading data from " + this.fileName);
-		return (this.createDataSets());
+		return createDataSets();
 	}
 	
 	private NetworkDataSet createDataSets() {
 		cat.debug("Creating data sets");
-		NetworkDataSet dataSet = new CSVDataSet();
+		NetworkDataSet dataSet = null;
 		File csvFile = new File(this.fileName);
 		FileInputStream fis = null;
 		StringTokenizer sTok;
@@ -65,9 +68,9 @@ public class CSVDataLoader implements DataLoader {
 				ips.add(this.createInputPattern(sTok));
 				eOps.add(this.createExpectedOutput(sTok));
 			}
-			ipSet = new CSVInputSet(inputHeaders, ips);
-			opSet = new CSVExpectedOutputSet(outputHeaders, eOps);
-			dataSet = new CSVDataSet(ipSet, opSet);
+			ipSet = new InputSetImpl(inputHeaders, ips);
+			opSet = new ExpectedOutputSetImpl(outputHeaders, eOps);
+			dataSet = new DataSetImpl(ipSet, opSet);
 			fis.close();
 		} catch (FileNotFoundException e) {
 			cat.error(e.getMessage());
@@ -102,7 +105,7 @@ public class CSVDataLoader implements DataLoader {
 			pattern[i++] = Double.parseDouble(sTok.nextToken());
 		}
 		
-		ip = new CSVInput(pattern);
+		ip = new InputImpl(pattern);
 		
 		return (ip);
 	}
@@ -121,8 +124,11 @@ public class CSVDataLoader implements DataLoader {
 			}
 		}
 		
-		op = new CSVExpectedOutput(pattern);
+		op = new ExpectedOutputImpl(pattern);
 		
 		return (op);
 	}
+
+
 }
+

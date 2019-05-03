@@ -181,7 +181,7 @@ public class ExperimentServer implements AIController {
 	/**
 	 * Intialises the server environment
 	 */
-	public void initialise(AIConfig config) throws InitialisationFailedException {
+	public void initialise(AIConfig config, boolean loadData) throws InitialisationFailedException {
 		this.tm = new NEATGATrainingManager();
 		this.tm.initialise(config);
 		this.pop = tm.getGeneticAlgorithm().population();
@@ -205,7 +205,7 @@ public class ExperimentServer implements AIController {
 		AIConfig config = new NEATLoader().loadConfig("F:\\JavaProjects\\NotMine\\NEAT4J\\target\\classes\\xor\\xor_neat.getGeneticAlgorithm");
 		ExperimentServer es = new ExperimentServer();
 		try {
-			es.initialise(config);
+			es.initialise(config, true);
 			es.createServer();
 		} catch (InitialisationFailedException e) {
 			// TODO Auto-generated catch block

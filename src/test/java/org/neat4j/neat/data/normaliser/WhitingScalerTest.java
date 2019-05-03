@@ -17,7 +17,7 @@ class WhitingScalerTest {
     void normalize() {
         /*List<List<Double>> data = DataCreator.get123DataSet();
         //DataScaler dataScaler = new WhitingScaler();
-        List<List<Double>> normalized = dataScaler.normalize(data);
+        List<List<Double>> normalized = dataScaler.normalise(data);
         for (List<Double> rows : normalized){
             for(Double value : rows){
                 Assertions.assertTrue(value <= 1);

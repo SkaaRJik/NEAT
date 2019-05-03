@@ -8,11 +8,11 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="231.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.SaveModelDialogueController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="231.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.SaveDialogueController">
    <left>
       <VBox prefHeight="0.0" prefWidth="102.0" spacing="13.0" BorderPane.alignment="CENTER">
          <children>
-            <Label fx:id="modelNameLabel" text="Model name" />
+            <Label fx:id="fileNameLabel" text="Model name" />
          </children>
          <BorderPane.margin>
             <Insets left="2.0" top="12.0" />
@@ -22,7 +22,7 @@
    <center>
       <VBox alignment="TOP_RIGHT" prefHeight="0.0" prefWidth="495.0" spacing="5.0" BorderPane.alignment="CENTER">
          <children>
-            <TextField fx:id="modelNameTextField">
+            <TextField fx:id="saveNameTextField">
                <VBox.margin>
                   <Insets right="5.0" />
                </VBox.margin>

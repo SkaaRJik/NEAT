@@ -24,6 +24,10 @@ public abstract class NEATFitnessFunction extends NeuralFitnessFunction {
 	public NEATFitnessFunction(NeuralNet net, NetworkDataSet dataSet) {
 		super(net, dataSet);
 	}
+
+	public NEATFitnessFunction(NeuralNet net, NetworkDataSet dataSet, NetworkDataSet testSet ) {
+		super(net, dataSet, testSet);
+	}
 	
 	public void createNetFromChromo(Chromosome genoType) {
 		((NEATNetDescriptor)this.net().netDescriptor()).updateStructure(genoType);

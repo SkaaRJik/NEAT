@@ -12,5 +12,5 @@ public interface AIController {
 	 * @param config
 	 * @throws InitialisationFailedException if environment creation fails
 	 */
-	public void initialise(AIConfig config) throws InitialisationFailedException ;
+	public void initialise(AIConfig config, boolean loadData) throws InitialisationFailedException ;
 }

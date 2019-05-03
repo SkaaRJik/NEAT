@@ -9,7 +9,10 @@ import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.core.InnovationDatabase;
 import org.neat4j.neat.core.NEATGADescriptor;
+import org.neat4j.neat.core.NEATNetDescriptor;
+import org.neat4j.neat.core.NEATNeuralNet;
 import org.neat4j.neat.ga.core.Chromosome;
+import org.neat4j.neat.nn.core.NeuralNet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +24,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
     ObservableList<Chromosome> bestEverChromosomes;
     ListProperty<Chromosome> bestEverChromosomesProperty;
     private int currentEpoch;
-
+    String pathToSave;
     @Override
     public void run() {
         this.evolve();
@@ -43,8 +46,9 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
         boolean terminateEnabled = ((NEATGADescriptor)this.ga.getDescriptor()).isToggleErrorTerminationValue();
         boolean nOrder = ((NEATGADescriptor)this.ga.getDescriptor()).isNaturalOrder();
         boolean terminate = false;
-        int i = 0;
 
+        int i = 0;
+        pathToSave = config.configElement("SAVE.LOCATION");
         while (i < epochs) {
             if(Thread.interrupted()) {
                 break;
@@ -53,6 +57,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
             cat.info("Running Epoch[" + i + "]\r");
             this.ga.runEpoch();
             this.saveBest();
+
             if ((this.ga.discoverdBestMember().fitness() >= terminateVal && !nOrder) || (this.ga.discoverdBestMember().fitness() <= terminateVal && nOrder)) {
                 terminate = true;
             }
@@ -80,7 +85,6 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
 
     @Override
     public void saveBest() {
-        String pathToSave = config.configElement("SAVE.LOCATION");
         Chromosome best = this.ga.discoverdBestMember();
         best.setInputs(Integer.parseInt(config.configElement("INPUT.NODES")));
         best.setOutputs(Integer.parseInt(config.configElement("OUTPUT.NODES")));

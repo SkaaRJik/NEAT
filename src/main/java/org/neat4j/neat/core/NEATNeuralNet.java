@@ -7,6 +7,7 @@
 package org.neat4j.neat.core;
 
 import org.apache.log4j.Category;
+import org.apache.log4j.Logger;
 import org.neat4j.neat.core.control.NEAT;
 import org.neat4j.neat.data.core.NetworkInput;
 import org.neat4j.neat.data.core.NetworkOutputSet;
@@ -25,7 +26,7 @@ import java.util.*;
  * The NEAT Neural Network
  */
 public class NEATNeuralNet implements NeuralNet {
-	private static final Category cat = Category.getInstance(NEATNeuralNet.class); 
+	private static final Logger cat = Logger.getLogger(NEATNeuralNet.class);
 	private NEATNetDescriptor descriptor;
 	private Synapse[] connections;
 	private Map<Integer, NEATNeuron> neurons;

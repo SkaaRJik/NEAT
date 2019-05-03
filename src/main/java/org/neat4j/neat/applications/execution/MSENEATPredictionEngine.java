@@ -1,4 +1,4 @@
-package org.neat4j.neat.applications.test;
+package org.neat4j.neat.applications.execution;
 
 import org.apache.log4j.Logger;
 import org.neat4j.core.AIConfig;
@@ -24,7 +24,7 @@ public class MSENEATPredictionEngine extends NEATApplicationEngine {
 	protected List<List<Double>> outs;
 
 
-	public void initialise(AIConfig config, boolean initData) throws InitialisationFailedException, IllegalArgumentException {
+	public void initialise(AIConfig config, boolean loadData) throws InitialisationFailedException, IllegalArgumentException {
 		try {
 			Chromosome chromo = (Chromosome) NEATChromosome.readObject(config.configElement("AI.SOURCE"));
 			// need to create a nn based on this chromo.
@@ -60,14 +60,12 @@ public class MSENEATPredictionEngine extends NEATApplicationEngine {
 		}
 	}
 
-
-
 	public NeuralNet createNet(AIConfig config) throws InitialisationFailedException {
 
 		NEATNetManager netManager;
 		netManager = new NEATNetManager();
 		netManager.initialise(config, true);
-
+		
 		return netManager.managedNet();
 	}
 
@@ -91,11 +89,15 @@ public class MSENEATPredictionEngine extends NEATApplicationEngine {
 			for (i = 0; i < this.outs.length; i++) {
 				writer.append(String.valueOf(this.outs[i]).replace(".", ",")+"\n");
 			}
+
+
 			writer.flush();
 		}*/
 		/*catch(IOException ex){
+
 			System.out.println(ex.getMessage());
 		}*/
 	}
+
 
 }

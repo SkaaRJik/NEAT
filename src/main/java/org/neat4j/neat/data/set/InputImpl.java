@@ -2,7 +2,7 @@
  * Created on Oct 12, 2004
  *
  */
-package org.neat4j.neat.data.csv;
+package org.neat4j.neat.data.set;
 
 import org.neat4j.neat.data.core.NetworkInput;
 
@@ -10,10 +10,10 @@ import org.neat4j.neat.data.core.NetworkInput;
  * @author MSimmerson
  *
  */
-public class CSVInput implements NetworkInput {
+public class InputImpl implements NetworkInput {
 	private double[] inputPattern;
 	
-	public CSVInput(double[] input) {
+	public InputImpl(double[] input) {
 		this.inputPattern = new double[input.length];
 		System.arraycopy(input, 0, this.inputPattern, 0, this.inputPattern.length);
 	}

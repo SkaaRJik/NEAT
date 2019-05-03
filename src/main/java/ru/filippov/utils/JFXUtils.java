@@ -1,21 +1,22 @@
 package ru.filippov.utils;
 
+import com.jfoenix.controls.base.IFXLabelFloatControl;
+import com.jfoenix.skins.JFXTextFieldSkin;
+import com.jfoenix.skins.ValidationPane;
+import com.jfoenix.validation.base.ValidatorBase;
 import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.event.EventHandler;
+import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.input.ZoomEvent;
-import javafx.scene.transform.Affine;
+import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
-import ru.filippov.GUI.customNodes.ZoomableCanvas;
 
 import java.lang.reflect.Field;
 
@@ -254,4 +255,43 @@ public class JFXUtils {
         }*/
     }
 
+
+    private static <T extends TextField & IFXLabelFloatControl> void validationPaneFormatter(
+            T jfxTextField) {
+        jfxTextField
+                .skinProperty()
+                .addListener(
+                        (observable, oldValue, newValue) -> {
+                            JFXTextFieldSkin textFieldSkin = ((JFXTextFieldSkin) newValue);
+                            ObservableList childs = textFieldSkin.getChildren();
+                            // Get validation pane.
+                            // It's always the last child. Be careful no get per type checking -> index can change
+                            // -> code will fail.
+                            ValidationPane validationPane = (ValidationPane) childs.get(childs.size() - 1);
+                            validationPane.setTranslateY(-32);
+
+                            // Set validation label to the right.
+                            // Again node is always first child but code can fail in future.
+                            StackPane labelStackPane = (StackPane) validationPane.getChildren().get(0);
+                            Label innerErrorLabel = (Label) labelStackPane.getChildren().get(0);
+                            StackPane.setAlignment(innerErrorLabel, Pos.TOP_RIGHT);
+                        });
+        // Validate also directly on typing or better text change for not override the error label.
+        /*jfxTextField
+                .textProperty()
+                .addListener((observable, oldValue, newValue) -> jfxTextField.validate());*/
+    }
+
+    public static  <T extends TextField & IFXLabelFloatControl> void addValidator(
+            T jfxTextField, ValidatorBase validator) {
+        jfxTextField.getValidators().add(validator);
+
+        jfxTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue!=null){
+                jfxTextField.validate();
+            }
+        });
+        validationPaneFormatter(jfxTextField);
+
+    }
 }

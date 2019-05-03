@@ -3,9 +3,6 @@ package ru.filippov.GUI.controllers;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXToggleButton;
-import com.jfoenix.controls.base.IFXLabelFloatControl;
-import com.jfoenix.skins.JFXTextFieldSkin;
-import com.jfoenix.skins.ValidationPane;
 import com.jfoenix.validation.RequiredFieldValidator;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
@@ -25,6 +22,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -36,6 +34,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
@@ -47,10 +46,10 @@ import org.gillius.jfxutils.chart.ChartPanManager;
 import org.gillius.jfxutils.chart.JFXChartUtil;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
-import org.neat4j.neat.applications.test.NEATPredictionEngineForJavaFX;
 import org.neat4j.neat.applications.train.NEATTrainingForJavaFX;
 import org.neat4j.neat.core.NEATConfig;
 import org.neat4j.neat.core.NEATLoader;
+import org.neat4j.neat.data.core.DataKeeper;
 import org.neat4j.neat.ga.core.Chromosome;
 
 import org.neat4j.neat.nn.core.ActivationFunction;
@@ -65,6 +64,7 @@ import ru.filippov.GUI.windows.*;
 import ru.filippov.utils.AdvancedNetVisualisator;
 import ru.filippov.utils.CsControl;
 import ru.filippov.utils.JFXUtils;
+import ru.filippov.utils.NumberValidator;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -194,94 +194,7 @@ public class MainController {
 
     }
 
-    static class DataKeeper{
-        List<List<Double>> data;
-        List<String> headers;
-        String legendHeader;
-        List<Double> legend;
-        String inputs;
-        String outputs;
 
-        public DataKeeper() {
-
-        }
-
-        public DataKeeper(List<List<Double>> data, List<String> headers, List<Double> legend) {
-            this.data = data;
-            this.headers = headers;
-            this.legend = legend;
-        }
-
-        public List<List<Double>> getData() {
-            return data;
-        }
-
-        public void setData(List<List<Double>> data) {
-            this.data = data;
-        }
-
-        public List<String> getHeaders() {
-            return headers;
-        }
-
-        public void setHeaders(List<String> headers) {
-            this.headers = headers;
-        }
-
-        public List<Double> getLegend() {
-            return legend;
-        }
-
-        public void setLegend(List<Double> legend) {
-            this.legend = legend;
-        }
-
-        public List<String> getHeadersForTableView(){
-            List<String> newHeaders = new ArrayList<>(this.headers.size()+1);
-
-            newHeaders.add(legendHeader);
-            newHeaders.addAll(headers);
-            return newHeaders;
-
-        }
-
-        public List<List<Double>> getDataForTableView(){
-            List<List<Double>> dataForTableView = new ArrayList<>(this.data.size()+1);
-            for (int i = 0 ; i < data.size(); i++) {
-                List<Double> row = new ArrayList<>(data.get(i).size()+1);
-                row.add(legend.get(i));
-                for (int j = 0; j < data.get(i).size(); j++) {
-                    row.add(data.get(i).get(j));
-                }
-                dataForTableView.add(row);
-            }
-            return dataForTableView;
-        }
-
-        public String getLegendHeader() {
-            return legendHeader;
-        }
-
-        public void setLegendHeader(String legendHeader) {
-            this.legendHeader = legendHeader;
-        }
-
-        public String getInputs() {
-            return inputs;
-        }
-
-        public void setInputs(String inputs) {
-            this.inputs = inputs;
-        }
-
-        public String getOutputs() {
-            return outputs;
-        }
-
-        public void setOutputs(String outputs) {
-            this.outputs = outputs;
-        }
-    }
 
 
     Logger logger = Logger.getLogger(MainController.class);
@@ -427,14 +340,25 @@ public class MainController {
     @FXML private VBox trainVBox;
     @FXML private ProgressBar trainingProgressBar;
 
+    @FXML
+    private BorderPane trainHeaderBorderPane;
+    @FXML
+    private HBox colorLegendHBox;
+    @FXML
+    private JFXTextField trainPercentageTextField;
+    @FXML
+    private JFXButton confirmTrainPercantageButton;
 
 
 
     private Thread trainThread;
-    private Thread testThread;
+
     @FXML
-    private LineChart<Number, Number> errorChart;
-    @FXML private JFXButton errorChartClearButton;
+    private LineChart<Number, Number> trainErrorChart;
+    @FXML private JFXButton trainErrorChartClearButton;
+    @FXML
+    private LineChart<Number, Number> testErrorChart;
+    @FXML private JFXButton testErrorChartClearButton;
     @FXML private LineChart<Number, Number> trainValueGraphicChart;
     @FXML private JFXButton trainValueGraphicChartClearButton;
     @FXML
@@ -480,7 +404,7 @@ public class MainController {
     @FXML
     private MaterialDesignIconView pinIcon;
 
-
+    private SimpleObjectProperty<Integer> trainEndIndex =   new SimpleObjectProperty<>(null);;
 
 
     private AIConfig currentNEATConfig;
@@ -492,8 +416,7 @@ public class MainController {
     ResourceBundle resourceBundle;
     Locale locale;
     Scene scene;
-    DataKeeper trainDataSet;
-    DataKeeper testDataSet;
+    SimpleObjectProperty<DataKeeper> trainSetSimpleObjectProperty = new SimpleObjectProperty<>(null);
 
     List<ProjectFileDescriptor> trainSets;
     List<ProjectFileDescriptor> testSets;
@@ -505,8 +428,10 @@ public class MainController {
     public void init() {
         this.scene = this.currentProjectLabel.getParent().getScene();
 
+
         this.scene.widthProperty().addListener((observable, oldValue, newValue) -> {
             this.drawablePane.setMaxWidth(newValue.doubleValue());
+
             this.netVisualisator.visualiseNet(drawablePane);
         });
 
@@ -523,9 +448,30 @@ public class MainController {
         });
 
         trainTitledPane.setText(null);
-        BorderPane borderPane = new BorderPane(null, null, new JFXButton("", new FontAwesomeIconView(FontAwesomeIcon.COGS)), null, new Label("Датасет"));
-        borderPane.prefWidthProperty().bind(trainTitledPane.widthProperty().subtract(40));
-        trainTitledPane.setGraphic(borderPane);
+
+
+
+
+
+        JFXUtils.addValidator(trainPercentageTextField, new NumberValidator("Промежуток [0.0-100.0]", 0 , 100));
+
+
+        
+
+        confirmTrainPercantageButton.disableProperty().bind(
+                trainPercentageTextField.textProperty().isEmpty().or(
+                        trainPercentageTextField.getValidators().get(0).hasErrorsProperty()
+                ).or(trainSetSimpleObjectProperty.isNull())
+        );
+        trainPercentageTextField.setOnKeyPressed(event -> {
+            if(event.getCode() == KeyCode.ENTER){
+                if(trainPercentageTextField.validate()){
+                    confirmTrainPercantage(null);
+                }
+            }
+        });
+        startTrainingButton.disableProperty().bind(trainEndIndex.isNull().or(trainSetSimpleObjectProperty.isNull()));
+
 
 
         this.trainingCount = 0;
@@ -608,6 +554,48 @@ public class MainController {
         });
 
 
+        final PseudoClass train = PseudoClass.getPseudoClass("train");
+        final PseudoClass test = PseudoClass.getPseudoClass("test");
+
+
+
+        this.colorLegendHBox.visibleProperty().bind(this.trainEndIndex.isNotNull());
+
+
+
+
+        this.trainTableView.setRowFactory(param -> {
+
+
+
+            /*Percentage selection with button*/
+            final TableRow<List<Double>> row = new TableRow<List<Double>>(){
+
+                @Override
+                public void updateIndex(int i) {
+                    super.updateIndex(i);
+                    if(trainEndIndex.getValue() != null){
+                        if(i>=0){
+                            pseudoClassStateChanged(train, i < trainEndIndex.getValue());
+                            pseudoClassStateChanged(test, i >= trainEndIndex.getValue());
+                        }
+                    }
+
+                }
+            };
+
+            trainEndIndex.addListener((observable, oldValue, newValue) -> {
+                if(newValue!=null){
+                    row.pseudoClassStateChanged(train, row.getIndex() < newValue);
+                    row.pseudoClassStateChanged(test, row.getIndex() >= newValue);
+                }
+            });
+
+
+
+
+            return row;
+        });
 
 
 
@@ -992,23 +980,27 @@ public class MainController {
 
         this.trainDatasetChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
-                this.trainDataSet = loadDataset(newValue.getAsFile());
-                this.inputNodesTextField.setText(this.trainDataSet.getInputs()); //get number of inputs
-                this.outputNodesTextField.setText(this.trainDataSet.getOutputs()); // get number of outputs
+                try {
+                    DataKeeper trainDataSet = DataKeeper.loadDataset(newValue.getAsFile());
+                    this.inputNodesTextField.setText(String.valueOf(trainDataSet.getInputs())); //get number of inputs
+                    this.outputNodesTextField.setText(String.valueOf(trainDataSet.getOutputs())); // get number of outputs
+                    this.trainEndIndex.set(null);
+                    this.trainPercentageTextField.setText(null);
 
 
-                this.fillTableViewWithData(this.trainTableView, this.trainDataSet.getHeadersForTableView(), this.trainDataSet.getDataForTableView());
+                    this.fillTableViewWithData(this.trainTableView, trainDataSet);
 
 
-                errorChart.getData().clear();
-                trainValueGraphicChart.getData().clear();
-                drawablePane.getChildren().clear();
+                    trainErrorChart.getData().clear();
+                    trainValueGraphicChart.getData().clear();
+                    drawablePane.getChildren().clear();
 
-                trainingCount = 0;
+                    trainingCount = 0;
+                    this.trainSetSimpleObjectProperty.setValue(trainDataSet);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
-                this.startTrainingButton.setDisable(false);
-            } else {
-                this.startTrainingButton.setDisable(true);
             }
         });
 
@@ -1066,10 +1058,14 @@ public class MainController {
         trainigTab.setGraphic(new BorderPane(trainingProgressBar,null,null,null, null));
         testingTab.setGraphic(new BorderPane(testingProgressBar,null,null,null, null));
 
-        errorChartClearButton.setOnAction(event -> {
-            this.errorChart.getData().clear();
+        trainErrorChartClearButton.setOnAction(event -> {
+            this.trainErrorChart.getData().clear();
             this.trainingCount = 0;
         });
+        testErrorChartClearButton.setOnAction(event -> {
+            this.testErrorChart.getData().clear();
+        });
+
 
         trainValueGraphicChartClearButton.setOnAction(event -> {
             this.trainValueGraphicChart.getData().clear();
@@ -1081,7 +1077,8 @@ public class MainController {
 
 
         //Panning works via either secondary (right) mouse or primary with ctrl held down
-        configureChart(this.errorChart);
+        configureChart(this.trainErrorChart);
+        configureChart(this.testErrorChart);
         configureChart(this.trainValueGraphicChart);
         //configureChart(this.testValueChart);
         trainValueGraphicChart.getXAxis().setAutoRanging( false );
@@ -1098,13 +1095,22 @@ public class MainController {
                         .forEach(div ->  div.setMouseTransparent(true) );
                 projectSplitPane.lookupAll(".split-pane-divider").stream()
                         .forEach(div ->  div.setMouseTransparent(true) );
-
                 /*netVisualisationCanvas.setWidth(netVisualizationBorderPane.getWidth()-2);
                 netVisualisationCanvas.setHeight(netVisualizationBorderPane.getHeight());
                 netVisualisationCanvas.widthProperty().bind(netVisualizationBorderPane.widthProperty());
                 netVisualisationCanvas.heightProperty().bind(netVisualizationBorderPane.heightProperty());*/
             }
         });
+
+        /*trainTitledPane.widthProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue!=null){
+                trainHeaderBorderPane.setMaxWidth(trainTitledPane.getWidth());
+                trainHeaderBorderPane.setPrefWidth(trainTitledPane.getWidth()-40);
+            }
+        });*/
+
+
+
 
         this.netVisualizationBorderPane.setCenter(ZoomPane.createZoomPane(this.drawablePane));
 
@@ -1211,89 +1217,20 @@ public class MainController {
 
 
 
-    private DataKeeper loadDataset(File datasetName){
-        try {
-            /*Read training dataset file*/
-            DataKeeper dataKeeper = new DataKeeper();
-            BufferedReader reader = new BufferedReader(new FileReader(datasetName));
-            StringTokenizer stringTokenizer = new StringTokenizer(reader.readLine(),";");
-            List<String> headers = new ArrayList<>();
-
-            dataKeeper.setInputs(stringTokenizer.nextToken());
-            dataKeeper.setOutputs(stringTokenizer.nextToken());
-            String legendLabel;
-            String line = reader.readLine();
-            stringTokenizer = new StringTokenizer(line,":");
-            if(stringTokenizer.nextToken().equals("Legend")){
-                if(stringTokenizer.hasMoreTokens()) {
-                    stringTokenizer = new StringTokenizer(stringTokenizer.nextToken(), ";");
-                    dataKeeper.setLegendHeader(stringTokenizer.nextToken());
-                    List<Double> legend = new ArrayList<>(stringTokenizer.countTokens());
-                    while (stringTokenizer.hasMoreTokens()) {
-                        legendLabel = stringTokenizer.nextToken();
-                        if("null".equals(legendLabel)) continue;
-                        legend.add(Double.valueOf(legendLabel));
-                    }
-                    dataKeeper.setLegend(legend);
-                }
-                line = reader.readLine();
-            }
 
 
-            stringTokenizer = new StringTokenizer(line,";");
-            while (stringTokenizer.hasMoreTokens()){
-                headers.add(stringTokenizer.nextToken());
-            }
-            dataKeeper.setHeaders(headers);
-
-            /*Read dataset getNetOutputs*/
-            List<List<Double>> tempDataSet = new ArrayList<>(50);
-            line = reader.readLine();
-            String value;
-            while (line != null) {
-                stringTokenizer = new StringTokenizer(line,";");
-                List<Double> row = new ArrayList<>();
-                while(stringTokenizer.hasMoreTokens()){
-                    value = stringTokenizer.nextToken();
-                    if("null".equals(value)) continue;
-                    if(value.equals("")){
-                        row.add(null);
-                    } else {
-                        row.add(Double.valueOf(value));
-                    }
-                }
-                tempDataSet.add(row);
-                line = reader.readLine();
-            }
-
-            dataKeeper.setData(tempDataSet);
-
-            if(dataKeeper.getLegend() == null){
-                dataKeeper.setLegendHeader("№");
-                List<Double> legend = new ArrayList<>();
-                for (double i = 0; i < dataKeeper.getData().size(); i++) {
-                    legend.add(i+1);
-                }
-                dataKeeper.setLegend(legend);
-            }
-
-
-            return dataKeeper;
-            /*Reading of training dataset is over*/
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    void fillTableViewWithData(TableView<List<Double>> tableView, List<String> headers, List<List<Double>> data){
+    void fillTableViewWithData(TableView<List<Double>> tableView, DataKeeper data){
 
 
         tableView.getColumns().clear();
         tableView.getItems().clear();
         /*Prepare headers of table's columns*/
+
+
+        List<String> headers = data.getHeadersForTableView();
+
+
+
 
         for (int i = 0; i < headers.size(); i++){
             TableColumn tableColumn = new TableColumn();
@@ -1304,12 +1241,13 @@ public class MainController {
             {
                 return new SimpleObjectProperty<Double>((p.getValue().get(index)));
             });
+
             tableView.getColumns().add(tableColumn);
         }
 
         /*Put read data into tableview*/
          ObservableList<List<Double>> observableList = FXCollections.observableArrayList();
-                    observableList.addAll(data);
+                    observableList.addAll(data.getDataForTableView());
          tableView.setItems(observableList);
 
     }
@@ -1817,7 +1755,7 @@ public class MainController {
             this.currentNeatConfigFile = projectFileDescriptor;
             logger.debug("Current NEAT Config Tree item= " +  this.currentNeatConfigFile.getValue().getFullPath());
             fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TRAINING_SET, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TRAINING_FOLDER).findFirst().orElse(null), trainDatasetChoiceBox);
-            fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TEST_SET, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TESTING_FOLDER).findFirst().orElse(null), testDatasetChoiceBox);
+            //fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TEST_SET, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TESTING_FOLDER).findFirst().orElse(null), testDatasetChoiceBox);
             fillChoiceBoxWithData(ProjectFileDescriptor.TYPE.TRAINED_MODEL, projectFileDescriptor.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.MODEL_FOLDER).findFirst().orElse(null), trainedModelsChoiceBox);
 
             fillFieldsUsingAIConfig(this.currentNEATConfig);
@@ -1846,7 +1784,8 @@ public class MainController {
         trainTableView.getColumns().clear();
         //testTableView.getItems().clear();
         //testTableView.getColumns().clear();
-        errorChart.getData().clear();
+        trainErrorChart.getData().clear();
+        testErrorChart.getData().clear();
         trainValueGraphicChart.getData().clear();
     }
 
@@ -1961,13 +1900,13 @@ public class MainController {
 
     private void saveModel(TreeItem<ProjectFileDescriptor> model){
 
-        SaveModelDialogue saveModelDialogue = SaveModelDialogue.getInstance(this.scene);
-        saveModelDialogue.setModelToSave(model.getValue().getAsFile());
-        saveModelDialogue.show();
+        SaveDialogue saveDialogue = SaveDialogue.getInstance(this.scene);
+        //saveDialogue.setModelToSave(model.getValue().getAsFile());
+        saveDialogue.show();
 
-        if(saveModelDialogue.getNameOfNewModel().length() != 0){
+        if(saveDialogue.getNameOfNewFile().length() != 0){
             ProjectFileDescriptor value = model.getValue();
-            ProjectFileDescriptor newModel = new ProjectFileDescriptor(value.getType(), value.getDirectoryPath(), saveModelDialogue.getNameOfNewModel(), value.getExtension());
+            ProjectFileDescriptor newModel = new ProjectFileDescriptor(value.getType(), value.getDirectoryPath(), saveDialogue.getNameOfNewFile(), value.getExtension());
 
             TreeItemContextMenu<ProjectFileDescriptor> treeItemContextMenu = new TreeItemContextMenu<>(newModel, newModel.getGraphic(), dataContextMenu);
             model.getParent().getChildren().add(treeItemContextMenu);
@@ -2025,44 +1964,7 @@ public class MainController {
     }
 
 
-    private <T extends TextField & IFXLabelFloatControl> void validationPaneFormatter(
-            T jfxTextField) {
-        jfxTextField
-                .skinProperty()
-                .addListener(
-                        (observable, oldValue, newValue) -> {
-                            JFXTextFieldSkin textFieldSkin = ((JFXTextFieldSkin) newValue);
-                            ObservableList childs = textFieldSkin.getChildren();
-                            // Get validation pane.
-                            // It's always the last child. Be careful no get per type checking -> index can change
-                            // -> code will fail.
-                            ValidationPane validationPane = (ValidationPane) childs.get(childs.size() - 1);
-                            validationPane.setTranslateY(-32);
 
-                            // Set validation label to the right.
-                            // Again node is always first child but code can fail in future.
-                            StackPane labelStackPane = (StackPane) validationPane.getChildren().get(0);
-                            Label innerErrorLabel = (Label) labelStackPane.getChildren().get(0);
-                            StackPane.setAlignment(innerErrorLabel, Pos.TOP_RIGHT);
-                        });
-        // Validate also directly on typing or better text change for not override the error label.
-        jfxTextField
-                .textProperty()
-                .addListener((observable, oldValue, newValue) -> jfxTextField.validate());
-    }
-
-    private <T extends TextField & IFXLabelFloatControl> void addReqieredFieldValidator(
-            T jfxTextField, RequiredFieldValidator requiredFieldValidator ) {
-        jfxTextField.getValidators().add(requiredFieldValidator);
-        jfxTextField.getValidators().add(requiredFieldValidator);
-        jfxTextField.focusedProperty().addListener((observable, oldValue, newValue) -> {
-            if(!newValue){
-                jfxTextField.validate();
-            }
-        });
-        validationPaneFormatter(jfxTextField);
-
-    }
 
     @FXML
     private void saveConfig(){
@@ -2268,29 +2170,33 @@ public class MainController {
             trainenModelTreeItem = new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic());
             for (int j = 0; j < files.length; j++) {
                 fileName = files[j].getName().split("[.]");
-
-                switch (fileName[1]){
-                    case "neat":
-                        projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.NEAT_CONFIG, files[j].getParent() ,fileName[0], fileName[1]);
-                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), NEATContext);
-                        this.projectTreeView.getRoot().getChildren().add(treeItem);
-                        treeItem.getChildren().addAll(trainTreeItem, testTreeItem, trainenModelTreeItem);
-                        break;
-                    case "trd":
-                        projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINING_SET, files[j].getParent() ,fileName[0], fileName[1]);
-                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu);
-                        trainTreeItem.getChildren().add(treeItem);
-                        break;
-                    case "ted":
-                        projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TEST_SET, files[j].getParent() ,fileName[0], fileName[1]);
-                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu);
-                        testTreeItem.getChildren().add(treeItem);
-                        break;
-                    case "ser":
-                        projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINED_MODEL, files[j].getParent() ,fileName[0], fileName[1]);
-                        treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu);
-                        trainenModelTreeItem.getChildren().add(treeItem);
-                        break;
+                try {
+                    switch (fileName[1]) {
+                        case "neat":
+                            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.NEAT_CONFIG, files[j].getParent(), fileName[0], fileName[1]);
+                            treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), NEATContext);
+                            this.projectTreeView.getRoot().getChildren().add(treeItem);
+                            treeItem.getChildren().addAll(trainTreeItem, testTreeItem, trainenModelTreeItem);
+                            break;
+                        case "trd":
+                            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINING_SET, files[j].getParent(), fileName[0], fileName[1]);
+                            treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu);
+                            trainTreeItem.getChildren().add(treeItem);
+                            break;
+                        case "ted":
+                            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TEST_SET, files[j].getParent(), fileName[0], fileName[1]);
+                            treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu);
+                            testTreeItem.getChildren().add(treeItem);
+                            break;
+                        case "ser":
+                            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINED_MODEL, files[j].getParent(), fileName[0], fileName[1]);
+                            treeItem = new TreeItemContextMenu<ProjectFileDescriptor>(projectFileDescriptor, projectFileDescriptor.getGraphic(), this.dataContextMenu);
+                            trainenModelTreeItem.getChildren().add(treeItem);
+                            break;
+                    }
+                } catch (ArrayIndexOutOfBoundsException ex){
+                    ex.printStackTrace();
+                    continue;
                 }
 
             }
@@ -2318,8 +2224,18 @@ public class MainController {
                 parentProject = this.currentNeatConfigFile;
                 break;
         }
-        DataPreparatorDialogue.getInstance(this.scene).setCurrentDatasetFolder(parentProject.getValue().getDirectoryPath()).show();
-        String nameOfDataSet = DataPreparatorDialogue.getInstance(this.scene).getNameOfTrainingSet();
+        NewDataPreparatorDialogue instance = NewDataPreparatorDialogue.getInstance(this.scene);
+        instance.setCurrentDatasetFolder(parentProject.getValue().getDirectoryPath()).show();
+
+        if(instance.getName()!=null){
+            ProjectFileDescriptor projectFileDescriptor;
+            projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINING_SET, parentProject.getValue().getDirectoryPath(), instance.getName(), "trd");
+            //this.projectTreeView.getSelectionModel().getSelectedItem().getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
+            parentProject.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TRAINING_FOLDER).findFirst().orElse(null).getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
+            this.trainDatasetChoiceBox.getItems().add(projectFileDescriptor);
+            //this.trainDatasetChoiceBox.getSelectionModel().select(projectFileDescriptor);
+        }
+        /*String nameOfDataSet = NewDataPreparatorDialogue.getInstance(this.scene);
         ProjectFileDescriptor projectFileDescriptor;
         if(nameOfDataSet.length() != 0){
             projectFileDescriptor = new ProjectFileDescriptor(ProjectFileDescriptor.TYPE.TRAINING_SET, parentProject.getValue().getDirectoryPath(), nameOfDataSet, "trd");
@@ -2335,7 +2251,7 @@ public class MainController {
             //this.projectTreeView.getSelectionModel().getSelectedItem().getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
             this.testDatasetChoiceBox.getItems().add(projectFileDescriptor);
             //this.testDatasetChoiceBox.getSelectionModel().select(projectFileDescriptor);
-        }
+        }*/
     }
 
     public void generateNewSeed() {
@@ -2351,18 +2267,26 @@ public class MainController {
                 logger.debug("trainModel() : Train thread was interrupted");
             }
         }
+
+        DataKeeper trainDataSet = this.trainSetSimpleObjectProperty.getValue();
+        trainDataSet.setTrainIndexEnd(this.trainEndIndex.getValue());
+
+
+
         this.initNEATConfigUsingGUI(this.currentNEATConfig);
         this.trainingProgressBar.progressProperty().bind(new SimpleObjectProperty<Double>((double) 0));
 
         logger.debug("trainModel() : Work with NEAT Config = " + this.currentNEATConfig);
 
         this.currentNEATConfig.updateConfig("TRAINING.SET", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
-        this.currentNEATConfig.updateConfig("SAVE.LOCATION", this.currentNeatConfigFile.getValue().getDirectoryPath()+"\\"+this.trainDatasetChoiceBox.getValue().getName()+"_last_best.ser");
+        this.currentNEATConfig.updateConfig("TEST.SET", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
+        this.currentNEATConfig.updateConfig("SAVE.LOCATION", this.currentNeatConfigFile.getValue().getDirectoryPath()+"\\"+trainDatasetChoiceBox.getValue().getName()+"_last_best.ser");
 
         try {
-            this.saveTempDataSet(this.currentNEATConfig.configElement("TRAINING.SET"), this.trainDataSet);
+            trainDataSet.saveSet(this.currentNEATConfig.configElement("TRAINING.SET"), trainDataSet.getTrainData());
+            trainDataSet.saveSet(this.currentNEATConfig.configElement("TEST.SET"), trainDataSet.getTestData());
             logger.debug("trainModel() : tempDataset name " + this.currentNEATConfig.configElement("TRAINING.SET"));
-            //this.currentNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+this.trainDatasetChoiceBox.getValue()+"\\"+this.trainDatasetChoiceBox.getValue()+"@test_temp.dataset");
+            //this.currentNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+trainDataSetChoiceBox.getValue()+"\\"+trainDataSetChoiceBox.getValue()+"@test_temp.dataset");
             NEATTrainingForJavaFX neatTrainingForJavaFX = new NEATTrainingForJavaFX();
             neatTrainingForJavaFX.initialise(currentNEATConfig);
 
@@ -2373,13 +2297,13 @@ public class MainController {
 
             logger.debug("trainModel() : name of current dataset " + this.trainDatasetChoiceBox.getValue().getName());
             if(this.trainValueGraphicChart.getData().isEmpty()){
-                //double tick = this.trainDataSet.getLegend().stream().mapToDouble(value -> {return value;}).sum() / this.trainDataSet.getLegend().size();
-                double tick = (this.trainDataSet.getLegend().get(this.trainDataSet.getLegend().size()-1) - this.trainDataSet.getLegend().get(0)) / (this.trainDataSet.getLegend().size()-1);
+                //double tick = trainDataSet.getLegend().stream().mapToDouble(value -> {return value;}).sum() / trainDataSet.getLegend().size();
+                double tick = (trainDataSet.getLegend().get(trainDataSet.getLegend().size()-1) - trainDataSet.getLegend().get(0)) / (trainDataSet.getLegend().size()-1);
                 ((NumberAxis) trainValueGraphicChart.getXAxis()).setTickUnit(tick);
-                //((NumberAxis)trainValueGraphicChart.getXAxis()).setTickUnit(this.trainDataSet.legend.get(1)-this.trainDataSet.legend.get(0));
-                ((NumberAxis) trainValueGraphicChart.getXAxis()).setLowerBound(this.trainDataSet.legend.get(0)-((NumberAxis) trainValueGraphicChart.getXAxis()).getTickUnit());
-                ((NumberAxis) trainValueGraphicChart.getXAxis()).setUpperBound(this.trainDataSet.legend.get(this.trainDataSet.legend.size()-1)+((NumberAxis) trainValueGraphicChart.getXAxis()).getTickUnit());
-                trainValueGraphicChart.getXAxis().setLabel(this.trainDataSet.getLegendHeader());
+                //((NumberAxis)trainValueGraphicChart.getXAxis()).setTickUnit(trainDataSet.legend.get(1)-trainDataSet.legend.get(0));
+                ((NumberAxis) trainValueGraphicChart.getXAxis()).setLowerBound(trainDataSet.getLegend().get(0)-((NumberAxis) trainValueGraphicChart.getXAxis()).getTickUnit());
+                ((NumberAxis) trainValueGraphicChart.getXAxis()).setUpperBound(trainDataSet.getLegend().get(trainDataSet.getLegend().size()-1)+((NumberAxis) trainValueGraphicChart.getXAxis()).getTickUnit());
+                trainValueGraphicChart.getXAxis().setLabel(trainDataSet.getLegendHeader());
                 XYChart.Series expectedOutputDataXYChart = null;
                 for (int i = 0; i < Integer.parseInt(this.outputNodesTextField.getText()); i++) {
 
@@ -2388,7 +2312,7 @@ public class MainController {
                     this.trainValueGraphicChart.getData().add(expectedOutputDataXYChart);
                     expectedOutputDataXYChart.setName(tableColumn.getText() + " (Факт)");
                     for (int j = 0; j < this.trainTableView.getItems().size(); j++) {
-                        XYChart.Data integerObjectData = new XYChart.Data<>(trainDataSet.legend.get(j), tableColumn.getCellData(j));
+                        XYChart.Data integerObjectData = new XYChart.Data<>(trainDataSet.getLegend().get(j), tableColumn.getCellData(j));
                         integerObjectData.setNode(new StackPane());
                         expectedOutputDataXYChart.getData().add(integerObjectData);
                         Tooltip.install(integerObjectData.getNode(), new Tooltip(String.valueOf(tableColumn.getCellData(j))));
@@ -2400,9 +2324,14 @@ public class MainController {
 
 
 
-            XYChart.Series errorSeries = new XYChart.Series();
-            errorSeries.setName("Fitness of the " + ++this.trainingCount + " run");
-            this.errorChart.getData().add(errorSeries);
+            XYChart.Series trainErrorSeries = new XYChart.Series();
+            trainErrorSeries.setName("Fitness of the " + ++this.trainingCount + " run");
+            this.trainErrorChart.getData().add(trainErrorSeries);
+
+            XYChart.Series testErrorSeries = new XYChart.Series();
+            testErrorSeries.setName("Loss of the " + ++this.trainingCount + " run");
+            this.testErrorChart.getData().add(testErrorSeries);
+
 
 
 
@@ -2414,8 +2343,8 @@ public class MainController {
 
 
            /*Platform.runLater(() -> {
-                *//**//*errorSeries.getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour[0]+";");
-                Node[] nodes = errorChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
+                *//**//*trainErrorSeries.getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour[0]+";");
+                Node[] nodes = trainErrorChart.lookupAll(".chart-line-symbol").toArray(new Node[0]);
                 nodes[nodes.length-1].setStyle("-fx-background-color: "+ colour[0] +", white;");
                 for (int i = 0; i <outputValuesSeries.length ; i++) {
                     outputValuesSeries[i].getNode().lookup(".chart-series-line"). setStyle("-fx-stroke: "+colour[i]+";");
@@ -2433,17 +2362,35 @@ public class MainController {
             AtomicInteger atomicInteger = new AtomicInteger(1);
             neatTrainingForJavaFX.getBestEverChromosomesProperty().addListener((ListChangeListener<? super Chromosome>) c -> {
                 Platform.runLater(() -> {
-                    int n = neatTrainingForJavaFX.getBestEverChromosomes().size();
-                    double fitnessValue = neatTrainingForJavaFX.getBestEverChromosomes().get(n-1).fitness();
-                    XYChart.Data<Number, Number> xyData = new XYChart.Data<>(neatTrainingForJavaFX.getCurrentEpoch(), fitnessValue);
+
+                    Chromosome bestChromo = neatTrainingForJavaFX.getBestEverChromosomes().get(neatTrainingForJavaFX.getBestEverChromosomes().size() - 1);
+                    int currentEpoch = neatTrainingForJavaFX.getCurrentEpoch();
+                    Double fitnessValue = bestChromo.fitness();
+                    XYChart.Data<Number, Number> xyData = new XYChart.Data<>(currentEpoch, fitnessValue);
                     xyData.setNode(new StackPane());
                     lastErrorTextField.setText(String.valueOf(fitnessValue));
                     currentEpochTextField.setText(String.valueOf(neatTrainingForJavaFX.getCurrentEpoch()));
                     Tooltip.install(xyData.getNode(), new Tooltip(String.valueOf(fitnessValue)));
-                    errorSeries.getData().add(xyData);
+                    trainErrorSeries.getData().add(xyData);
+
+
+                    fitnessValue = bestChromo.getValidationError();
+                    if(fitnessValue!=null) {
+                        xyData = new XYChart.Data<>(currentEpoch, fitnessValue);
+                        xyData.setNode(new StackPane());
+                        testErrorTextField.setText(String.valueOf(fitnessValue));
+                        Tooltip.install(xyData.getNode(), new Tooltip(String.valueOf(fitnessValue)));
+                        testErrorSeries.getData().add(xyData);
+                    }
+
+
+
+
+
+
                     outputValuesSeries.getData().clear();
 
-                    Chromosome bestChromo = neatTrainingForJavaFX.getBestEverChromosomes().get(n - 1);
+
                     List<List<Double>> outputs = bestChromo.getOutputValues();
                     AtomicInteger counter = new AtomicInteger();
                     for(List<Double> output : outputs) {
@@ -2460,7 +2407,7 @@ public class MainController {
             });
 
 
-            neatTrainingForJavaFX.statusProperty().addListener(observable -> {
+            /*neatTrainingForJavaFX.statusProperty().addListener(observable -> {
                 Platform.runLater(() -> {
                     int n = neatTrainingForJavaFX.getBestEverChromosomes().size();
                         Chromosome bestChromo = neatTrainingForJavaFX.getBestEverChromosomes().get(n - 1);
@@ -2471,7 +2418,7 @@ public class MainController {
                             e.printStackTrace();
                         }
                 });
-            });
+            });*/
             this.trainingProgressBar.progressProperty().bind(neatTrainingForJavaFX.statusProperty());
 
 
@@ -2543,7 +2490,7 @@ public class MainController {
 
     public void testModel(ActionEvent actionEvent) {
 
-        if(testThread != null) {
+        /*if(testThread != null) {
             if (testThread.isAlive()) {
                 testThread.interrupt();
                 logger.debug("testModel() : Test thread was interrupted");
@@ -2567,8 +2514,8 @@ public class MainController {
                 double tick = (this.testDataSet.getLegend().get(this.testDataSet.getLegend().size()-1) - this.testDataSet.getLegend().get(0)) / (this.testDataSet.getLegend().size()-1);
                 ((NumberAxis) testValueChart.getXAxis()).setTickUnit(tick);
                 //((NumberAxis)testValueGraphicChart.getXAxis()).setTickUnit(this.testDataSet.legend.get(1)-this.testDataSet.legend.get(0));
-                ((NumberAxis) testValueChart.getXAxis()).setLowerBound(this.testDataSet.legend.get(0)-((NumberAxis) testValueChart.getXAxis()).getTickUnit());
-                ((NumberAxis) testValueChart.getXAxis()).setUpperBound(this.testDataSet.legend.get(this.testDataSet.legend.size()-1)+((NumberAxis) testValueChart.getXAxis()).getTickUnit());
+                ((NumberAxis) testValueChart.getXAxis()).setLowerBound(this.testDataSet.getLegend().get(0)-((NumberAxis) testValueChart.getXAxis()).getTickUnit());
+                ((NumberAxis) testValueChart.getXAxis()).setUpperBound(this.testDataSet.getLegend().get(this.testDataSet.getLegend().size()-1)+((NumberAxis) testValueChart.getXAxis()).getTickUnit());
                 testValueChart.getXAxis().setLabel(this.testDataSet.getLegendHeader());
                 XYChart.Series expectedOutputDataXYChart = null;
                 for (int i = 0; i < Integer.parseInt(this.outputNodesTextField.getText()); i++) {
@@ -2579,7 +2526,7 @@ public class MainController {
                     expectedOutputDataXYChart.setName(tableColumn.getText() + " (Факт)");
                     for (int j = 0; j < this.testTableView.getItems().size(); j++) {
                         if(tableColumn.getCellData(j) != null) {
-                            XYChart.Data integerObjectData = new XYChart.Data<>(testDataSet.legend.get(j), tableColumn.getCellData(j));
+                            XYChart.Data integerObjectData = new XYChart.Data<>(testDataSet.getLegend().get(j), tableColumn.getCellData(j));
                             integerObjectData.setNode(new StackPane());
                             expectedOutputDataXYChart.getData().add(integerObjectData);
                             Tooltip.install(integerObjectData.getNode(), new Tooltip(String.valueOf(tableColumn.getCellData(j))));
@@ -2594,7 +2541,7 @@ public class MainController {
             AtomicInteger counter = new AtomicInteger(0);
             neatPredictionEngineForJavaFX.getOutsProperty().addListener((observable, oldValue, newValue) -> {
                 Platform.runLater(()->{
-                    /*List<Double> outputs = newValue.get(newValue.size() - 1);*/
+                    *//*List<Double> outputs = newValue.get(newValue.size() - 1);*//*
                     if(newValue!=null) {
                         counter.set(0);
                         for (List<Double> output : newValue) {
@@ -2633,7 +2580,7 @@ public class MainController {
         } catch (IllegalArgumentException e) {
             AlertWindow.createAlertWindow("Несовместимость модели и тестируемой выборки\n" + e.getMessage()).showAndWait();
             e.printStackTrace();
-        }
+        }*/
 
 
     }
@@ -2678,46 +2625,38 @@ public class MainController {
 
 
 
-    public File saveTempDataSet(String filePath, DataKeeper dataSet) throws IOException {
-        File file = new File(filePath);
-        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, false));
-        Double value;
-        for (int i = 0; i < dataSet.getHeaders().size(); i++) {
-            bufferedWriter.write(this.trainDataSet.getHeaders().get(i));
-            if(i != dataSet.getHeaders().size() - 1) bufferedWriter.write(";");
-        }
-        bufferedWriter.append("\n");
-        for(List<Double> list : dataSet.getData()){
-            for (int i = 0; i < list.size(); i++) {
-                value = list.get(i);
 
-                bufferedWriter.write(String.valueOf(value));
-                if(i != list.size()-1) bufferedWriter.write(";");
-            }
-            bufferedWriter.write("\n");
-        }
-        bufferedWriter.flush();
-        bufferedWriter.close();
-        return file;
-    }
 
     public void openTrainedModels(ActionEvent actionEvent) {
     }
 
-    public void openTestDataset(ActionEvent actionEvent) {
-    }
 
     public void viewDataInNewWindow(ProjectFileDescriptor projectFileDescriptor){
-        DataKeeper dataKeeper = loadDataset(projectFileDescriptor.getAsFile());
+        DataKeeper dataKeeper = null;
+        try {
+            dataKeeper = DataKeeper.loadDataset(projectFileDescriptor.getAsFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+            AlertWindow.createAlertWindow("Невозможно открыть файл : " + projectFileDescriptor.getFullPath());
+        }
 
         ViewDataWindow viewDataWindow = ViewDataWindow.getInstance(this.scene, projectFileDescriptor.getType()+" "+projectFileDescriptor.getName());
 
-        fillTableViewWithData(viewDataWindow.getTableView(), dataKeeper.getHeadersForTableView(), dataKeeper.getDataForTableView());
+        fillTableViewWithData(viewDataWindow.getTableView(), dataKeeper);
         viewDataWindow.show();
     }
 
-
-
+    @FXML
+    private void confirmTrainPercantage(ActionEvent event){
+        try{
+            double trainPercentage = Double.parseDouble(this.trainPercentageTextField.getText().replace(",", "."));
+            this.trainEndIndex.set((int) Math.round( ((double) this.trainSetSimpleObjectProperty.getValue().getData().size()) / 100 * trainPercentage));
+            this.trainSetSimpleObjectProperty.getValue().setTrainIndexEnd(this.trainEndIndex.getValue());
+        } catch (NumberFormatException ex){
+            ex.printStackTrace();
+            AlertWindow.createAlertWindow("Невереый формат числа! Введите число в диапозоне от 0.0 - 100.0").showAndWait();
+        }
+    }
 
 
 }

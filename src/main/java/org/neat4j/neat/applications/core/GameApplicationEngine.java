@@ -21,9 +21,8 @@ public class GameApplicationEngine implements ApplicationEngine {
 	/**
 	 * @see org.neat4j.ailibrary.core.AIController#initialise(org.neat4j.ailibrary.core.AIConfig)
 	 */
-	public void initialise(AIConfig config) throws InitialisationFailedException {
+	public void initialise(AIConfig config, boolean loadData) throws InitialisationFailedException {
 		// TODO Auto-generated method stub
 
 	}
-
 }

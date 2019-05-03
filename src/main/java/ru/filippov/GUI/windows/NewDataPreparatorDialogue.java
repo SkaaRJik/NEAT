@@ -5,23 +5,25 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import ru.filippov.GUI.controllers.DataPreparatorDialogueController;
+import ru.filippov.GUI.controllers.NewDataPreparatorDialogueController;
 import ru.filippov.utils.CsControl;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-public class DataPreparatorDialogue {
-    private static DataPreparatorDialogue instance;
+public class NewDataPreparatorDialogue {
+
+    private static NewDataPreparatorDialogue instance;
 
     private Stage stage;
-    private DataPreparatorDialogueController controller;
+    private NewDataPreparatorDialogueController controller;
 
     private ResourceBundle resourceBundle;
 
-    public DataPreparatorDialogue(Scene parent) {
-        FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("views/dataPreparator.fxml"));
+    public NewDataPreparatorDialogue(Scene parent) {
+        FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("views/newDataPreparator.fxml"));
         Parent root = null;
         try {
             root = loader.load();
@@ -36,8 +38,8 @@ public class DataPreparatorDialogue {
         this.stage.initModality(Modality.APPLICATION_MODAL);
         this.stage.initOwner(parent.getWindow());
         controller = loader.getController();
-
         controller.init();
+
     }
 
     public void setLanguageUsingDefaultLocale(){
@@ -55,24 +57,27 @@ public class DataPreparatorDialogue {
     }
 
 
-    public static DataPreparatorDialogue getInstance(Scene parent) {
-        if(instance == null) instance = new DataPreparatorDialogue(parent);
+    public static NewDataPreparatorDialogue getInstance(Scene parent) {
+        if(instance == null) instance = new NewDataPreparatorDialogue(parent);
 
         return instance;
     }
 
-    public DataPreparatorDialogue setCurrentDatasetFolder(String datasetFolderName){
+    public NewDataPreparatorDialogue setCurrentDatasetFolder(String datasetFolderName){
         controller.setCurrentDatasetFolder(datasetFolderName);
         return instance;
     }
 
     public void show() {
-        instance.controller.clearNamesOfDatasets();
+        instance.controller.refresh();
         instance.stage.showAndWait();
     }
 
-    public String getNameOfTrainingSet(){
-        return instance.controller.getNameOfTrainingSet();
+    public String getName(){
+        return instance.controller.getFileName();
     }
-    public String getNameOfTestSet(){ return instance.controller.getNameOfTestSet(); }
+
+
+
+
 }

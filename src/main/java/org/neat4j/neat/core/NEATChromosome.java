@@ -23,6 +23,7 @@ import java.util.List;
 public class NEATChromosome implements Chromosome {
 	private Gene[] genes;
 	private double fitness;
+	private Double validationError;
 	private int specieId = -1;
 	private boolean nOrder = false;
 	private int inputs;
@@ -137,5 +138,15 @@ public class NEATChromosome implements Chromosome {
 
 	public void setOutputs(int outputs) {
 		this.outputs = outputs;
+	}
+
+	@Override
+	public Double getValidationError() {
+		return this.validationError;
+	}
+
+	@Override
+	public void setValidationError(Double error) {
+		this.validationError = error;
 	}
 }

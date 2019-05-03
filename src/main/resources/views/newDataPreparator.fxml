@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXComboBox?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.NewDataPreparatorDialogueController">
+   <center>
+      <TabPane fx:id="tabPane" prefHeight="200.0" prefWidth="200.0" styleClass="tab-pane-next" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+        <tabs>
+          <Tab fx:id="loadDataTab" text="Загрузка">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="305.0" prefWidth="600.0">
+                     <children>
+                        <BorderPane fx:id="loadDataBorderPane" layoutX="200.0" layoutY="60.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <top>
+                              <BorderPane prefHeight="0.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+                                 <center>
+                                    <TextField fx:id="fileTextField" editable="false" promptText="Open the file" BorderPane.alignment="CENTER">
+                                       <BorderPane.margin>
+                                          <Insets top="5.0" />
+                                       </BorderPane.margin></TextField>
+                                 </center>
+                                 <left>
+                                    <Label text="File" BorderPane.alignment="CENTER">
+                                       <BorderPane.margin>
+                                          <Insets left="5.0" right="5.0" top="5.0" />
+                                       </BorderPane.margin></Label>
+                                 </left>
+                                 <right>
+                                    <HBox BorderPane.alignment="CENTER">
+                                       <BorderPane.margin>
+                                          <Insets left="5.0" right="5.0" top="5.0" />
+                                       </BorderPane.margin>
+                                       <children>
+                                          <JFXComboBox fx:id="encodingChoiceBox" editable="true" prefHeight="31.0" prefWidth="100.0" promptText="Encoding" />
+                                          <JFXButton contentDisplay="CENTER" onAction="#loadData" text=" ">
+                                             <graphic>
+                                                <FontAwesomeIconView glyphName="FOLDER_OPEN_ALT" size="18.0" />
+                                             </graphic>
+                                          </JFXButton>
+                                       </children>
+                                    </HBox>
+                                 </right>
+                                 <bottom>
+                                    <Label fx:id="selectInputsAndOutputsLabel" text="Select inputs and outputs" BorderPane.alignment="CENTER" />
+                                 </bottom>
+                              </BorderPane>
+                           </top>
+                           <center>
+                              <ScrollPane fitToHeight="true" fitToWidth="true" BorderPane.alignment="CENTER">
+                                 <content>
+                                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0">
+                                       <children>
+                                          <TableView fx:id="selectUsableDataTableView" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                       </children>
+                                    </AnchorPane>
+                                 </content>
+                              </ScrollPane>
+                           </center>
+                        </BorderPane>
+                     </children></AnchorPane>
+            </content>
+          </Tab>
+            <Tab fx:id="normaliseDataTab" disable="true" text="Нормирование">
+              <content>
+                <AnchorPane>
+                     <children>
+                        <BorderPane prefHeight="503.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <top>
+                              <VBox alignment="CENTER" spacing="10.0" BorderPane.alignment="CENTER">
+                                 <children>
+                                    <Label text="Нормировать данные" />
+                                    <HBox alignment="CENTER" spacing="10.0">
+                                       <children>
+                                          <Label fx:id="chooseNormaliseMethodLabel" text="Алгоритм" />
+                                          <ChoiceBox fx:id="chooseNormaliseMethodChoiceBox" prefWidth="150.0" />
+                                          <Label fx:id="chooseActivationFunctionLabel" text="Label" visible="false" />
+                                          <ChoiceBox fx:id="chooseActivationFunctionChoiceBox" prefWidth="150.0" visible="false" />
+                                          <Button fx:id="runNormaliseButton" mnemonicParsing="false" onAction="#normaliseData" text="Button" />
+                                       </children>
+                                    </HBox>
+                                    <HBox alignment="CENTER" layoutX="10.0" layoutY="41.0" spacing="50.0">
+                                       <children>
+                                          <Label fx:id="setRangeLabel" text="Предел" />
+                                          <JFXTextField fx:id="minRangeTextField" labelFloat="true" promptText="Min" text="0.1" />
+                                          <JFXTextField fx:id="maxRangeTextField" labelFloat="true" promptText="Max" text="0.9" />
+                                       </children>
+                                       <padding>
+                                          <Insets top="10.0" />
+                                       </padding>
+                                    </HBox>
+                                 </children>
+                                 <BorderPane.margin>
+                                    <Insets bottom="5.0" top="5.0" />
+                                 </BorderPane.margin>
+                              </VBox>
+                           </top>
+                           <center>
+                              <Accordion fx:id="normaliseDataAccordion" BorderPane.alignment="CENTER">
+                                <panes>
+                                  <TitledPane animated="false" text="Данные">
+                                    <content>
+                                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                             <children>
+                                                <TableView fx:id="normalisedDataTableView" layoutX="229.0" layoutY="47.0" prefHeight="368.0" prefWidth="798.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                             </children>
+                                          </AnchorPane>
+                                    </content>
+                                  </TitledPane>
+                                  <TitledPane animated="false" expanded="false" text="Распределение">
+                                    <content>
+                                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                             <children>
+                                                <BarChart fx:id="normaliseStatisticBarChart" layoutX="61.0" layoutY="-25.0" prefHeight="368.0" prefWidth="798.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                  <xAxis>
+                                                    <CategoryAxis side="BOTTOM" />
+                                                  </xAxis>
+                                                  <yAxis>
+                                                    <NumberAxis side="LEFT" />
+                                                  </yAxis>
+                                                </BarChart>
+                                             </children>
+                                          </AnchorPane>
+                                    </content>
+                                  </TitledPane>
+                                </panes>
+                              </Accordion>
+                           </center>
+                        </BorderPane>
+                     </children>
+                  </AnchorPane>
+              </content>
+            </Tab>
+        </tabs>
+      </TabPane>
+   </center>
+   <bottom>
+      <AnchorPane prefHeight="48.0" prefWidth="590.0" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </BorderPane.margin>
+         <children>
+            <BorderPane layoutY="14.0" prefHeight="56.0" prefWidth="590.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <left>
+                  <HBox alignment="BOTTOM_LEFT" prefHeight="48.0" prefWidth="326.0" spacing="5.0" BorderPane.alignment="CENTER">
+                     <children>
+                        <CheckBox fx:id="containsHeadersCheckBox" mnemonicParsing="false" prefHeight="21.0" prefWidth="162.0" text="has headers">
+                           <HBox.margin>
+                              <Insets bottom="5.0" />
+                           </HBox.margin>
+                        </CheckBox>
+                     </children>
+                  </HBox>
+               </left>
+               <right>
+                  <HBox alignment="BOTTOM_RIGHT" prefHeight="48.0" prefWidth="261.0" spacing="10.0" BorderPane.alignment="BOTTOM_RIGHT">
+                     <children>
+                        <JFXButton fx:id="cancelButton" onAction="#cancel" text="Cancel" />
+                        <JFXButton fx:id="previousButton" disable="true" onAction="#previousStep" text="Previous" />
+                        <JFXButton fx:id="nextButton" disable="true" onAction="#nextStep" text="Next" />
+                     </children>
+                  </HBox>
+               </right>
+               <center>
+                  <Label fx:id="dataTextAreaError" style="-fx-text-fill: red;" wrapText="true" BorderPane.alignment="CENTER" />
+               </center>
+            </BorderPane>
+         </children>
+      </AnchorPane>
+   </bottom>
+</BorderPane>

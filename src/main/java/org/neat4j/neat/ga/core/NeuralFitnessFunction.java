@@ -10,17 +10,27 @@ import org.neat4j.neat.nn.core.NeuralNet;
 public abstract class NeuralFitnessFunction implements FitnessFunction {
 	private NeuralNet net;
 	private NetworkDataSet evalDataSet;
-	
+	private NetworkDataSet valDataSet;
+
 	public NeuralFitnessFunction(NeuralNet net, NetworkDataSet dataSet) {
 		this.evalDataSet = dataSet;
 		this.net = net;
 	}
-	
+	public NeuralFitnessFunction(NeuralNet net, NetworkDataSet dataSet, NetworkDataSet valDataSet) {
+		this.evalDataSet = dataSet;
+		this.valDataSet = valDataSet;
+		this.net = net;
+	}
+
 	public NeuralNet net() {
 		return (this.net);
 	}
 	
 	public NetworkDataSet evaluationData() {
 		return (this.evalDataSet);
+	}
+
+	public NetworkDataSet testData() {
+		return (this.valDataSet);
 	}
 }

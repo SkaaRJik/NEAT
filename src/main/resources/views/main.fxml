@@ -4,6 +4,7 @@
 <?import com.jfoenix.controls.JFXTextField?>
 <?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <?import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView?>
+<?import de.jensd.fx.glyphs.octicons.OctIconView?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
@@ -28,7 +29,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0" prefWidth="640.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
    <top>
       <AnchorPane prefHeight="0.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <children>
@@ -145,7 +146,7 @@
                      <content>
                         <SplitPane fx:id="neatSplitPane" dividerPositions="0.5">
                            <items>
-                              <ScrollPane fitToWidth="true">
+                              <ScrollPane fx:id="dataSetsScrollPane" fitToWidth="true">
                                  <content>
                                     <VBox fx:id="trainVBox" alignment="CENTER" spacing="10.0">
                                        <children>
@@ -184,6 +185,40 @@
                                                    </children>
                                                 </AnchorPane>
                                             </content>
+                                             <graphic>
+                                                <BorderPane fx:id="trainHeaderBorderPane">
+                                                   <left>
+                                                      <Label text="Датасет" BorderPane.alignment="CENTER" />
+                                                   </left>
+                                                   <right>
+                                                      <HBox spacing="5.0" BorderPane.alignment="CENTER">
+                                                         <children>
+                                                            <HBox fx:id="colorLegendHBox" alignment="CENTER" spacing="5.0" styleClass="borderedHBox">
+                                                               <children>
+                                                                  <Label ellipsisString="Трен" styleClass="selected-as-train" text="Тренировка" />
+                                                                  <Label ellipsisString="Тест" styleClass="selected-as-test" text="Тестирование" />
+                                                               </children>
+                                                               <HBox.margin>
+                                                                  <Insets />
+                                                               </HBox.margin>
+                                                               <padding>
+                                                                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                                               </padding>
+                                                            </HBox>
+                                                            <JFXTextField fx:id="trainPercentageTextField" labelFloat="true" prefHeight="33.0" prefWidth="242.0" promptText="Выделить на тренировку (0-100%)" />
+                                                            <JFXButton fx:id="confirmTrainPercantageButton" onAction="#confirmTrainPercantage">
+                                                               <graphic>
+                                                                  <MaterialDesignIconView glyphName="CHECK" size="20" />
+                                                               </graphic>
+                                                            </JFXButton>
+                                                         </children>
+                                                      </HBox>
+                                                   </right>
+                                                   <padding>
+                                                      <Insets top="20.0" />
+                                                   </padding>
+                                                </BorderPane>
+                                             </graphic>
                                           </TitledPane>
                                           <JFXButton fx:id="startTrainingButton" onAction="#trainModel" text="Start">
                                              <graphic>
@@ -193,25 +228,42 @@
                                           <FlowPane hgap="10.0" vgap="10.0">
                                              <children>
                                                 <JFXTextField fx:id="lastErrorTextField" labelFloat="true" promptText="Ошибка обучения" />
-                                                <JFXTextField fx:id="currentEpochTextField" editable="false" labelFloat="true" layoutX="10.0" layoutY="10.0" promptText="Текущая эпоха" />
                                                 <JFXTextField fx:id="testErrorTextField" labelFloat="true" promptText="Ошибка тестирования" />
+                                                <JFXTextField fx:id="currentEpochTextField" editable="false" labelFloat="true" layoutX="10.0" layoutY="10.0" promptText="Текущая эпоха" />
                                              </children>
                                           </FlowPane>
                                           <FlowPane hgap="10.0" vgap="10.0">
                                              <children>
                                                 <HBox alignment="CENTER" styleClass="borderedHBox">
                                                    <children>
-                                                      <LineChart fx:id="errorChart">
+                                                      <LineChart fx:id="trainErrorChart">
                                                         <xAxis>
-                                                          <NumberAxis label="Epochs" side="BOTTOM" />
+                                                          <NumberAxis label="Эпохи" side="BOTTOM" />
                                                         </xAxis>
                                                         <yAxis>
-                                                          <NumberAxis label="Errors" side="LEFT" />
+                                                          <NumberAxis label="Ошибка обучения" side="LEFT" />
                                                         </yAxis>
                                                       </LineChart>
-                                                      <JFXButton fx:id="errorChartClearButton" mnemonicParsing="false">
+                                                      <JFXButton fx:id="trainErrorChartClearButton" mnemonicParsing="false">
                                                          <graphic>
-                                                            <MaterialDesignIconView glyphName="REFRESH" size="20.0" />
+                                                            <OctIconView glyphName="TRASHCAN" size="24" />
+                                                         </graphic>
+                                                      </JFXButton>
+                                                   </children>
+                                                </HBox>
+                                                <HBox alignment="CENTER" layoutX="10.0" layoutY="10.0" styleClass="borderedHBox">
+                                                   <children>
+                                                      <LineChart fx:id="testErrorChart">
+                                                         <xAxis>
+                                                            <NumberAxis label="Эпохи" side="BOTTOM" />
+                                                         </xAxis>
+                                                         <yAxis>
+                                                            <NumberAxis label="Ошибка тестирования" side="LEFT" />
+                                                         </yAxis>
+                                                      </LineChart>
+                                                      <JFXButton fx:id="testErrorChartClearButton" mnemonicParsing="false">
+                                                         <graphic>
+                                                            <OctIconView glyphName="TRASHCAN" size="24" />
                                                          </graphic>
                                                       </JFXButton>
                                                    </children>
@@ -223,12 +275,12 @@
                                                             <NumberAxis label="Legend" side="BOTTOM" />
                                                          </xAxis>
                                                          <yAxis>
-                                                            <NumberAxis label="Output values" side="LEFT" />
+                                                            <NumberAxis label="Значения" side="LEFT" />
                                                          </yAxis>
                                                       </LineChart>
                                                       <JFXButton fx:id="trainValueGraphicChartClearButton" mnemonicParsing="false">
                                                          <graphic>
-                                                            <MaterialDesignIconView glyphName="REFRESH" size="20.0" />
+                                                            <OctIconView glyphName="TRASHCAN" size="24" />
                                                          </graphic>
                                                       </JFXButton>
                                                    </children>

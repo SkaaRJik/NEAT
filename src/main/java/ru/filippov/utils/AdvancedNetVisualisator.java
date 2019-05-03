@@ -252,6 +252,7 @@ public class AdvancedNetVisualisator {
             config.updateConfig("INPUT.NODES", String.valueOf(chromo.getInputs()));
             config.updateConfig("OUTPUT.NODES", String.valueOf(chromo.getOutputs()));
 
+            //NeuralNet net = createNet(config);
             NeuralNet net = createNet(config);
             ((NEATNetDescriptor)(net.netDescriptor())).updateStructure(chromo);
             ((NEATNeuralNet)net).updateNetStructure();
@@ -290,7 +291,7 @@ public class AdvancedNetVisualisator {
         int row = 0;
         int col = 0;
         List<NEATNeuron> neurons = this.net.getNeurons();
-        
+
         NEATNeuron neuron;
 
         // will only need the first few entries, but htis will cope with wierd structures
@@ -439,39 +440,11 @@ public class AdvancedNetVisualisator {
 
     public NeuralNet createNet(AIConfig config) throws InitialisationFailedException {
         NEATNetManager netManager = new NEATNetManager();
-        netManager.initialise(config);
+        netManager.initialise(config, false);
         return ((NEATNeuralNet)netManager.managedNet());
     }
 
-    private DisplayNeuron[] findDisplaySources(DisplayNeuron[] displayNeurons, DisplayNeuron from) {
-        ArrayList sourceNeurons = from.neuron().sourceNeurons();
-        DisplayNeuron[] targets = new DisplayNeuron[sourceNeurons.size()];
-        int i;
 
-        for (i = 0; i < targets.length; i++) {
-            targets[i] = this.findTarget(displayNeurons, ((NEATNeuron)sourceNeurons.get(i)).id());
-        }
-
-        return (targets);
-    }
-
-    private DisplayNeuron findTarget(DisplayNeuron[] displayNeurons, int id) {
-        int i = 0;
-        boolean found = false;
-        DisplayNeuron target = null;
-
-        while (i < displayNeurons.length && ! found) {
-            if (displayNeurons[i] != null) {
-                if (displayNeurons[i].neuron().id() == id) {
-                    target = displayNeurons[i];
-                    found = true;
-                }
-            }
-            i++;
-        }
-
-        return (target);
-    }
 
 
 
@@ -490,7 +463,6 @@ public class AdvancedNetVisualisator {
         g.setFill(Color.WHITE);
         g.strokeText("id=" + neuron.neuron().id() + "("+neuron.neuron().getActivationFunction().getFunctionName()+")", neuron.x(), neuron.y());
     }
-
     private void drawLink(DisplayNeuron from, DisplayNeuron to, GraphicsContext g) {
         if (from.neuron().id() == to.neuron().id()) {
             g.setFill(Color.BLUE);

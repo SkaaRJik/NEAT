@@ -2,7 +2,7 @@
  * Created on Oct 6, 2004
  *
  */
-package org.neat4j.neat.data.csv;
+package org.neat4j.neat.data.set;
 
 import org.neat4j.neat.data.core.ExpectedOutputSet;
 import org.neat4j.neat.data.core.NetworkOutput;
@@ -14,14 +14,14 @@ import java.util.List;
  * @author MSimmerson
  *
  */
-public class CSVExpectedOutputSet implements ExpectedOutputSet {
+public class ExpectedOutputSetImpl implements ExpectedOutputSet {
 
 	List<String> headers;
 
 	private ArrayList ops;
 	private int idx;
 	
-	public CSVExpectedOutputSet( List<String> headers, ArrayList eOps) {
+	public ExpectedOutputSetImpl(List<String> headers, ArrayList eOps) {
 		this.idx = 0;
 		this.ops = eOps;
 		this.headers = headers;

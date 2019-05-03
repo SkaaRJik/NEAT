@@ -105,7 +105,6 @@ public class NEATGATrainingManager {
 	public void saveBest() {
 		String pathToSave = config.configElement("SAVE.LOCATION");
 		Chromosome chromosome = this.ga.discoverdBestMember();
-
 		chromosome.setInputs(Integer.parseInt(config.configElement("INPUT.NODES")));
 		chromosome.setOutputs(Integer.parseInt(config.configElement("OUTPUT.NODES")));
 		this.save(pathToSave, chromosome);
@@ -176,6 +175,7 @@ public class NEATGATrainingManager {
 		NEATNetManager netManager;
 		NeuralNet net = null;
 		NetworkDataSet dataSet = null;
+		NetworkDataSet testSet = null;
 		LearningEnvironment env;
 
 		try {
@@ -191,11 +191,12 @@ public class NEATGATrainingManager {
 					config.updateConfig("TRAINING.SET", config.configElement("TRAINING.SET"));
 				*/
 				netManager = new NEATNetManager();
-				netManager.initialise(config);
+				netManager.initialise(config, true);
 				net = netManager.managedNet();
 				env = net.netDescriptor().learnable().learningEnvironment();
 				dataSet = (NetworkDataSet)env.learningParameter("TRAINING.SET");
-				function = new MSENEATFitnessFunction(net, dataSet);
+				testSet = (NetworkDataSet)env.learningParameter("TEST.SET");
+				function = new MSENEATFitnessFunction(net, dataSet, testSet);
 
 		}  catch (IllegalArgumentException e) {
 			throw new InvalidFitnessFunction("Invalid function class, " + function.getClass() + " must extend " + NeuralFitnessFunction.class.getName() + ":" + e.getMessage());
@@ -272,18 +273,5 @@ public class NEATGATrainingManager {
 		return (saveOk);
 	}
 
-	public static void main(String[] args) {
-		NEATGATrainingManager gam = new NEATGATrainingManager();
-		try {
 
-			AIConfig config = new NEATLoader().loadConfig("F:\\JavaProjects\\NEAT4JONERANDOM\\src\\main\\resources\\new\\new_neat.getGeneticAlgorithm");
-			gam.initialise(config);
-			gam.evolve();
-
-		} catch (InitialisationFailedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		new MSENEATPredictionEngine().main(null);
-	}
 }

@@ -10,7 +10,7 @@ class NewProjectDialogueTest {
 
     @Test
     void show() {
-        DataPreparatorDialogue.getInstance(null).show();
+        NewDataPreparatorDialogue.getInstance(null).show();
 
 
 
