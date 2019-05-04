@@ -7,6 +7,7 @@
 package org.neat4j.neat.ga.core;
 
 import org.neat4j.neat.core.InnovationDatabase;
+import org.neat4j.neat.nn.core.functions.ActivationFunctionContainer;
 
 import java.io.Serializable;
 

@@ -19,7 +19,7 @@ import java.util.*;
  *
  */
 public class NEATConfig implements AIConfig {
-	private HashMap config;
+	private HashMap<String, String> config;
 
 
 	//Make copy of config
@@ -71,6 +71,11 @@ public class NEATConfig implements AIConfig {
 		} else {
 			return false;
 		}
+	}
+
+	@Override
+	public HashMap<String,String> getMap() {
+		return this.config;
 	}
 
 	public List<String> getActivationFunctionsByElementKey(String elementKey){

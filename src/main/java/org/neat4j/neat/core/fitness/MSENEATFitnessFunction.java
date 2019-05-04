@@ -29,23 +29,19 @@ public class MSENEATFitnessFunction extends NEATFitnessFunction {
 		super(net, dataSet, testSet);
 	}
 
-	public double evaluate(Chromosome genoType) {
-		int i;
-		int j;
+
+	private double calculateError(NetworkDataSet networkDataSet, List<List<Double>> outputs){
+
+
 		NetworkOutputSet opSet;
 		NetworkInput ip;
-		ExpectedOutputSet eOpSet = this.evaluationData().expectedOutputSet();
+		ExpectedOutputSet eOpSet = networkDataSet.expectedOutputSet();
 		List<Double> op;
 		List<Double> eOp;
 		double error = 0;
 
-		
-		// need to create a net based on this chromo
-		this.createNetFromChromo(genoType);
-		List<List<Double>> outputs = new ArrayList<>();
-
 		// execute net over data set
-		for (i = 0; i < eOpSet.size(); i++) {
+		for (int i = 0; i < eOpSet.size(); i++) {
 			ip = this.evaluationData().inputSet().nextInput();
 			opSet = this.net().execute(ip);
 			op = opSet.nextOutput().getNetOutputs();
@@ -53,31 +49,30 @@ public class MSENEATFitnessFunction extends NEATFitnessFunction {
 			if(i == 0) ((ArrayList<List<Double>>) outputs).ensureCapacity(op.size());
 			List<Double> outputValues = new ArrayList<>(eOpSet.size());
 			outputs.add(outputValues);
-			for (j = 0; j < op.size(); j++) {
+			for (int j = 0; j < op.size(); j++) {
 				outputValues.add(op.get(j));
 				error += Math.pow(eOp.get(j) - op.get(j), 2);
 			}
 		}
-		genoType.setOutputValues(outputs);
+		return (Math.sqrt(error / eOpSet.size()));
+	}
+
+
+	public double evaluate(Chromosome genoType) {
+		int i;
+		int j;
+
+
+		List<List<Double>> outputs = new ArrayList<>();
+		// need to create a net based on this chromo
+		this.createNetFromChromo(genoType);
+		double error = calculateError(this.evaluationData(), outputs);
+
 
 		if(this.testData() != null) {
-			double valError = 0;
-			eOpSet = this.testData().expectedOutputSet();
-
-			for (i = 0; i < eOpSet.size(); i++) {
-				ip = this.testData().inputSet().nextInput();
-				opSet = this.net().execute(ip);
-				op = opSet.nextOutput().getNetOutputs();
-				eOp = eOpSet.nextOutput().getNetOutputs();
-				List<Double> outputValues = new ArrayList<>(eOpSet.size());
-				outputs.add(outputValues);
-				for (j = 0; j < op.size(); j++) {
-					outputValues.add(op.get(j));
-					valError += Math.pow(eOp.get(j) - op.get(j), 2);
-				}
-			}
-			genoType.setValidationError(valError);
+			genoType.setValidationError(calculateError(this.testData(), outputs));
 		}
+		genoType.setOutputValues(outputs);
 
 
 		NEATNodeGene nodeGene;
@@ -91,6 +86,6 @@ public class MSENEATFitnessFunction extends NEATFitnessFunction {
 				else if(nodeGene.getType() == NEATNodeGene.TYPE.OUTPUT) nodeGene.setLabel(this.evaluationData().expectedOutputSet().getHeaders().get(outputsIndex++));;
 			}
 		}
-		return (Math.sqrt(error / eOpSet.size()));
+		return error;
 	}
 }

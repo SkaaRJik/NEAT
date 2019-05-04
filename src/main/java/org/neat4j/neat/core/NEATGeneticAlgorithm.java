@@ -421,30 +421,38 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 	}
 
 	@Override
-	public void pluginAllowedActivationFunctions(AIConfig config) {
-		ActivationFunctionContainer.refresh();
+	public ActivationFunctionContainer pluginAllowedActivationFunctions(AIConfig config) {
+		ActivationFunctionContainer activationFunctionContainer = new ActivationFunctionContainer();
 		try {
 
 			List<String> functions = ((NEATConfig)config).getActivationFunctionsByElementKey("INPUT.ACTIVATIONFUNCTIONS");
+			activationFunctionContainer.setInputActivationFunctions(new ArrayList<>(functions.size()));
 			for(String function : functions){
-				ActivationFunctionContainer.getInputActivationFunctions().add((ActivationFunctionImpl)(Class.forName(function).newInstance()));
+				activationFunctionContainer.getInputActivationFunctions().add((ActivationFunctionImpl)(Class.forName(function).newInstance()));
 			}
 			functions = ((NEATConfig)config).getActivationFunctionsByElementKey("HIDDEN.ACTIVATIONFUNCTIONS");
+			activationFunctionContainer.setHiddenActivationFunctions(new ArrayList<>(functions.size()));
 			for(String function : functions){
-				ActivationFunctionContainer.getHiddenActivationFunctions().add((ActivationFunctionImpl)(Class.forName(function).newInstance()));
+				activationFunctionContainer.getHiddenActivationFunctions().add((ActivationFunctionImpl)(Class.forName(function).newInstance()));
 			}
 			functions = ((NEATConfig)config).getActivationFunctionsByElementKey("OUTPUT.ACTIVATIONFUNCTIONS");
+			activationFunctionContainer.setOutputActivationFunctions(new ArrayList<>(functions.size()));
 			for(String function : functions){
-				ActivationFunctionContainer.getOutputActivationFunctions().add((ActivationFunctionImpl)(Class.forName(function).newInstance()));
+				activationFunctionContainer.getOutputActivationFunctions().add((ActivationFunctionImpl)(Class.forName(function).newInstance()));
 			}
 		} catch (InstantiationException e) {
 			e.printStackTrace();
+			return null;
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
+			return null;
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
+			return null;
 		}
+		return activationFunctionContainer;
 	}
+
 
 	public Chromosome generationBest() {
 		return (this.genBest);

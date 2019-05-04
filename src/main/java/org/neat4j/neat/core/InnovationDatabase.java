@@ -30,14 +30,20 @@ public class InnovationDatabase {
 	private int neuronId = 1;
 	public  int totalHits = 0;
 	public  int totalMisses = 0;
+	ActivationFunctionContainer activationFunctionContainer;
 
-	public InnovationDatabase(Random ran){
+	public ActivationFunctionContainer getActivationFunctionContainer() {
+		return activationFunctionContainer;
+	}
+
+	public InnovationDatabase(Random ran, ActivationFunctionContainer activationFunctionContainer){
 		this.ran = ran;
 		innovationId = 1;
 		neuronId = 1;
 		totalHits = 0;
 		totalMisses = 0;
 		this.innovations = new HashMap();
+		this.activationFunctionContainer = activationFunctionContainer;
 	}
 
 	private int nextInnovationNumber() {
@@ -63,7 +69,7 @@ public class InnovationDatabase {
 	 *  evolving data inputs.
 	 * @return Created chromosome population
 	 */
-	public Chromosome[] initialiseInnovations(int popSize, int inputs, int outputs, boolean featureSelection, int extraFeatureCount) {	
+	public Chromosome[] initialiseInnovations(int popSize, int inputs, int outputs, boolean featureSelection, int extraFeatureCount) {
 		int i;
 		int j;
 		int popIdx;
@@ -79,11 +85,11 @@ public class InnovationDatabase {
 		}
 		
 		for (i = 0; i < inputs; i++) {
-			nodes[i] = this.createNewNodeGene(NEATNodeGene.TYPE.INPUT);
+			nodes[i] = this.createNewNodeGene(NEATNodeGene.TYPE.INPUT, activationFunctionContainer);
 		}
 
 		for (i = inputs; i < nodes.length; i++) {
-			nodes[i] = this.createNewNodeGene(NEATNodeGene.TYPE.OUTPUT);
+			nodes[i] = this.createNewNodeGene(NEATNodeGene.TYPE.OUTPUT, activationFunctionContainer);
 		}
 
 //		for (i = inputs + outputs; i < nodes.length; i++) {
@@ -140,7 +146,7 @@ public class InnovationDatabase {
 		return (new NEATFeatureGene(innovationNumber, MathUtils.nextDouble()));
 	}
 	
-	private NEATNodeGene createNewNodeGene(NEATNodeGene.TYPE type) {
+	private NEATNodeGene createNewNodeGene(NEATNodeGene.TYPE type, ActivationFunctionContainer activationFunctionContainer) {
 		int innovationNumber = this.nextInnovationNumber();
 		NEATInnovation databaseEntry = new NEATNodeInnovation();
 		databaseEntry.setInnovationId(innovationNumber);
@@ -149,11 +155,11 @@ public class InnovationDatabase {
 		ActivationFunction activationFunction = null;
 
 		if (type == NEATNodeGene.TYPE.HIDDEN){
-			activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(ran);
+			activationFunction = activationFunctionContainer.getRandomHiddenActivationFunction(ran);
 		} else if (type == NEATNodeGene.TYPE.INPUT) {
-			activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(ran);
+			activationFunction = activationFunctionContainer.getRandomInputActivationFunction(ran);
 		} else if(type == NEATNodeGene.TYPE.OUTPUT) {
-			activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(ran);
+			activationFunction = activationFunctionContainer.getRandomOutputActivationFunction(ran);
 		}
 
 		NEATNodeGene nodeGene = new NEATNodeGene(innovationNumber, ((NEATNodeInnovation)databaseEntry).getNodeId(), MathUtils.nextDouble(), type, "",MathUtils.nextPlusMinusOne(), activationFunction);
@@ -211,7 +217,7 @@ public class InnovationDatabase {
 			totalHits++;
 		}
 
-		gene = new NEATNodeGene(databaseEntry.innovationId(), ((NEATNodeInnovation)databaseEntry).getNodeId(), MathUtils.nextDouble(), NEATNodeGene.TYPE.HIDDEN, "",MathUtils.nextPlusMinusOne(), ActivationFunctionContainer.getRandomHiddenActivationFunction(ran));
+		gene = new NEATNodeGene(databaseEntry.innovationId(), ((NEATNodeInnovation)databaseEntry).getNodeId(), MathUtils.nextDouble(), NEATNodeGene.TYPE.HIDDEN, "",MathUtils.nextPlusMinusOne(), activationFunctionContainer.getRandomHiddenActivationFunction(ran));
 
 		return (gene);
 	}

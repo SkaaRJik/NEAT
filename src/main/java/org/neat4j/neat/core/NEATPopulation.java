@@ -60,11 +60,11 @@ public class NEATPopulation implements Population {
 		Chromosome[] templates = innovationDatabase.initialiseInnovations(this.popSize, this.inputs, this.outputs, this.featureSelection, this.extraFeatureCount);
 		
 		for (i = 0; i < this.popSize; i++) {
-			this.chromosomes[i] = this.individualFromTemplate(templates[i]);
+			this.chromosomes[i] = this.individualFromTemplate(templates[i], innovationDatabase.getActivationFunctionContainer());
 		}
 	}
 	
-	private Chromosome individualFromTemplate(Chromosome template) {
+	private Chromosome individualFromTemplate(Chromosome template, ActivationFunctionContainer activationFunctionContainer) {
 		int i;
 		Gene[] templateGenes = template.genes();
 		Gene[] individualGenes = new Gene[templateGenes.length]; 
@@ -77,9 +77,9 @@ public class NEATPopulation implements Population {
 				nodeGene = (NEATNodeGene)templateGenes[i];
 
 				ActivationFunction activationFunction = null;
-				if(nodeGene.getType() == NEATNodeGene.TYPE.INPUT) activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(random);
-				else if(nodeGene.getType() == NEATNodeGene.TYPE.HIDDEN) activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(random);
-				else if(nodeGene.getType() == NEATNodeGene.TYPE.OUTPUT) activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(random);
+				if(nodeGene.getType() == NEATNodeGene.TYPE.INPUT) activationFunction = activationFunctionContainer.getRandomInputActivationFunction(random);
+				else if(nodeGene.getType() == NEATNodeGene.TYPE.HIDDEN) activationFunction = activationFunctionContainer.getRandomHiddenActivationFunction(random);
+				else if(nodeGene.getType() == NEATNodeGene.TYPE.OUTPUT) activationFunction = activationFunctionContainer.getRandomOutputActivationFunction(random);
 
 
 

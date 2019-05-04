@@ -6,6 +6,7 @@ package org.neat4j.core;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * @author MSimmerson
@@ -26,4 +27,7 @@ public interface AIConfig {
 	public void updateConfig(String elementKey, String elementValue);
 
 	boolean saveConfig(File file) throws IOException;
+
+	HashMap getMap();
+
 }

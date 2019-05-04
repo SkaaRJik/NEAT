@@ -171,7 +171,7 @@ public class DataKeeper implements Serializable{
 
     public List<List<Double>> getTrainData(){
 
-        if(trainIndexEnd == null) return null;
+        if(trainIndexEnd == null) return this.data;
         List<List<Double>> trainData = new ArrayList<>(trainIndexEnd);
         for (int i = 0; i < trainIndexEnd; i++) {
             trainData.add(this.data.get(i));

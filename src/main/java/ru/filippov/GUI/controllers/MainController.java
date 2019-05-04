@@ -446,10 +446,8 @@ public class MainController {
 
 
         new File(Paths.get("").toAbsolutePath().toString()+"\\projects").mkdir();
-        this.tempDirectory = new File(Paths.get("").toAbsolutePath().toString()+"\\temp");
-        if(!this.tempDirectory.exists()){
-            this.tempDirectory.mkdir();
-        }
+        this.tempDirectory =NEATTrainingForJavaFX.TEMP_DIRECTORY_PATH;
+
 
         this.scene.getWindow().setOnCloseRequest(event -> {
             Arrays.stream(this.tempDirectory.listFiles()).forEach(file1 -> file1.delete());
@@ -2280,25 +2278,20 @@ public class MainController {
         trainDataSet.setTrainIndexEnd(this.trainEndIndex.getValue());
 
         AIConfig config = new NEATConfig((NEATConfig) this.currentNEATConfig);
-
         this.initNEATConfigUsingGUI(config);
-        this.trainingProgressBar.progressProperty().bind(new SimpleObjectProperty<Double>((double) 0));
+
+        this.trainingProgressBar.progressProperty().setValue(0);
 
         logger.debug("trainModel() : Work with NEAT Config = " + config);
 
-        config.updateConfig("TRAINING.SET", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
-        config.updateConfig("TEST.SET", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
-        config.updateConfig("SAVE.LOCATION", this.currentNeatConfigFile.getValue().getDirectoryPath()+"\\"+trainDatasetChoiceBox.getValue().getName()+"_last_best.ser");
 
         this.saveReport.setDisable(true);
 
         try {
-            trainDataSet.saveSet(config.configElement("TRAINING.SET"), trainDataSet.getTrainData());
-            trainDataSet.saveSet(config.configElement("TEST.SET"), trainDataSet.getTestData());
-            logger.debug("trainModel() : tempDataset name " + config.configElement("TRAINING.SET"));
+
             //config.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+trainDataSetChoiceBox.getValue()+"\\"+trainDataSetChoiceBox.getValue()+"@test_temp.dataset");
             NEATTrainingForJavaFX neatTrainingForJavaFX = new NEATTrainingForJavaFX();
-            neatTrainingForJavaFX.initialise(config);
+            neatTrainingForJavaFX.initialise(config, trainDataSet, this.currentNeatConfigFile.getValue().getDirectoryPath()+"\\"+trainDatasetChoiceBox.getValue().getName()+"_last_best.ser");
 
 
 
@@ -2447,7 +2440,7 @@ public class MainController {
                             } catch (InitialisationFailedException e) {
                                 e.printStackTrace();
                             }
-                            
+                            trainingProgressBar.progressProperty().unbind();
                             trainReporter.addConfig(config);
 
                             trainReporter.addBestChromosomesSet(neatTrainingForJavaFX.getBestEverChromosomes());

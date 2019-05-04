@@ -38,14 +38,6 @@ public class NEATMutator implements Mutator {
 	private double pNewActivationFunction;
 	final private InnovationDatabase innovationDatabase;
 
-	public double getpNewActivationFunction() {
-		return pNewActivationFunction;
-	}
-
-	public void setpNewActivationFunction(double pNewActivationFunction) {
-		this.pNewActivationFunction = pNewActivationFunction;
-	}
-
 
 
 	private static final int MAX_LINK_ATTEMPTS = 5;
@@ -56,7 +48,7 @@ public class NEATMutator implements Mutator {
 		this.innovationDatabase = innovationDatabase;
 	}
 	
-	public NEATMutator(double pAddNode, double pAddLink, double pDisable, double pNewActivationFunction, Random random, InnovationDatabase innovationDatabase) {
+	public NEATMutator(double pAddNode, double pAddLink, double pDisable, double pNewActivationFunction, Random random, InnovationDatabase innovationDatabase, ActivationFunctionContainer activationFunctionContainer) {
 		this.random = random;
 		this.pAddNode = pAddNode;
 		this.pAddLink = pAddLink;
@@ -157,25 +149,25 @@ public class NEATMutator implements Mutator {
 			ActivationFunction activationFunction = mutated.getActivationFunction();
 			ActivationFunction lastActivationFunction = mutated.getActivationFunction();
 			if(mutated.getType() == NEATNodeGene.TYPE.INPUT) {
-				if(ActivationFunctionContainer.getInputActivationFunctions().size() > 1) {
+				if(this.innovationDatabase.getActivationFunctionContainer().getInputActivationFunctions().size() > 1) {
 					do{
-						activationFunction = ActivationFunctionContainer.getRandomInputActivationFunction(random);
+						activationFunction = this.innovationDatabase.getActivationFunctionContainer().getRandomInputActivationFunction(random);
 					}
 					while (activationFunction.getFunctionName().equals(lastActivationFunction.getFunctionName()));
 
 				}
 			}
 			else if(mutated.getType() == NEATNodeGene.TYPE.HIDDEN){
-				if(ActivationFunctionContainer.getHiddenActivationFunctions().size() > 1)
+				if(this.innovationDatabase.getActivationFunctionContainer().getHiddenActivationFunctions().size() > 1)
 					do{
-						activationFunction = ActivationFunctionContainer.getRandomHiddenActivationFunction(random);
+						activationFunction = this.innovationDatabase.getActivationFunctionContainer().getRandomHiddenActivationFunction(random);
 					}
 					while (activationFunction.getFunctionName().equals(lastActivationFunction.getFunctionName()));
 			}
 			else if(mutated.getType() == NEATNodeGene.TYPE.OUTPUT){
-				if(ActivationFunctionContainer.getOutputActivationFunctions().size() > 1)
+				if(this.innovationDatabase.getActivationFunctionContainer().getOutputActivationFunctions().size() > 1)
 					do{
-						activationFunction = ActivationFunctionContainer.getRandomOutputActivationFunction(random);
+						activationFunction = this.innovationDatabase.getActivationFunctionContainer().getRandomOutputActivationFunction(random);
 					}
 					while (activationFunction.getFunctionName().equals(lastActivationFunction.getFunctionName()));
 			}
@@ -532,5 +524,9 @@ public class NEATMutator implements Mutator {
 
 	public void setPerturb(double perturb) {
 		this.perturb = perturb;
+	}
+
+	public void setpNewActivationFunction(double pNewActivationFunction) {
+		this.pNewActivationFunction = pNewActivationFunction;
 	}
 }

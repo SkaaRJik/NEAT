@@ -10,7 +10,10 @@ import org.neat4j.neat.core.DefaultConfig;
 import ru.filippov.GUI.windows.AlertWindow;
 
 import java.io.*;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 public class NewDatasetDialogueController {
     @FXML
@@ -81,8 +84,11 @@ public class NewDatasetDialogueController {
             try{
                 writer = new FileWriter(neatFile, false);
                 writer.write("");
-                for(String s : DefaultConfig.getDefaultConfig()){
-                    writer.append(s+"\n");
+
+                Iterator<Map.Entry<String, String>> iterator = DefaultConfig.getDefaultConfig().getMap().entrySet().iterator();
+                while (iterator.hasNext()){
+                    Map.Entry<String, String> pair = iterator.next();
+                    writer.append(pair.getKey()+"="+pair.getValue()+"\n");
                 }
 
                 projectFile = neatFile;

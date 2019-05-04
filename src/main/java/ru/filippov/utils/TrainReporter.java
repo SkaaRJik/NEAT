@@ -95,7 +95,7 @@ public class TrainReporter {
 
 
                 createDocParagraph(document, "Ошибки", ParagraphAlignment.LEFT);
-                createTableWithErrors(document);
+                createTotalTableWithErrors(document);
 
                 createDocParagraph(document, "Значения", ParagraphAlignment.LEFT);
                 createTableWithOutputs(document);
@@ -111,6 +111,8 @@ public class TrainReporter {
                     writeBriefing(document, configs.get(i), bestChromosomes.get(i), images.get(i));
                     createDocParagraph(document, "", ParagraphAlignment.LEFT);
                     writeAIConfig(document, configs.get(i));
+                    createDocParagraph(document, "", ParagraphAlignment.LEFT);
+                    createVerticalTableWithErrors(document, bestChromosomes.get(i));
 
 
                 }
@@ -336,7 +338,7 @@ public class TrainReporter {
 
    
 
-    protected void createTableWithErrors(XWPFDocument docxDoc){
+    protected void createTotalTableWithErrors(XWPFDocument docxDoc){
         XWPFTable table = docxDoc.createTable(3, this.bestChromosomes.size()+1);
         table.getRow(0).getCell(0).setText("Вид ошибки");
         table.getRow(1).getCell(0).setText("Ошибка тренировки");
@@ -351,6 +353,21 @@ public class TrainReporter {
             table.getRow(2).getCell(i+1).setText(best.getValidationError() != null ? String.valueOf(best.getValidationError()).replace(".", ",") : "");
         }
     }
+
+
+    protected void createVerticalTableWithErrors(XWPFDocument docxDoc, List<Chromosome> chromosomes){
+        XWPFTable table = docxDoc.createTable(chromosomes.size()+1, 3);
+        table.getRow(0).getCell(0).setText("Эпоха");
+        table.getRow(0).getCell(1).setText("Ошибка тренировки");
+        table.getRow(0).getCell(2).setText("Ошибка тестирования");
+
+        for (int i = 0; i < chromosomes.size(); i++) {
+            table.getRow(i+1).getCell(0).setText(String.valueOf(i + 1));
+            table.getRow(i+1).getCell(1).setText(String.valueOf(chromosomes.get(i).fitness()).replace(".", ","));
+            table.getRow(i+1).getCell(2).setText(chromosomes.get(i).getValidationError() != null ? String.valueOf(chromosomes.get(i).getValidationError()).replace(".", ",") : "");
+        }
+    }
+
 
 
     protected void createTableWithOutputs(XWPFDocument docxDoc){

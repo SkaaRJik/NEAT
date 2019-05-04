@@ -3,7 +3,6 @@ package org.neat4j.neat.applications.train;
 import org.apache.log4j.Category;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
-import org.neat4j.neat.applications.test.MSENEATPredictionEngine;
 import org.neat4j.neat.core.*;
 import org.neat4j.neat.core.control.NEATNetManager;
 import org.neat4j.neat.core.fitness.InvalidFitnessFunction;
@@ -11,7 +10,6 @@ import org.neat4j.neat.core.fitness.MSENEATFitnessFunction;
 import org.neat4j.neat.core.mutators.NEATMutator;
 import org.neat4j.neat.core.pselectors.InvalidParentSelectorFunction;
 import org.neat4j.neat.core.pselectors.TournamentSelector;
-import org.neat4j.neat.core.xover.InvalidCrossoverFunction;
 import org.neat4j.neat.core.xover.NEATCrossover;
 import org.neat4j.neat.data.core.NetworkDataSet;
 import org.neat4j.neat.ga.core.*;
@@ -22,8 +20,6 @@ import org.neat4j.neat.utils.MathUtils;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Random;
 
 /**
@@ -49,12 +45,11 @@ public class NEATGATrainingManager {
 		MathUtils.setSeed(Long.parseLong(config.configElement("GENERATOR.SEED")));
 		config.updateConfig("NATURAL.ORDER.STRATEGY", "true");
 		this.random = MathUtils.getRand();
-		innovationDatabase = new InnovationDatabase(this.random);
 		GADescriptor gaDescriptor = this.createDescriptor(config);
 		this.assigGA(this.createGeneticAlgorithm(gaDescriptor));
 		try {
 			this.assignConfig(config);
-			this.ga.pluginAllowedActivationFunctions(config);
+			innovationDatabase = new InnovationDatabase(this.random, this.ga.pluginAllowedActivationFunctions(config));
 			this.ga.pluginFitnessFunction(this.createFunction());
 			this.ga.pluginCrossOver(new NEATCrossover());
 			this.ga.pluginMutator(new NEATMutator(this.random, innovationDatabase));
@@ -63,6 +58,7 @@ public class NEATGATrainingManager {
 		} catch (InvalidFitnessFunction e) {
 			throw new InitialisationFailedException(e.getMessage());
 		}  catch (Exception e) {
+			e.printStackTrace();
 			throw new InitialisationFailedException(e.getMessage());
 		}
 	}
