@@ -29,7 +29,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" stylesheets="@../css/white.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.filippov.GUI.controllers.MainController">
    <top>
       <AnchorPane prefHeight="0.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <children>
@@ -230,6 +230,7 @@
                                                 <JFXTextField fx:id="lastErrorTextField" labelFloat="true" promptText="Ошибка обучения" />
                                                 <JFXTextField fx:id="testErrorTextField" labelFloat="true" promptText="Ошибка тестирования" />
                                                 <JFXTextField fx:id="currentEpochTextField" editable="false" labelFloat="true" layoutX="10.0" layoutY="10.0" promptText="Текущая эпоха" />
+                                                <JFXButton fx:id="saveReport" onAction="#saveReport" />
                                              </children>
                                           </FlowPane>
                                           <FlowPane hgap="10.0" vgap="10.0">

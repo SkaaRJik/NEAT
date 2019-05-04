@@ -23,6 +23,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -30,6 +31,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -38,6 +40,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.util.Callback;
 import javafx.util.Duration;
@@ -61,18 +64,18 @@ import ru.filippov.GUI.customNodes.TreeCellIContextMenu;
 import ru.filippov.GUI.customNodes.TreeItemContextMenu;
 import ru.filippov.GUI.customNodes.ZoomPane;
 import ru.filippov.GUI.windows.*;
-import ru.filippov.utils.AdvancedNetVisualisator;
-import ru.filippov.utils.CsControl;
-import ru.filippov.utils.JFXUtils;
-import ru.filippov.utils.NumberValidator;
+import ru.filippov.utils.*;
 
 import java.io.*;
+import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainController {
 
+
+    private TrainReporter trainReporter;
 
 
 
@@ -337,6 +340,11 @@ public class MainController {
     @FXML private JFXTextField lastErrorTextField;
     @FXML
     private JFXTextField currentEpochTextField;
+
+    @FXML
+    private JFXButton saveReport;
+
+
     @FXML private VBox trainVBox;
     @FXML private ProgressBar trainingProgressBar;
 
@@ -986,7 +994,7 @@ public class MainController {
                     this.outputNodesTextField.setText(String.valueOf(trainDataSet.getOutputs())); // get number of outputs
                     this.trainEndIndex.set(null);
                     this.trainPercentageTextField.setText(null);
-
+                    trainReporter = new TrainReporter(trainDataSet, resourceBundle);
 
                     this.fillTableViewWithData(this.trainTableView, trainDataSet);
 
@@ -994,7 +1002,7 @@ public class MainController {
                     trainErrorChart.getData().clear();
                     trainValueGraphicChart.getData().clear();
                     drawablePane.getChildren().clear();
-
+                    saveReport.setDisable(true);
                     trainingCount = 0;
                     this.trainSetSimpleObjectProperty.setValue(trainDataSet);
                 } catch (IOException e) {
@@ -2271,24 +2279,26 @@ public class MainController {
         DataKeeper trainDataSet = this.trainSetSimpleObjectProperty.getValue();
         trainDataSet.setTrainIndexEnd(this.trainEndIndex.getValue());
 
+        AIConfig config = new NEATConfig((NEATConfig) this.currentNEATConfig);
 
-
-        this.initNEATConfigUsingGUI(this.currentNEATConfig);
+        this.initNEATConfigUsingGUI(config);
         this.trainingProgressBar.progressProperty().bind(new SimpleObjectProperty<Double>((double) 0));
 
-        logger.debug("trainModel() : Work with NEAT Config = " + this.currentNEATConfig);
+        logger.debug("trainModel() : Work with NEAT Config = " + config);
 
-        this.currentNEATConfig.updateConfig("TRAINING.SET", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
-        this.currentNEATConfig.updateConfig("TEST.SET", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
-        this.currentNEATConfig.updateConfig("SAVE.LOCATION", this.currentNeatConfigFile.getValue().getDirectoryPath()+"\\"+trainDatasetChoiceBox.getValue().getName()+"_last_best.ser");
+        config.updateConfig("TRAINING.SET", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
+        config.updateConfig("TEST.SET", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+trainDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
+        config.updateConfig("SAVE.LOCATION", this.currentNeatConfigFile.getValue().getDirectoryPath()+"\\"+trainDatasetChoiceBox.getValue().getName()+"_last_best.ser");
+
+        this.saveReport.setDisable(true);
 
         try {
-            trainDataSet.saveSet(this.currentNEATConfig.configElement("TRAINING.SET"), trainDataSet.getTrainData());
-            trainDataSet.saveSet(this.currentNEATConfig.configElement("TEST.SET"), trainDataSet.getTestData());
-            logger.debug("trainModel() : tempDataset name " + this.currentNEATConfig.configElement("TRAINING.SET"));
-            //this.currentNEATConfig.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+trainDataSetChoiceBox.getValue()+"\\"+trainDataSetChoiceBox.getValue()+"@test_temp.dataset");
+            trainDataSet.saveSet(config.configElement("TRAINING.SET"), trainDataSet.getTrainData());
+            trainDataSet.saveSet(config.configElement("TEST.SET"), trainDataSet.getTestData());
+            logger.debug("trainModel() : tempDataset name " + config.configElement("TRAINING.SET"));
+            //config.updateConfig("INPUT.DATA", this.currentProjectTextField.getText()+"\\datasets\\"+trainDataSetChoiceBox.getValue()+"\\"+trainDataSetChoiceBox.getValue()+"@test_temp.dataset");
             NEATTrainingForJavaFX neatTrainingForJavaFX = new NEATTrainingForJavaFX();
-            neatTrainingForJavaFX.initialise(currentNEATConfig);
+            neatTrainingForJavaFX.initialise(config);
 
 
 
@@ -2412,7 +2422,7 @@ public class MainController {
                     int n = neatTrainingForJavaFX.getBestEverChromosomes().size();
                         Chromosome bestChromo = neatTrainingForJavaFX.getBestEverChromosomes().get(n - 1);
                         try {
-                            netVisualisator.setNetToVisualise(bestChromo, currentNEATConfig);
+                            netVisualisator.setNetToVisualise(bestChromo, config);
                             netVisualisator.visualiseNet(this.drawablePane);
                         } catch (InitialisationFailedException e) {
                             e.printStackTrace();
@@ -2431,13 +2441,20 @@ public class MainController {
                     if (newValue) {
                         Platform.runLater(() -> {
                             try {
-                                netVisualisator.setNetToVisualise(neatTrainingForJavaFX.getBestEverChromosomes().get(neatTrainingForJavaFX.getBestEverChromosomes().size() - 1), currentNEATConfig);
-                                netVisualisator.visualiseNet(MainController.this.drawablePane);
+                                netVisualisator.setNetToVisualise(neatTrainingForJavaFX.getBestEverChromosomes().get(neatTrainingForJavaFX.getBestEverChromosomes().size() - 1), config);
+                                netVisualisator.visualiseNet(drawablePane);
 
                             } catch (InitialisationFailedException e) {
                                 e.printStackTrace();
                             }
+                            
+                            trainReporter.addConfig(config);
 
+                            trainReporter.addBestChromosomesSet(neatTrainingForJavaFX.getBestEverChromosomes());
+                            SnapshotParameters snapshotParameters = new SnapshotParameters();
+                            snapshotParameters.setFill(Color.web("#1E1E1E"));
+                            trainReporter.addTopologyImage(SwingFXUtils.fromFXImage(drawablePane.snapshot(snapshotParameters, null), null));
+                            saveReport.setDisable(false);
 
                             TreeItem<ProjectFileDescriptor> folder = currentTreeItem.getChildren()
                                     .parallelStream()
@@ -2477,12 +2494,15 @@ public class MainController {
             this.trainThread.start();
 
 
+
         } catch (IOException e) {
             AlertWindow.createAlertWindow("Can't open file!\n" + e.getMessage()).showAndWait();
             e.printStackTrace();
+            if(!trainReporter.getBestChromosomes().isEmpty()) saveReport.setDisable(false);
         } catch (InitialisationFailedException e) {
             AlertWindow.createAlertWindow("Initialisation failed!\n" + e.getMessage()).showAndWait();
             e.printStackTrace();
+            if(!trainReporter.getBestChromosomes().isEmpty()) saveReport.setDisable(false);
         }
 
 
@@ -2649,6 +2669,7 @@ public class MainController {
     @FXML
     private void confirmTrainPercantage(ActionEvent event){
         try{
+            if(!trainTitledPane.isExpanded()) trainTitledPane.setExpanded(true);
             double trainPercentage = Double.parseDouble(this.trainPercentageTextField.getText().replace(",", "."));
             this.trainEndIndex.set((int) Math.round( ((double) this.trainSetSimpleObjectProperty.getValue().getData().size()) / 100 * trainPercentage));
             this.trainSetSimpleObjectProperty.getValue().setTrainIndexEnd(this.trainEndIndex.getValue());
@@ -2658,5 +2679,31 @@ public class MainController {
         }
     }
 
+    public void saveReport(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Сохранить отчет");
+
+        fileChooser.getExtensionFilters().add( new FileChooser.ExtensionFilter("DOC files (*.docx)", "*.docx"));//Расширение));//Расширение);
+
+        fileChooser.setInitialDirectory(Paths.get(".").toAbsolutePath().toFile());
+        File file = fileChooser.showSaveDialog(this.scene.getWindow());//Указываем текущую сцену
+        if(file!=null) {
+
+            if(this.trainReporter.createReport(file)){
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Сохранение");
+
+                // Header Text: null
+                alert.setHeaderText(null);
+                alert.setContentText("Сохранение прошло успешно!");
+
+                alert.showAndWait();
+            } else {
+                AlertWindow.createAlertWindow("Произошла ошибка во время сохранения.\n Закройте файл и повторите попытку.").show();
+            }
+        }
+
+
+    }
 
 }

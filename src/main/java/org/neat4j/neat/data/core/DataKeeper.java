@@ -181,8 +181,9 @@ public class DataKeeper implements Serializable{
 
     public List<List<Double>> getTestData(){
         if(trainIndexEnd == null) return null;
-        List<List<Double>> testData = new ArrayList<>(this.data.size() - trainIndexEnd);
+        List<List<Double>> testData =null;
         for (int i = trainIndexEnd; i < this.data.size(); i++) {
+            if(i == trainIndexEnd) testData = new ArrayList<>(this.data.size() - trainIndexEnd);
             testData.add(this.data.get(i));
         }
         return testData;
@@ -190,6 +191,7 @@ public class DataKeeper implements Serializable{
 
 
     public File saveSet(String filePath, List<List<Double>> set) throws IOException {
+        if (set == null) return null;
         File file = new File(filePath);
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file, false));
         Double value;

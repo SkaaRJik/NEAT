@@ -10,4 +10,25 @@ public class ActivationFunctionFinder {
         if(TanhFunction.getStaticFunctionName().equalsIgnoreCase(name)) return TanhFunction.class.getName();
         return null;
     }
+
+
+    public  static String getFunctionNameByClassName(String name){
+        if(ArctgFunction.class.getName().equalsIgnoreCase(name)) return ArctgFunction.getStaticFunctionName();
+        if(LinearFunction.class.getName().equalsIgnoreCase(name)) return LinearFunction.getStaticFunctionName();
+        if(SigmoidFunction.class.getName().equalsIgnoreCase(name)) return SigmoidFunction.getStaticFunctionName();
+        if(TanhFunction.class.getName().equalsIgnoreCase(name)) return TanhFunction.getStaticFunctionName();
+        return null;
+    }
+
+    public static String getConcatFunctions(String functions){
+        StringBuilder stringBuilder = new StringBuilder();
+        String[] split = functions.split(";");
+        for (int i = 0; i < split.length; i++) {
+            stringBuilder.append(ActivationFunctionFinder.getFunctionNameByClassName(split[i]));
+            if(i+1 < split.length)
+                stringBuilder.append(", ");
+        }
+        return stringBuilder.toString();
+    }
+
 }
