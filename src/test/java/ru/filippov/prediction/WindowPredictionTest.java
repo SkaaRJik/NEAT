@@ -3,11 +3,16 @@ package ru.filippov.prediction;
 import org.apache.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.core.DefaultConfig;
+import org.neat4j.neat.core.NEATConfig;
+import org.neat4j.neat.core.NEATLoader;
 import org.neat4j.neat.data.core.DataKeeper;
+import org.neat4j.neat.ga.core.Chromosome;
 import sun.rmi.runtime.Log;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +28,7 @@ class WindowPredictionTest {
     private WindowPrediction windowPrediction;
     private DataKeeper dataKeeper;
     final static  int WINDOW_SIZE = 3;
+    AIConfig config;
 
     public WindowPredictionTest(){
         List<List<Double>> data = new ArrayList<List<Double>>(24);
@@ -63,19 +69,31 @@ class WindowPredictionTest {
         this.dataKeeper.setLegend(legend);
 
         try {
-            this.windowPrediction = new WindowPrediction(this.dataKeeper, WINDOW_SIZE, 3, DefaultConfig.getDefaultConfig());
+            this.windowPrediction = new WindowPrediction();
+            this.windowPrediction.initialise(this.dataKeeper, WINDOW_SIZE, 3, DefaultConfig.getDefaultConfig());
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InitialisationFailedException e) {
             e.printStackTrace();
         }
+
+        config = new NEATLoader().loadConfig("F:\\JavaProjects\\NEATJavaFX\\src\\test\\java\\ru\\filippov\\testResources\\Start.neat");
+
+    }
+
+    @Test
+    void configIsLoaded(){
+        Assertions.assertNotNull(config);
     }
 
     @Test
     void prepareDataOneColumnTest(){
-        DataKeeper dataKeeper = windowPrediction.prepareDataForWindow(0);
-        Assertions.assertEquals(WINDOW_SIZE+1, dataKeeper.getData().get(0).size());
+        DataKeeper dataKeeper1 = windowPrediction.prepareDataForWindow(0, dataKeeper);
+        Assertions.assertEquals(WINDOW_SIZE+1, dataKeeper1.getData().get(0).size());
     }
+
+
+
 
     @Test
     void startTest(){
@@ -87,7 +105,77 @@ class WindowPredictionTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        logger.info(this.getClass().getName() + "Тест завершен");
+
 
     }
+
+    @Test
+    void retainTest(){
+
+        try {
+            windowPrediction.retrain(1, DefaultConfig.getDefaultConfig()).join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        List<Chromosome> bestEverChromosomes = windowPrediction.trainer[1].getBestEverChromosomes();
+        double fitness1 = bestEverChromosomes.get(bestEverChromosomes.size() - 1).fitness();
+        try {
+            windowPrediction.retrain(1, DefaultConfig.getDefaultConfig()).join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        bestEverChromosomes = windowPrediction.trainer[1].getBestEverChromosomes();
+        double fitness2 = bestEverChromosomes.get(bestEverChromosomes.size() - 1).fitness();
+
+        Assertions.assertEquals(fitness1, fitness2);
+
+        AIConfig newConfig = new NEATConfig((NEATConfig) DefaultConfig.getDefaultConfig());
+        newConfig.updateConfig("GENERATOR.SEED", String.valueOf(System.currentTimeMillis()));
+        try {
+            windowPrediction.retrain(1, newConfig).join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        bestEverChromosomes = windowPrediction.trainer[1].getBestEverChromosomes();
+        double fitness3 = bestEverChromosomes.get(bestEverChromosomes.size() - 1).fitness();
+        Assertions.assertNotEquals(fitness1, fitness3);
+        Assertions.assertNotEquals(fitness2, fitness3);
+    }
+
+
+    @Test
+    void tryToPredictWithNoTraining(){
+        InitialisationFailedException thrown = assertThrows(InitialisationFailedException.class, () -> windowPrediction.predict(config));
+        Assertions.assertNotNull(thrown);
+    }
+
+    @Test
+    void predictTest(){
+        Thread thread = new Thread(this.windowPrediction);
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        try {
+            this.windowPrediction.predict(config);
+        } catch (InitialisationFailedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    void reverseTest(){
+        String hello = "hello";
+        System.out.println(new StringBuilder(hello).reverse().toString());
+
+
+
+    }
+
 }

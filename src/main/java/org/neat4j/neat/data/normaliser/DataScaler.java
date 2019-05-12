@@ -7,6 +7,5 @@ import java.util.List;
 
 public interface DataScaler extends Serializable {
     DataKeeper normalise(List<List<Double>> dataToNormalize, double minRange, double maxRange);
-
-
+    DataKeeper denormalise(List<List<Double>> dataToNormalize);
 }

@@ -71,4 +71,9 @@ public class NonLinearScaler implements DataScaler {
         return new DataKeeper(normalised, this);
     }
 
+    @Override
+    public DataKeeper denormalise(List<List<Double>> dataToNormalize) {
+        return null;
+    }
+
 }

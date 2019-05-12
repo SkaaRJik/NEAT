@@ -1,6 +1,7 @@
 package org.neat4j.neat.data.core;
 
 import org.neat4j.neat.data.normaliser.DataScaler;
+import org.neat4j.neat.data.normaliser.LinearScaler;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -214,4 +215,11 @@ public class DataKeeper implements Serializable{
         return file;
     }
 
+    public void calculateIndex(double percent){
+        this.trainIndexEnd = (int) Math.round(this.data.size() * percent);
+    }
+
+    public DataKeeper denormalise(){
+        return ((LinearScaler)this.dataScaler).denormalise(this.data);
+    }
 }

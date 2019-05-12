@@ -2,18 +2,15 @@ package org.neat4j.neat.applications.train;
 
 
 import javafx.beans.property.*;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.scene.chart.XYChart;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.StackPane;
 import org.apache.log4j.Logger;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
-import org.neat4j.neat.core.InnovationDatabase;
 import org.neat4j.neat.core.NEATGADescriptor;
-import org.neat4j.neat.core.NEATNetDescriptor;
-import org.neat4j.neat.core.NEATNeuralNet;
 import org.neat4j.neat.data.core.DataKeeper;
 import org.neat4j.neat.ga.core.Chromosome;
-import org.neat4j.neat.nn.core.NeuralNet;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,12 +28,20 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
         }
     }
 
+    private SimpleObjectProperty<DataKeeper> dataKeeper = new SimpleObjectProperty<>(null);
 
-    DoubleProperty status;
-    BooleanProperty isEnded;
-    ObservableList<Chromosome> bestEverChromosomes;
-    ListProperty<Chromosome> bestEverChromosomesProperty;
-    private int currentEpoch;
+    private DoubleProperty status = new SimpleDoubleProperty(0);
+    private BooleanProperty isEnded = new SimpleBooleanProperty(false);
+    private List<Chromosome> bestEverChromosomes;
+    private SimpleObjectProperty<Chromosome> bestEverChromosomeProperty = new SimpleObjectProperty<>(null);
+
+    private Integer currentEpoch = 0;
+    private Double lastTrainError = 0.0;
+    private Double lastValidationError = null;
+
+
+
+
     String pathToSave;
     @Override
     public void run() {
@@ -47,10 +52,26 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
     public void initialise(AIConfig config) throws InitialisationFailedException {
 
         super.initialise(config);
-        this.status = new SimpleDoubleProperty(0);
-        this.isEnded = new SimpleBooleanProperty(false);
-        bestEverChromosomes = FXCollections.observableArrayList();
-        this.bestEverChromosomesProperty = new SimpleListProperty<>(bestEverChromosomes);
+
+        this.status.setValue(0);
+        this.isEnded.setValue(false);
+        bestEverChromosomes = new ArrayList<>(Integer.parseInt(config.configElement("NUMBER.EPOCHS")));
+
+        bestEverChromosomeProperty.setValue(null);
+        currentEpoch = 0;
+        lastTrainError = 0.0;
+        lastValidationError = null;
+
+
+
+
+
+
+
+
+        
+        
+        
     }
 
     public void initialise(AIConfig config, DataKeeper trainDataSet, String pathToSave) throws InitialisationFailedException, IOException {
@@ -68,8 +89,9 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
 
 
 
-        logger.debug("trainModel() : tempDataset name " + config.configElement("TRAINING.SET"));
 
+        logger.debug("trainModel() : tempDataset name " + config.configElement("TRAINING.SET"));
+        this.dataKeeper.setValue(trainDataSet);
         this.initialise(config);
 
     }
@@ -87,7 +109,6 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
             if(Thread.interrupted()) {
                 break;
             }
-            currentEpoch = i+1;
             logger.info("Running Epoch[" + i + "]\r");
             this.ga.runEpoch();
             this.saveBest();
@@ -95,8 +116,10 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
             if ((this.ga.discoverdBestMember().fitness() >= terminateVal && !nOrder) || (this.ga.discoverdBestMember().fitness() <= terminateVal && nOrder)) {
                 terminate = true;
             }
+
             i++;
             status.setValue(((double)i)/epochs);
+            this.saveDataForGUI(i);
             if(terminate && terminateEnabled) {
                 status.setValue(1);
                 break;
@@ -108,6 +131,34 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
         logger.debug("Innovation Database Stats - Hits:" + innovationDatabase.totalHits + " - totalMisses:" + innovationDatabase.totalMisses);
 
     }
+
+    private void saveDataForGUI(int i) {
+        Chromosome best = this.ga.discoverdBestMember();
+        logger.info("Save GUI[" + i + "]\r");
+
+        this.lastTrainError = best.getTrainError();
+        this.lastValidationError = best.getValidationError();
+        currentEpoch = i+1;
+
+
+        /*this.errorData.add();
+        if(best.getValidationError()!=null){
+            this.validationErrorData.add(this.createXYChart(i, best.getValidationError()));
+        }*/
+
+
+
+    }
+
+
+    private XYChart.Data<Number, Number> createXYChart(Number i, Double value){
+        if(value == null) return null;
+        XYChart.Data<Number, Number> xyData = new XYChart.Data<>(i, value);
+        xyData.setNode(new StackPane());
+        Tooltip.install(xyData.getNode(), new Tooltip(String.valueOf(value)));
+        return xyData;
+    }
+
 
     public double getStatus() {
         return status.get();
@@ -122,6 +173,8 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
         Chromosome best = this.ga.discoverdBestMember();
         best.setInputs(Integer.parseInt(config.configElement("INPUT.NODES")));
         best.setOutputs(Integer.parseInt(config.configElement("OUTPUT.NODES")));
+
+        this.bestEverChromosomeProperty.setValue(best);
         if(pathToSave != null)
             this.save(pathToSave, best);
         bestEverChromosomes.add(best);
@@ -131,16 +184,12 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
         return bestEverChromosomes;
     }
 
-    public int getCurrentEpoch() {
-        return this.currentEpoch;
+    public List<Chromosome> getBestEverChromosomesList() {
+        return bestEverChromosomes;
     }
 
-    public ObservableList<Chromosome> getBestEverChromosomesProperty() {
-        return bestEverChromosomesProperty.get();
-    }
-
-    public ListProperty<Chromosome> bestEverChromosomesPropertyProperty() {
-        return bestEverChromosomesProperty;
+    public SimpleObjectProperty<Chromosome> getBestChromosomeProperty() {
+        return bestEverChromosomeProperty;
     }
 
     public boolean isIsEnded() {
@@ -149,5 +198,25 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
 
     public BooleanProperty isEndedProperty() {
         return isEnded;
+    }
+
+    public Double getLastTrainError() {
+        return lastTrainError;
+    }
+
+    public Double getLastValidationError() {
+        return lastValidationError;
+    }
+
+    public Integer getCurrentEpoch() {
+        return currentEpoch;
+    }
+
+    public SimpleObjectProperty<DataKeeper> getDataKeeperProperty() {
+        return dataKeeper;
+    }
+
+    public DataKeeper getDataKeeper(){
+        return dataKeeper.getValue();
     }
 }

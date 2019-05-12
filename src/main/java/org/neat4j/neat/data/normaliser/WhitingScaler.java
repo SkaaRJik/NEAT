@@ -80,5 +80,10 @@ public class WhitingScaler implements DataScaler  {
 
     }
 
+    @Override
+    public DataKeeper denormalise(List<List<Double>> dataToNormalize) {
+        return null;
+    }
+
 
 }

@@ -749,7 +749,7 @@ public class NewDataPreparatorDialogueController{
             }
             split = line.split("[;]");
             for (int i = 0; i < split.length; i++) {
-                if(split[i].matches("[\\d]*[,]?[\\d]*")){
+                if(split[i].matches("[\\d]*[,]?[\\dEe]*")){
                         split[i] = split[i].replaceAll(",", ".");
                 }
                 row.add(split[i]);
@@ -849,6 +849,7 @@ public class NewDataPreparatorDialogueController{
                     //dataScaler = new LinearScalerGlobalValues();
                     dataScaler = new LinearScaler();
                     normalisedUsedData = dataScaler.normalise(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
+
                     //normalisedUsedData = dataScaler.normalise(usedData);
 
                     break;
@@ -937,6 +938,7 @@ public class NewDataPreparatorDialogueController{
         this.normalisedUsedData.setHeaders(normalisedDataTableView.getColumns().stream().map(listTableColumn -> {
             return listTableColumn.getText();
         }).collect(Collectors.toList()));
+        DataKeeper denormalise = this.normalisedUsedData.denormalise();
         return this.normalisedUsedData.writeDataIntoFile(dest);
 
     }

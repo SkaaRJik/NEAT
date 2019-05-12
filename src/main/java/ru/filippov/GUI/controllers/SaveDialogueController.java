@@ -57,9 +57,10 @@ public class SaveDialogueController {
 
         this.saveNameTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null){
-                if (newValue.contains("/") || newValue.contains("\\")) {
-                    saveNameTextField.setText(newValue.replaceAll("[/\\\\]", " "));
+                if (newValue.contains("/") || newValue.contains("\\") || newValue.contains(".")) {
+                    saveNameTextField.setText(newValue.replaceAll("[/\\\\.]", " "));
                 }
+
             }
         });
 
