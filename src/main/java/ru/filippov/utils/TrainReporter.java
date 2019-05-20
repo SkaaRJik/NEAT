@@ -2,6 +2,7 @@ package ru.filippov.utils;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.scene.layout.Pane;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
 import org.apache.poi.wp.usermodel.Paragraph;
@@ -34,6 +35,9 @@ public class TrainReporter {
     DataKeeper dataKeeper;
     List<BufferedImage> images;
     ResourceBundle resourceBundle;
+
+
+
 
     static {
         hMergeStart.setVal(STMerge.RESTART);

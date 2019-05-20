@@ -2,16 +2,11 @@ package ru.filippov.utils;
 
 import javafx.css.PseudoClass;
 import javafx.event.EventHandler;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import org.apache.log4j.Logger;
 import org.neat4j.core.AIConfig;
@@ -21,7 +16,6 @@ import org.neat4j.neat.core.control.NEATNetManager;
 import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.nn.core.NeuralNet;
 import org.neat4j.neat.nn.core.Synapse;
-import ru.filippov.GUI.customNodes.ZoomableCanvas;
 
 import java.awt.*;
 import java.io.File;
@@ -29,8 +23,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
-public class AdvancedNetVisualisator {
-    private static final Logger cat = Logger.getLogger(AdvancedNetVisualisator.class);
+public class NetVisualisator {
+    private static final Logger cat = Logger.getLogger(NetVisualisator.class);
     private NEATNeuralNet net;
     private static final int X_OFFSET = 50;
     private static final int Y_OFFSET = 30;
@@ -280,7 +274,7 @@ public class AdvancedNetVisualisator {
     }
 
 
-    public AdvancedNetVisualisator() {
+    public NetVisualisator() {
 
     }
 

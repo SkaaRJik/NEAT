@@ -169,28 +169,14 @@ public class NEATNeuralNet implements NeuralNet {
 
 		NEATNeuron neuron;
 		for (NEATNodeGene gene : nodes) {
-			neuron = new NEATNeuron(this.createActivationFunction(gene), gene.id(), gene.getType(), gene.getLabel());
-			neuron.setActivationFunction(gene.getActivationFunction());
+			neuron = new NEATNeuron(gene.getActivationFunction(), gene.id(), gene.getType(), gene.getLabel());
+			//neuron.setActivationFunction(gene.getActivationFunction());
 			neuron.modifyBias(gene.bias(), 0, true);
 			tempNeurons.put(neuron.id(), neuron);
 		}
 		return tempNeurons;
 	}
-	
-	private ActivationFunction createActivationFunction(NEATNodeGene gene) {
-		ActivationFunction function = null;
-		// inputs are passed through
-		if (gene.getType() == NEATNodeGene.TYPE.INPUT) {
-			function = new LinearFunction();
-		} else if (gene.getType() == NEATNodeGene.TYPE.OUTPUT){
-			function = new SigmoidFunction(gene.sigmoidFactor());
-		} else {
-			function = new TanhFunction();
-		}
-		
-		return (function);
-	}
-	
+
 	private Synapse[] createLinks(ArrayList links, Map<Integer, NEATNeuron> neurons) {
 		NEATLinkGene gene;
 		Synapse[] synapses = new Synapse[links.size()];

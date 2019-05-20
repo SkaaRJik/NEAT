@@ -10,7 +10,6 @@ import org.apache.log4j.Category;
 import org.neat4j.core.AIConfig;
 import org.neat4j.neat.core.mutators.NEATMutator;
 import org.neat4j.neat.ga.core.*;
-import org.neat4j.neat.nn.core.ActivationFunction;
 import org.neat4j.neat.nn.core.functions.ActivationFunctionContainer;
 import org.neat4j.neat.nn.core.functions.ActivationFunctionImpl;
 
@@ -64,20 +63,20 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 	 */
 	public void runEpoch() {
 		Chromosome[] currentGen = this.pop.genoTypes();
-		Chromosome[] part;
+
 		this.setChromosomeNO(currentGen);
 		cat.debug("Evaluating pop");
 		for (int i = 0; i < this.numberOfThreads; i++) {
-			part = getPartChromosomes(currentGen, i);
-			Chromosome[] finalPart = part;
-			threads[i] = new Thread(()->{evaluatePopulation(finalPart);});
+			//part = getPartChromosomes(currentGen, i);
+			//Chromosome[] finalPart = part;
+			int finalI = i+1;
+			threads[i] = new Thread(()->{
+				calculateFitness(currentGen, (finalI)*offsetOfIndex, (finalI)*offsetOfIndex+offsetOfIndex);
+			});
 			threads[i].run();
 		}
-		part = new Chromosome[offsetOfIndex];
-		for (int i = 0; i < offsetOfIndex; i++) {
-			part[i] = currentGen[i];
-		}
-		this.evaluatePopulation(part);
+
+		this.calculateFitness(currentGen, 0 , offsetOfIndex);
 		for (int i = 0; i < numberOfThreads; i++) {
 			try {
 				threads[i].join();
@@ -85,13 +84,9 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 				e.printStackTrace();
 			}
 		}
-		//this.evaluatePopulation(currentGen);
+
 		this.runEvolutionCycle(currentGen);
-		/*Chromosome[] currentGen = this.pop.genoTypes();
-		this.setChromosomeNO(currentGen);
-		cat.debug("Evaluating pop");
-		this.evaluatePopulation(currentGen);
-		this.runEvolutionCycle(currentGen);*/
+
 	}
 
 	private Chromosome[] getPartChromosomes(Chromosome[] currentGen, int i) {
@@ -147,11 +142,11 @@ public class NEATGeneticAlgorithm implements GeneticAlgorithm {
 		return (best);
 	}
 
-	private void evaluatePopulation(Chromosome[] genoTypes) {
+	private void calculateFitness(Chromosome[] genoTypes, int start, int end) {
 		int i;
 		double eval;
 		
-		for (i = 0; i < genoTypes.length; i++) {
+		for (i = start; i < end; i++) {
 			eval = this.func.evaluate(genoTypes[i]);
 			genoTypes[i].updateFitness(eval);			
 		}

@@ -103,8 +103,9 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
         boolean nOrder = ((NEATGADescriptor)this.ga.getDescriptor()).isNaturalOrder();
         boolean terminate = false;
 
-        int i = 0;
+
         pathToSave = config.configElement("SAVE.LOCATION");
+        int i = 0;
         while (i < epochs) {
             if(Thread.interrupted()) {
                 break;

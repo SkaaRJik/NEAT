@@ -77,6 +77,7 @@ public class MainController {
 
 
 
+
     static class ProjectFileDescriptor{
 
 
@@ -262,7 +263,7 @@ public class MainController {
     private VBox titlesPaneContainer;
     private TitledPane GASettingsTitledPane;
     private JFXTextField mutationProbabilityTextField;
-    private JFXTextField crossoverProbabilityTextField;
+    //private JFXTextField crossoverProbabilityTextField;
     private JFXTextField addLinkProbabilityTextField;
     private JFXTextField addNodeProbabilityTextField;
     private JFXTextField mutateBiasProbabilityTextField;
@@ -364,7 +365,7 @@ public class MainController {
     @FXML
     private Pane drawablePane;
     //private ZoomableCanvas netVisualisationCanvas;
-    private AdvancedNetVisualisator netVisualisator;
+    private NetVisualisator netVisualisator;
 
 
     @FXML
@@ -520,6 +521,7 @@ public class MainController {
             treeCell.addEventFilter(MouseEvent.MOUSE_CLICKED, (MouseEvent e) -> {
 
                 if (e.getClickCount() % 2 == 0 && e.getButton().equals(MouseButton.PRIMARY)) {
+                    if(treeCell.getTreeItem() == null) return;
                     ProjectFileDescriptor value = treeCell.getTreeItem().getValue();
 
 
@@ -620,7 +622,7 @@ public class MainController {
         HBox hBox = new HBox(20, this.generatorSeedTextField, generateSeedButton);
 
         this.mutationProbabilityTextField = new JFXTextField();
-        this.crossoverProbabilityTextField = new JFXTextField();
+        //this.crossoverProbabilityTextField = new JFXTextField();
         this.addLinkProbabilityTextField = new JFXTextField();
         this.addNodeProbabilityTextField = new JFXTextField();
         this.mutateBiasProbabilityTextField = new JFXTextField();
@@ -628,7 +630,7 @@ public class MainController {
         this.toggleLinkProbabilityTextField = new JFXTextField();
         this.weightReplaceProbabilityTextField = new JFXTextField();
         this.mutationProbabilityTextField.setLabelFloat(true);
-        this.crossoverProbabilityTextField.setLabelFloat(true);
+        //this.crossoverProbabilityTextField.setLabelFloat(true);
         this.addLinkProbabilityTextField.setLabelFloat(true);
         this.addNodeProbabilityTextField.setLabelFloat(true);
         this.mutateBiasProbabilityTextField.setLabelFloat(true);
@@ -637,7 +639,7 @@ public class MainController {
         this.weightReplaceProbabilityTextField.setLabelFloat(true);
 
         this.mutationProbabilityTextField.setAlignment(Pos.CENTER);
-        this.crossoverProbabilityTextField.setAlignment(Pos.CENTER);
+        //this.crossoverProbabilityTextField.setAlignment(Pos.CENTER);
         this.addLinkProbabilityTextField.setAlignment(Pos.CENTER);
         this.addNodeProbabilityTextField.setAlignment(Pos.CENTER);
         this.mutateBiasProbabilityTextField.setAlignment(Pos.CENTER);
@@ -648,7 +650,7 @@ public class MainController {
         tempVbox.getChildren().addAll(
                 hBox,
             this.mutationProbabilityTextField,
-            this.crossoverProbabilityTextField,
+            //this.crossoverProbabilityTextField,
             this.addLinkProbabilityTextField,
             this.addNodeProbabilityTextField,
             this.mutateBiasProbabilityTextField,
@@ -1131,7 +1133,7 @@ public class MainController {
                 netVisualisator.visualiseNet(netVisualisationCanvas);
             }
         };*/
-        this.netVisualisator = new AdvancedNetVisualisator();
+        this.netVisualisator = new NetVisualisator();
         //this.netVisualizationBorderPane.setCenter(this.netVisualisationCanvas);
 
        /* this.netVisualisationCanvas.widthProperty().bind(this.netVisualizationBorderPane.widthProperty());
@@ -1302,7 +1304,7 @@ public class MainController {
         neatOptionsLabel.setText(resourceBundle.getString("NEAT_OPTIONS"));
         noActiveProjectLabel.setText(resourceBundle.getString("NO_OPEN_PROJECTS"));
         mutationProbabilityTextField.setPromptText(resourceBundle.getString("MUTATION_PROBABILITY"));
-        crossoverProbabilityTextField.setPromptText(resourceBundle.getString("CROSSOVER_PROBABILITY"));
+        //crossoverProbabilityTextField.setPromptText(resourceBundle.getString("CROSSOVER_PROBABILITY"));
         addLinkProbabilityTextField.setPromptText(resourceBundle.getString("ADD_LINK_PROBABILITY"));
         addNodeProbabilityTextField.setPromptText(resourceBundle.getString("ADD_NODE_PROBABILITY"));
         this.newActivationFunctionProbabilityTextField.setPromptText(resourceBundle.getString("NEW_ACTIVATION_FUNCTION_PROBABILITY"));
@@ -1801,7 +1803,7 @@ public class MainController {
 
     private void clearGUIConfig(){
         mutationProbabilityTextField.setText("");
-        crossoverProbabilityTextField.setText("");
+        //crossoverProbabilityTextField.setText("");
         addLinkProbabilityTextField.setText("");
         addNodeProbabilityTextField.setText("");
         mutateBiasProbabilityTextField.setText("");
@@ -1990,7 +1992,7 @@ public class MainController {
 
     private void initNEATConfigUsingGUI(AIConfig NEATConfig) {
          NEATConfig.updateConfig("PROBABILITY.MUTATION", mutationProbabilityTextField.getText());
-         NEATConfig.updateConfig("PROBABILITY.CROSSOVER", crossoverProbabilityTextField.getText());
+         //NEATConfig.updateConfig("PROBABILITY.CROSSOVER", crossoverProbabilityTextField.getText());
          NEATConfig.updateConfig("PROBABILITY.ADDLINK", addLinkProbabilityTextField.getText());
          NEATConfig.updateConfig("PROBABILITY.ADDNODE", addNodeProbabilityTextField.getText());
          NEATConfig.updateConfig("PROBABILITY.MUTATEBIAS", mutateBiasProbabilityTextField.getText());
@@ -2068,7 +2070,7 @@ public class MainController {
 
     private void fillFieldsUsingAIConfig(AIConfig NEATConfig){
         mutationProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.MUTATION"));
-        crossoverProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.CROSSOVER"));
+        //crossoverProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.CROSSOVER"));
         addLinkProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.ADDLINK"));
         addNodeProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.ADDNODE"));
         mutateBiasProbabilityTextField.setText(NEATConfig.configElement("PROBABILITY.MUTATEBIAS"));
@@ -2750,26 +2752,48 @@ public class MainController {
 
     private void createInputPredictionTitledPane(String inputLabel){
 
-        final NumberAxis xAxis = new NumberAxis();
-        final NumberAxis yAxis = new NumberAxis();
-        xAxis.setLabel(predictionDataSet.getValue().getLegendHeader());
-        yAxis.setLabel("Значение");
+        Map<String, Node> map = new HashMap<>(10);
+
+
+        final NumberAxis vxAxis = new NumberAxis();
+        final NumberAxis vyAxis = new NumberAxis();
+        vxAxis.setLabel(predictionDataSet.getValue().getLegendHeader());
+        vyAxis.setLabel("Значение");
         final LineChart<Number,Number> lineChart =
-                new LineChart<Number,Number>(xAxis,yAxis);
+                new LineChart<Number,Number>(vxAxis,vyAxis);
         this.configureChart(lineChart);
         lineChart.setTitle(inputLabel);
+        map.put("lineChart", lineChart);
 
         JFXTextField error = new JFXTextField();
         error.setLabelFloat(true);
         error.setPromptText("Ошибка обучения");
 
+        final NumberAxis trxAxis = new NumberAxis();
+        final NumberAxis tryAxis = new NumberAxis();
+        trxAxis.setLabel("Эпоха");
+        tryAxis.setLabel("Ошибка");
+        final LineChart<Number,Number> trlineChart =
+                new LineChart<Number,Number>(trxAxis,tryAxis);
+        this.configureChart(trlineChart);
+        trlineChart.setTitle("Ошибки тренровки");
+        map.put("trChart", trlineChart);
 
         JFXTextField valError = new JFXTextField();
         valError.setLabelFloat(true);
         valError.setPromptText("Ошибка тестирования");
 
+        final NumberAxis texAxis = new NumberAxis();
+        final NumberAxis teyAxis = new NumberAxis();
+        texAxis.setLabel("Эпоха");
+        teyAxis.setLabel("Ошибка");
+        final LineChart<Number,Number> telineChart =
+                new LineChart<Number,Number>(texAxis,teyAxis);
+        this.configureChart(telineChart);
+        telineChart.setTitle("Ошибки тестирования");
+        map.put("teChart", telineChart);
 
-        VBox vBox = new VBox(new HBox(error, valError), lineChart);
+        VBox vBox = new VBox(new HBox(error, valError), map.get("lineChart"), new HBox(map.get("trChart"), map.get("teChart")));
         ((HBox)vBox.getChildren().get(0)).setSpacing(5);
 
         TitledPane titledPane = new TitledPane(inputLabel, vBox);
@@ -2779,12 +2803,12 @@ public class MainController {
         titledPane.setGraphic(new BorderPane(progressBar,null, retrainButton, null, null));
         predictionVBox.getChildren().add(titledPane);
 
-        Map<String, Node> map = new HashMap<>();
+
 
         map.put("valError" , valError);
         map.put("progressBar", progressBar);
         map.put("retrainButton", retrainButton);
-        map.put("lineChart", lineChart);
+
         map.put("error", error);
         map.put("titledPane", titledPane);
         this.dynamicPredictionNodes.add(map);
@@ -2924,14 +2948,23 @@ public class MainController {
         AIConfig config = new NEATConfig();
         this.initNEATConfigUsingGUI(config);
         WindowPrediction windowPrediction = this.windowPrediction.getValue();
-        windowPrediction.retrain(i, config);
+        windowPrediction.train(i, config);
         NEATTrainingForJavaFX trainer = windowPrediction.getTrainer(i);
-        List<Tooltip> seriesTooltip = new ArrayList<>(windowPrediction.getDataKeeper().getData().size() + Integer.parseInt(yearPredictionTextField.getText()));
+        //List<Tooltip> seriesTooltip = new ArrayList<>(windowPrediction.getDataKeeper().getData().size() + Integer.parseInt(yearPredictionTextField.getText()));
         XYChart.Series<Number, Number> outputSeries = new XYChart.Series<>();
         predictionInputTime.set(i, predictionInputTime.get(i)+1);
         outputSeries.setName(predictionInputTime.get(i)+". " + windowPrediction.getDataKeeper().getHeaders().get(i));
         LineChart lineChart = (LineChart) dynamicPredictionNodes.get(i).get("lineChart");
         Double tick = ((NumberAxis) lineChart.getXAxis()).getTickUnit();
+
+        XYChart.Series<Number, Number> trSeries = new XYChart.Series<>();
+        XYChart.Series<Number, Number> teSeries = new XYChart.Series<>();
+        ((LineChart<Number, Number>) dynamicPredictionNodes.get(i).get("trChart")).getData().add(trSeries);
+        trSeries.setName(predictionInputTime.get(i)+". " + windowPrediction.getDataKeeper().getHeaders().get(i));
+        ((LineChart<Number, Number>) dynamicPredictionNodes.get(i).get("teChart")).getData().add(teSeries);
+        teSeries.setName(predictionInputTime.get(i)+". " + windowPrediction.getDataKeeper().getHeaders().get(i));
+
+
         trainer.isEndedProperty().addListener(new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
@@ -2946,11 +2979,11 @@ public class MainController {
                     for (int j = 0; j < trainer.getDataKeeper().getData().size(); j++) {
                         xValue = start;
                         yValue = trainer.getBestChromosomeProperty().getValue().getOutputValues().get(j).get(0);
-                        //yValue = newValue.getData().get(j).get(newValue.getInputs());
+
                         outputSeries.getData().add(new XYChart.Data<>(xValue, yValue));
                         outputSeries.getData().get(j).setNode(new StackPane());
                         tooltip = new Tooltip(lineChart.getXAxis().getLabel() + ": " + xValue + "\n" + lineChart.getYAxis().getLabel() + ": " + yValue);
-                        seriesTooltip.add(tooltip);
+
                         Tooltip.install(outputSeries.getData().get(j).getNode(), tooltip);
                         start += tick;
                     }
@@ -2963,6 +2996,69 @@ public class MainController {
             }
         });
 
+
+        windowPrediction.getInputPredictionEndedProperty(i).addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                if(newValue){
+                    List<Double> predictedInputs = windowPrediction.getPredictedInputs(i);
+
+                    Double xValue;
+                    Double yValue;
+                    Tooltip tooltip;
+                    XYChart.Data<Number, Number> xyChart;
+                    List<XYChart.Data<Number, Number>> predictedOuts = new ArrayList<>(predictedInputs.size());
+                    Double start = (Double) outputSeries.getData().get(outputSeries.getData().size()-1).getXValue()+tick;
+                    for (int j = 0; j < predictedInputs.size(); j++) {
+                        xValue = start;
+                        yValue = predictedInputs.get(j);
+                        xyChart = new XYChart.Data<>(xValue, yValue);
+                        //yValue = newValue.getData().get(j).get(newValue.getInputs());
+                        predictedOuts.add(xyChart);
+                        xyChart.setNode(new StackPane());
+                        tooltip = new Tooltip(lineChart.getXAxis().getLabel()+": " + xValue + "\n" + lineChart.getYAxis().getLabel() + ": " + yValue);
+                        //seriesTooltip.add(tooltip);
+                        Tooltip.install(xyChart.getNode(), tooltip);
+                        start+=tick;
+                    }
+                    Platform.runLater(()->{
+                        outputSeries.getData().addAll(predictedOuts);
+                    });
+
+
+                    windowPrediction.getInputPredictionEndedProperty(i).removeListener(this);
+                }
+            }
+        });
+
+        JFXTextField error = (JFXTextField) dynamicPredictionNodes.get(i).get("error");
+        JFXTextField valError = (JFXTextField) dynamicPredictionNodes.get(i).get("valError");
+        trainer.getBestChromosomeProperty().addListener(new ChangeListener<Chromosome>() {
+
+            @Override
+            public void changed(ObservableValue<? extends Chromosome> observable, Chromosome oldValue, Chromosome newValue) {
+
+                if(newValue != null){
+                    Double err = trainer.getBestChromosomeProperty().getValue().getTrainError();
+                    Double verr = trainer.getBestChromosomeProperty().getValue().getValidationError();
+                    Integer currentEpoch = trainer.getCurrentEpoch();
+                    XYChart.Data<Number, Number> trData = createXYData(currentEpoch, err, "Эпоха", "Ошибка");
+                    XYChart.Data<Number, Number> teData = (verr == null) ? null : createXYData(currentEpoch, verr, "Эпоха", "Ошибка");
+                    Platform.runLater(()->{
+
+                        trSeries.getData().add(trData);
+                        teSeries.getData().add(teData);
+
+                        error.setText(String.valueOf(err));
+                        valError.setText(String.valueOf(verr));
+                    });
+
+
+                    if(trainer.isIsEnded()) trainer.getBestChromosomeProperty().removeListener(this);
+                }
+
+            }
+        });
 
 
 
@@ -2981,19 +3077,21 @@ public class MainController {
         JFXTextField error = (JFXTextField) map.get("error");
         JFXTextField valError = (JFXTextField) map.get("valError");
         JFXButton retrainButton = (JFXButton) map.get("retrainButton");
+        XYChart.Series<Number, Number> trSeries = new XYChart.Series<>();
+        XYChart.Series<Number, Number> teSeries = new XYChart.Series<>();
+        ((LineChart<Number, Number>) map.get("trChart")).getData().add(trSeries);
+        trSeries.setName(predictionInputTime.get(i)+". " + predictionData.getHeaders().get(i));
+        ((LineChart<Number, Number>) map.get("teChart")).getData().add(teSeries);
+        teSeries.setName(predictionInputTime.get(i)+". " + predictionData.getHeaders().get(i));
+
 
         error.setText("0");
         retrainButton.disableProperty().unbind();
         retrainButton.disableProperty().bind(windowPrediction.getValue().trainIsFinishedProperty().isEqualTo(false));
         retrainButton.setOnAction(event -> {
             retrain(i);
-
-
-
         });
 
-
-        //error.textProperty().bind(trainer.lastErrorProperty());
         if(lineChart.getData().isEmpty()) {
             List<XYChart.Data<Number, Number>> inputs = new ArrayList<>(predictionData.getData().size());
             for (int j = 0; j < predictionData.getData().size(); j++) {
@@ -3009,42 +3107,24 @@ public class MainController {
         progressBar.progressProperty().bind(trainer.statusProperty());
 
 
-
-        /*trainer.getDataKeeperProperty().addListener(new ChangeListener<DataKeeper>() {
-
-
-
-            @Override
-            public void changed(ObservableValue<? extends DataKeeper> observable, DataKeeper oldValue, DataKeeper newValue) {
-                Double xValue;
-                Double yValue;
-                Tooltip tooltip;
-                for (int j = 0; j < newValue.getData().size(); j++) {
-                    xValue = newValue.getLegend().get(j);
-                    yValue = 0.0;
-                    //yValue = newValue.getData().get(j).get(newValue.getInputs());
-                    outputSeries.getData().add(new XYChart.Data<>(xValue, yValue));
-                    outputSeries.getData().get(j).setNode(new StackPane());
-                    tooltip = new Tooltip(lineChart.getXAxis().getLabel()+": " + xValue + "\n" + lineChart.getYAxis().getLabel() + ": " + yValue);
-                    seriesTooltip.add(tooltip);
-                    Tooltip.install(outputSeries.getData().get(j).getNode(), tooltip);
-                }
-                Platform.runLater(()->{
-                    lineChart.getData().add(outputSeries);
-                });
-                if(trainer.isIsEnded()) trainer.getDataKeeperProperty().removeListener(this);
-            }
-        });*/
-
         trainer.getBestChromosomeProperty().addListener(new ChangeListener<Chromosome>() {
+
             @Override
             public void changed(ObservableValue<? extends Chromosome> observable, Chromosome oldValue, Chromosome newValue) {
+
                 if(newValue != null){
-                    String err = String.valueOf(trainer.getLastTrainError());
-                    String verr = String.valueOf(trainer.getLastValidationError());
+                    Double err = trainer.getBestChromosomeProperty().getValue().getTrainError();
+                    Double verr = trainer.getBestChromosomeProperty().getValue().getValidationError();
+                    Integer currentEpoch = trainer.getCurrentEpoch();
+                    XYChart.Data<Number, Number> trData = createXYData(currentEpoch, err, "Эпоха", "Ошибка");
+                    XYChart.Data<Number, Number> teData = (verr == null) ? null : createXYData(currentEpoch, verr, "Эпоха", "Ошибка");
                     Platform.runLater(()->{
-                        error.setText(err);
-                        valError.setText(verr);
+
+                        trSeries.getData().add(trData);
+                        teSeries.getData().add(teData);
+
+                        error.setText(String.valueOf(err));
+                        valError.setText(String.valueOf(verr));
                     });
 
 
@@ -3054,7 +3134,6 @@ public class MainController {
             }
         });
 
-        List<Tooltip> seriesTooltip = new ArrayList<>(predictionData.getData().size() + Integer.parseInt(yearPredictionTextField.getText()));
         XYChart.Series<Number, Number> outputSeries = new XYChart.Series<>();
         predictionInputTime.set(i, predictionInputTime.get(i)+1);
         outputSeries.setName(predictionInputTime.get(i)+". " + predictionData.getHeaders().get(i));
@@ -3076,7 +3155,7 @@ public class MainController {
                         outputSeries.getData().add(new XYChart.Data<>(xValue, yValue));
                         outputSeries.getData().get(j).setNode(new StackPane());
                         tooltip = new Tooltip(lineChart.getXAxis().getLabel() + ": " + xValue + "\n" + lineChart.getYAxis().getLabel() + ": " + yValue);
-                        seriesTooltip.add(tooltip);
+                        //seriesTooltip.add(tooltip);
                         Tooltip.install(outputSeries.getData().get(j).getNode(), tooltip);
                         start += tick;
                     }
@@ -3108,7 +3187,7 @@ public class MainController {
                             predictedOuts.add(xyChart);
                             xyChart.setNode(new StackPane());
                             tooltip = new Tooltip(lineChart.getXAxis().getLabel()+": " + xValue + "\n" + lineChart.getYAxis().getLabel() + ": " + yValue);
-                            seriesTooltip.add(tooltip);
+                            //seriesTooltip.add(tooltip);
                             Tooltip.install(xyChart.getNode(), tooltip);
                             start+=tick;
                         }
@@ -3166,6 +3245,8 @@ public class MainController {
                 ((TitledPane) map.get("titledPane")).setText(this.predictionDataSet.getValue().getHeaders().get(i));
                 ((LineChart) map.get("lineChart")).setTitle(this.predictionDataSet.getValue().getHeaders().get(i));
                 ((LineChart) map.get("lineChart")).getData().clear();
+                ((LineChart) map.get("trChart")).getData().clear();
+                ((LineChart) map.get("teChart")).getData().clear();
                 ((ProgressBar) map.get("progressBar")).progressProperty().unbind();
                 ((ProgressBar) map.get("progressBar")).progressProperty().setValue(0);
                 ((JFXTextField) map.get("error")).textProperty().unbind();

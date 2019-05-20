@@ -10,9 +10,7 @@ import org.neat4j.neat.core.NEATConfig;
 import org.neat4j.neat.core.NEATLoader;
 import org.neat4j.neat.data.core.DataKeeper;
 import org.neat4j.neat.ga.core.Chromosome;
-import sun.rmi.runtime.Log;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -113,14 +111,14 @@ class WindowPredictionTest {
     void retainTest(){
 
         try {
-            windowPrediction.retrain(1, DefaultConfig.getDefaultConfig()).join();
+            windowPrediction.train(1, DefaultConfig.getDefaultConfig()).join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         List<Chromosome> bestEverChromosomes = windowPrediction.trainer[1].getBestEverChromosomes();
         double fitness1 = bestEverChromosomes.get(bestEverChromosomes.size() - 1).fitness();
         try {
-            windowPrediction.retrain(1, DefaultConfig.getDefaultConfig()).join();
+            windowPrediction.train(1, DefaultConfig.getDefaultConfig()).join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -132,7 +130,7 @@ class WindowPredictionTest {
         AIConfig newConfig = new NEATConfig((NEATConfig) DefaultConfig.getDefaultConfig());
         newConfig.updateConfig("GENERATOR.SEED", String.valueOf(System.currentTimeMillis()));
         try {
-            windowPrediction.retrain(1, newConfig).join();
+            windowPrediction.train(1, newConfig).join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -178,4 +176,12 @@ class WindowPredictionTest {
 
     }
 
+
+    @Test
+    void forik(){
+        int i = 0;
+        int n1 = 36, n2 = 24;
+        for ( i=n1-1; !(n1 % i ==0 && n2 % i ==0); i--);
+        System.out.println(i);
+    }
 }

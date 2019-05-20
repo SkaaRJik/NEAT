@@ -6,7 +6,6 @@ import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.applications.train.NEATTrainingForJavaFX;
 import org.neat4j.neat.core.*;
-import org.neat4j.neat.core.control.NEAT;
 import org.neat4j.neat.core.control.NEATNetManager;
 import org.neat4j.neat.data.core.DataKeeper;
 import org.neat4j.neat.data.core.NetworkInput;
@@ -17,7 +16,6 @@ import org.neat4j.neat.nn.core.NeuralNet;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -106,21 +104,8 @@ public class WindowPrediction implements Runnable {
     public void run() {
         trainIsFinished.setValue(false);
         Thread[] threads = new Thread[this.inputs];
-        //trainIsFinished.setValue(false);
         for (int i = 0; i < this.inputs; i++) {
-            int finalI = i;
-            /*threads[i] = new Thread(() -> {
-                try {
-                    dataForWindow[finalI] = prepareDataForWindow(finalI, dataKeeper);
-                    inputThreads[finalI] = new WindowTrainThread(finalI, trainer[finalI], configForWindows[finalI], dataForWindow[finalI]);
-                    inputThreads[finalI].startTraining();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (InitialisationFailedException e) {
-                    e.printStackTrace();
-                }
-            });*/
-            threads[i] = retrain(i, configForWindow[i] );
+            threads[i] = train(i, configForWindow[i] );
         }
 
         try {
@@ -134,7 +119,7 @@ public class WindowPrediction implements Runnable {
 
     }
 
-    public Thread retrain(int index, AIConfig config){
+    public Thread train(int index, AIConfig config){
         Thread thread = new Thread(() -> {
             predictionInputEnded[index].setValue(false);
             config.updateConfig("INPUT.NODES", String.valueOf(windowsSize));
@@ -147,34 +132,8 @@ public class WindowPrediction implements Runnable {
                 inputThreads[index] = new WindowTrainThread(index, trainer[index], config, dataForWindow[index]);
 
                 inputThreads[index].startTraining();
+                predictFactorSign(index, config);
 
-                //List<Chromosome> bestEverChromosomes = ;
-                Chromosome bestChromosome = trainer[index].getBestEverChromosomes().get(trainer[index].getBestEverChromosomes().size()-1);
-                List<Double> inputs = new ArrayList<>(windowsSize+yearPrediction);
-
-                for (int i = this.dataKeeper.getData().size()-windowsSize; i < this.dataKeeper.getData().size(); i++) {
-                    inputs.add(this.dataKeeper.getData().get(i).get(index));
-
-                }
-
-                NEATNeuralNet neatNeuralNet = this.initNet(config, bestChromosome);
-                //double[] inputPattern = new double[windowsSize];
-                NetworkInput input = null;
-                NetworkOutputSet execute = null;
-                Double[] inputTemp  = new Double[windowsSize];
-                for (int i = 0; i < yearPrediction; i++) {
-                    for (int j = 0; j < windowsSize; j++) {
-                        inputTemp[j] = inputs.get(i+j);
-                    }
-                    input = new InputImpl(inputTemp);
-                    execute = neatNeuralNet.execute(input);
-                    inputs.add(execute.nextOutput().getNetOutputs().get(0));
-                    predictedInputDatas[i][index] = execute.nextOutput().getNetOutputs().get(0);
-                }
-
-                for (int i = 0 ; i < bestChromosome.getOutputValues().size() ; i++) {
-                    predictedWindowDatas[i][index] = bestChromosome.getOutputValues().get(i).get(0);
-                }
                 predictionInputEnded[index].setValue(true);
 
             } catch (InitialisationFailedException e) {
@@ -187,13 +146,41 @@ public class WindowPrediction implements Runnable {
         return thread;
     }
 
+    private void predictFactorSign(int index, AIConfig config) throws InitialisationFailedException {
+        //List<Chromosome> bestEverChromosomes = ;
+        Chromosome bestChromosome = trainer[index].getBestEverChromosomes().get(trainer[index].getBestEverChromosomes().size()-1);
+        List<Double> inputs = new ArrayList<>(windowsSize+yearPrediction);
+
+        for (int i = this.dataKeeper.getData().size()-windowsSize; i < this.dataKeeper.getData().size(); i++) {
+            inputs.add(this.dataKeeper.getData().get(i).get(index));
+
+        }
+
+        NEATNeuralNet neatNeuralNet = this.initNet(config, bestChromosome);
+        //double[] inputPattern = new double[windowsSize];
+        NetworkInput input = null;
+        NetworkOutputSet execute = null;
+        Double[] inputTemp  = new Double[windowsSize];
+        for (int i = 0; i < yearPrediction; i++) {
+            for (int j = 0; j < windowsSize; j++) {
+                inputTemp[j] = inputs.get(i+j);
+            }
+            input = new InputImpl(inputTemp);
+            execute = neatNeuralNet.execute(input);
+            inputs.add(execute.nextOutput().getNetOutputs().get(0));
+            predictedInputDatas[i][index] = execute.nextOutput().getNetOutputs().get(0);
+        }
+
+        for (int i = 0 ; i < bestChromosome.getOutputValues().size() ; i++) {
+            predictedWindowDatas[i][index] = bestChromosome.getOutputValues().get(i).get(0);
+        }
+    }
+
     public List<Double> getPredictedInputs(int index){
         List<Double> list = new ArrayList<>(predictedInputDatas.length);
         for (int j = 0; j < predictedInputDatas.length; j++) {
             list.add(predictedWindowDatas[j][index]);
         }
-
-
         return list;
     }
 

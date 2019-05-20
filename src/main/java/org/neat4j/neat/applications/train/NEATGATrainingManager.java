@@ -117,7 +117,7 @@ public class NEATGATrainingManager {
 		descriptor.setPToggleLink(Double.parseDouble(config.configElement("PROBABILITY.TOGGLELINK")));
 		descriptor.setPMutateBias(Double.parseDouble(config.configElement("PROBABILITY.MUTATEBIAS")));
 		descriptor.setPNewActivationFunction(Double.parseDouble(config.configElement("PROBABILITY.NEWACTIVATIONFUNCTION")));
-		descriptor.setPXover(Double.parseDouble(config.configElement("PROBABILITY.CROSSOVER")));
+		//descriptor.setPXover(Double.parseDouble(config.configElement("PROBABILITY.CROSSOVER")));
 		descriptor.setPMutation(Double.parseDouble(config.configElement("PROBABILITY.MUTATION")));
 		descriptor.setInputNodes(Integer.parseInt(config.configElement("INPUT.NODES")));
 		descriptor.setOutputNodes(Integer.parseInt(config.configElement("OUTPUT.NODES")));

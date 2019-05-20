@@ -94,6 +94,9 @@ public class MSENEATFitnessFunction extends NEATFitnessFunction {
 				else if(nodeGene.getType() == NEATNodeGene.TYPE.OUTPUT) nodeGene.setLabel(this.evaluationData().expectedOutputSet().getHeaders().get(outputsIndex++));;
 			}
 		}
-		return genoType.getValidationError() == null ? genoType.getTrainError() :  genoType.getTrainError() + genoType.getValidationError();
+		//System.out.println(genoType.getTrainError() + " " + );
+		return genoType.getValidationError() == null ? genoType.getTrainError() : genoType.getTrainError() + genoType.getValidationError();
+		//return genoType.getValidationError() == null ? genoType.getTrainError() :  genoType.getTrainError() + genoType.getValidationError();
+		//return genoType.getValidationError() == null ? genoType.getTrainError() :   genoType.getValidationError();
 	}
 }

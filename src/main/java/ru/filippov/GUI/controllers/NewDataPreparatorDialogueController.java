@@ -253,7 +253,7 @@ public class NewDataPreparatorDialogueController{
                     this.pseudoClassStateChanged(nullInRow, this.getTableView().getItems().get(i).contains("null") || activate);
                     if(this.getPseudoClassStates().contains(nullInRow)){
                         dataTextAreaError.setVisible(true);
-                        dataTextAreaError.setText("Таблица содержит NULL!");
+                        dataTextAreaError.setText("Недопустимые значения!");
                         nextButton.setDisable(true);
                     }
                 }
@@ -589,7 +589,7 @@ public class NewDataPreparatorDialogueController{
 
 
             if(hasNull) {
-                dataTextAreaError.setText("Таблица содержит NULL!");
+                dataTextAreaError.setText("Недопустимые значения!");
                 dataTextAreaError.setVisible(true);
                 nextButton.setDisable(true);
             } else {
