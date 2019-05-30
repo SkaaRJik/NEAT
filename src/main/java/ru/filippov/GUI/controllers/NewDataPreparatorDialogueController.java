@@ -775,6 +775,7 @@ public class NewDataPreparatorDialogueController{
 
         } catch (IOException e) {
             e.printStackTrace();
+            AlertWindow.createAlertWindow(e.getMessage()).showAndWait();
         }
     }
 
@@ -938,7 +939,7 @@ public class NewDataPreparatorDialogueController{
         this.normalisedUsedData.setHeaders(normalisedDataTableView.getColumns().stream().map(listTableColumn -> {
             return listTableColumn.getText();
         }).collect(Collectors.toList()));
-        DataKeeper denormalise = this.normalisedUsedData.denormalise();
+        //DataKeeper denormalise = this.normalisedUsedData.denormalise();
         return this.normalisedUsedData.writeDataIntoFile(dest);
 
     }

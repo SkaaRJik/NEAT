@@ -66,62 +66,15 @@ public class TrainReporter {
         this.configs.add(config);
     }
 
-    public boolean createReport(File destination)  {
+    public boolean createReport(File destination, XWPFDocument document)  {
         if (destination != null) {
-            XWPFDocument document= new XWPFDocument();
+            if(document == null)
+                document = new XWPFDocument();
             FileOutputStream out = null;
-            AIConfig config;
-            List<Chromosome> chromosomes;
-            Chromosome chromosome;
+
             try {
                 out = new FileOutputStream(destination);
-
-                createDocParagraph(document, "Отчет по тренировке сети", ParagraphAlignment.CENTER);
-
-                createDocParagraph(document, "Входов сети : " + this.dataKeeper.getInputs() + " Выходов : " + this.dataKeeper.getOutputs(), ParagraphAlignment.LEFT);
-
-
-                createDocParagraph(document, "Тренировочный набор", ParagraphAlignment.LEFT);
-                List<List<Double>> dataToWrite = dataKeeper.getTrainData();
-                IntegerProperty legendIndex = new SimpleIntegerProperty(0);
-
-
-                XWPFTable table = document.createTable(dataToWrite.size()+1, dataToWrite.get(0).size()+1);
-                writeDataIntoTable(table, dataToWrite, legendIndex);
-
-                dataToWrite = dataKeeper.getTestData();
-                if(dataToWrite != null) {
-                    createDocParagraph(document, "Тестирующий набор", ParagraphAlignment.LEFT);
-
-                    table = document.createTable(dataToWrite.size() + 1, dataToWrite.get(0).size() + 1);
-                    writeDataIntoTable(table, dataToWrite, legendIndex);
-                }
-
-
-                createDocParagraph(document, "Ошибки", ParagraphAlignment.LEFT);
-                createTotalTableWithErrors(document);
-
-                createDocParagraph(document, "Значения", ParagraphAlignment.LEFT);
-                createTableWithOutputs(document);
-
-
-
-                for (int i = 0; i < this.configs.size(); i++) {
-
-
-
-                    document.createParagraph().createRun().addBreak(BreakType.PAGE);
-                    createDocParagraph(document, "Параметры тренировки №" + (i+1), ParagraphAlignment.CENTER);
-                    writeBriefing(document, configs.get(i), bestChromosomes.get(i), images.get(i));
-                    createDocParagraph(document, "", ParagraphAlignment.LEFT);
-                    writeAIConfig(document, configs.get(i));
-                    createDocParagraph(document, "", ParagraphAlignment.LEFT);
-                    createVerticalTableWithErrors(document, bestChromosomes.get(i));
-
-
-                }
-
-
+                writeReport(document);
                 document.write(out);
                 out.close();
 
@@ -140,6 +93,58 @@ public class TrainReporter {
             return true;
         }
         return false;
+    }
+
+    public void writeReport(XWPFDocument document) throws IOException, InvalidFormatException {
+        createDocParagraph(document, "Отчет по тренировке сети", ParagraphAlignment.CENTER);
+
+        createDocParagraph(document, "Входов сети : " + this.dataKeeper.getInputs() + " Выходов : " + this.dataKeeper.getOutputs(), ParagraphAlignment.LEFT);
+
+
+        createDocParagraph(document, "Тренировочный набор", ParagraphAlignment.LEFT);
+        List<List<Double>> dataToWrite = dataKeeper.getTrainData();
+        IntegerProperty legendIndex = new SimpleIntegerProperty(0);
+
+
+        XWPFTable table = document.createTable(dataToWrite.size()+1, dataToWrite.get(0).size()+1);
+        writeDataIntoTable(table, dataToWrite, legendIndex);
+
+        dataToWrite = dataKeeper.getTestData();
+        if(dataToWrite != null) {
+            createDocParagraph(document, "Тестирующий набор", ParagraphAlignment.LEFT);
+
+            table = document.createTable(dataToWrite.size() + 1, dataToWrite.get(0).size() + 1);
+            writeDataIntoTable(table, dataToWrite, legendIndex);
+        }
+
+
+        createDocParagraph(document, "Ошибки", ParagraphAlignment.LEFT);
+        createTotalTableWithErrors(document);
+
+        createDocParagraph(document, "Значения", ParagraphAlignment.LEFT);
+        createTableWithOutputs(document);
+
+
+
+        for (int i = 0; i < this.configs.size(); i++) {
+
+
+
+            document.createParagraph().createRun().addBreak(BreakType.PAGE);
+            createDocParagraph(document, "Параметры тренировки №" + (i+1), ParagraphAlignment.CENTER);
+            if(images.size() != 0) {
+                writeBriefing(document, configs.get(i), bestChromosomes.get(i), images.get(i));
+            } else {
+                writeBriefing(document, configs.get(i), bestChromosomes.get(i), null);
+            }
+            createDocParagraph(document, "", ParagraphAlignment.LEFT);
+            writeAIConfig(document, configs.get(i));
+            createDocParagraph(document, "", ParagraphAlignment.LEFT);
+            createVerticalTableWithErrors(document, bestChromosomes.get(i));
+
+
+        }
+
     }
 
     private void writeBriefing(XWPFDocument document, AIConfig config, List<Chromosome> listBestChromosomes, BufferedImage bufferedImage) throws IOException, InvalidFormatException {
@@ -166,18 +171,18 @@ public class TrainReporter {
         table.getRow(2).getCell(2).getCTTc().getTcPr().setVMerge(vMergeCont);
         table.getRow(3).getCell(2).getCTTc().addNewTcPr();
         table.getRow(3).getCell(2).getCTTc().getTcPr().setVMerge(vMergeCont);
-        table.getRow(1).getCell(2).setText(String.valueOf(lastBestChromosome.fitness()).replace(".",","));
+        table.getRow(1).getCell(2).setText(String.valueOf(lastBestChromosome.getTrainError()).replace(".",","));
         table.getRow(1).getCell(2).setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
 
 
-        table.getRow(0).getCell(3).setText("Ошибка прогнозирования");
+        table.getRow(0).getCell(3).setText("Ошибка тестирования");
         table.getRow(1).getCell(3).getCTTc().addNewTcPr();
         table.getRow(1).getCell(3).getCTTc().getTcPr().setVMerge(vMergeStart);
         table.getRow(2).getCell(3).getCTTc().addNewTcPr();
         table.getRow(2).getCell(3).getCTTc().getTcPr().setVMerge(vMergeCont);
         table.getRow(3).getCell(3).getCTTc().addNewTcPr();
         table.getRow(3).getCell(3).getCTTc().getTcPr().setVMerge(vMergeCont);
-        table.getRow(1).getCell(3).setText(String.valueOf(lastBestChromosome.fitness()).replace(".",","));
+        table.getRow(1).getCell(3).setText(String.valueOf(lastBestChromosome.getValidationError()).replace(".",","));
         table.getRow(1).getCell(3).setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
 
 
@@ -185,6 +190,7 @@ public class TrainReporter {
         createMergedRow(table, 5, null);
         createMergedRow(table, 6, "Топология");
         createMergedRow(table, 7, null);
+        if(bufferedImage!=null)
         writePictureOfTopology(table.getRow(7).getCell(0).getParagraphs().get(0), bufferedImage);
 
 
@@ -353,7 +359,7 @@ public class TrainReporter {
         for (int i = 0; i < this.bestChromosomes.size(); i++) {
             best = this.bestChromosomes.get(i).get(this.bestChromosomes.get(i).size()-1);
             table.getRow(0).getCell(i+1).setText("Тренировка № " + (i + 1));
-            table.getRow(1).getCell(i+1).setText(String.valueOf(best.fitness()).replace(".", ","));
+            table.getRow(1).getCell(i+1).setText(String.valueOf(best.getTrainError()).replace(".", ","));
             table.getRow(2).getCell(i+1).setText(best.getValidationError() != null ? String.valueOf(best.getValidationError()).replace(".", ",") : "");
         }
     }
@@ -367,7 +373,7 @@ public class TrainReporter {
 
         for (int i = 0; i < chromosomes.size(); i++) {
             table.getRow(i+1).getCell(0).setText(String.valueOf(i + 1));
-            table.getRow(i+1).getCell(1).setText(String.valueOf(chromosomes.get(i).fitness()).replace(".", ","));
+            table.getRow(i+1).getCell(1).setText(String.valueOf(chromosomes.get(i).getTrainError()).replace(".", ","));
             table.getRow(i+1).getCell(2).setText(chromosomes.get(i).getValidationError() != null ? String.valueOf(chromosomes.get(i).getValidationError()).replace(".", ",") : "");
         }
     }
@@ -394,34 +400,26 @@ public class TrainReporter {
         List<Double> output;
         Chromosome best;
         List<List<Double>> columns = new ArrayList<>(col-1);
-        List<Double> expected;
+
         for (int i = 0; i < dataKeeper.getOutputs(); i++) {
 
             for (int j = 0; j < this.bestChromosomes.size(); j++) {
-                best = this.bestChromosomes.get(j).get(this.bestChromosomes.size()-1);
-                expected = new ArrayList<>(data.size());
+                best = this.bestChromosomes.get(j).get(this.bestChromosomes.get(j).size()-1);
+                output = new ArrayList<>(data.size());
                 for (int l = 0; l < best.getOutputValues().size(); l++) {
-                    expected.add(best.getOutputValues().get(l).get(i));
+                    output.add(best.getOutputValues().get(l).get(i));
                 }
-                columns.add(expected);
+                columns.add(output);
             }
 
-            expected = new ArrayList<>(data.size());
+            output = new ArrayList<>(data.size());
             k = this.dataKeeper.getInputs()+i;
             for(int j = 0; j < data.size(); j++){
-                expected.add(data.get(j).get(k));
+                output.add(data.get(j).get(k));
             }
-            columns.add(expected);
+            columns.add(output);
 
         }
-
-
-
-
-
-
-
-
 
         CTHMerge mergeCont;
         k = 0;

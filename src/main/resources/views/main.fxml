@@ -382,6 +382,11 @@
                                                    </HBox.margin>
                                                 </JFXTextField>
                                                 <JFXButton fx:id="startPredictionButton" onAction="#startPrediction" text="Прогнозировать" />
+                                                <JFXButton fx:id="savePredictionReport" onAction="#savePredictionReport" text="Отчет">
+                                                   <graphic>
+                                                      <FontAwesomeIconView glyphName="FILE_WORD_ALT" size="18.0" />
+                                                   </graphic>
+                                                </JFXButton>
                                              </children>
                                              <BorderPane.margin>
                                                 <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

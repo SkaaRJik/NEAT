@@ -8,7 +8,10 @@ package org.neat4j.neat.core;
 
 import org.apache.log4j.Category;
 import org.apache.log4j.Logger;
+import org.neat4j.core.AIConfig;
+import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.core.control.NEAT;
+import org.neat4j.neat.core.control.NEATNetManager;
 import org.neat4j.neat.data.core.NetworkInput;
 import org.neat4j.neat.data.core.NetworkOutputSet;
 import org.neat4j.neat.ga.core.Chromosome;
@@ -258,4 +261,33 @@ public class NEATNeuralNet implements NeuralNet {
 	public Synapse[] getConnections() {
 		return connections;
 	}
+
+	static public NEATNeuralNet createNet(AIConfig config, Chromosome chromo) throws InitialisationFailedException {
+		NeuralNet net = null;
+		// need to create a nn based on this chromo.
+		net = createNet(config);
+		((NEATNetDescriptor)(net.netDescriptor())).updateStructure(chromo);
+		((NEATNeuralNet)net).updateNetStructure();
+		return (NEATNeuralNet) net;
+	}
+
+	static protected NeuralNet createNet(AIConfig config) throws InitialisationFailedException {
+		NEATNetManager netManager = new NEATNetManager();
+		netManager.initialise(config, false);
+		return ((NEATNeuralNet)netManager.managedNet());
+	}
+
+	static public NeuralNet createNet(Chromosome chromo) throws InitialisationFailedException {
+
+
+		NEATNetManager netManager = new NEATNetManager();
+		netManager.initialise(chromo);
+
+		NeuralNet net = netManager.managedNet();
+
+		((NEATNetDescriptor)(net.netDescriptor())).updateStructure(chromo);
+		((NEATNeuralNet)net).updateNetStructure();
+		return ((NEATNeuralNet)net);
+	}
+
 }

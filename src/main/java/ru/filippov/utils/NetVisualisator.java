@@ -83,7 +83,7 @@ public class NetVisualisator {
 
             from = this.neuronsPositions.get(connections[i].getFrom().getID());
             to = this.neuronsPositions.get(connections[i].getTo().getID());
-
+            if(from == null || to == null) continue;
             line = new Line(from.x * canvasW + N_SIZE_W, from.y * canvasH + N_SIZE_H / 2, to.x * canvasW, to.y * canvasH + N_SIZE_H / 2);
 
             connectionsPositions.put(connections[i].getFrom().getID() + "_" + connections[i].getTo().getID(), line);
@@ -239,19 +239,13 @@ public class NetVisualisator {
 
     }
 
-    public void setNetToVisualise(File fileNet, AIConfig config){
+    public void setNetToVisualise(File fileNet){
         try {
             Chromosome chromo = (Chromosome)NEATChromosome.readObject(fileNet.getAbsolutePath());
             // need to create a nn based on this chromo.
-            config.updateConfig("INPUT.NODES", String.valueOf(chromo.getInputs()));
-            config.updateConfig("OUTPUT.NODES", String.valueOf(chromo.getOutputs()));
 
             //NeuralNet net = createNet(config);
-            NeuralNet net = createNet(config);
-            ((NEATNetDescriptor)(net.netDescriptor())).updateStructure(chromo);
-            ((NEATNeuralNet)net).updateNetStructure();
-
-            this.net = (NEATNeuralNet) net;
+            this.net = (NEATNeuralNet) NEATNeuralNet.createNet(chromo);
             prepareNetToVisualise();
         } catch (IOException e) {
             e.printStackTrace();
@@ -263,13 +257,14 @@ public class NetVisualisator {
 
     }
 
+
     public void setNetToVisualise(NEATNeuralNet net){
         this.net = net;
         prepareNetToVisualise();
     }
 
     public void setNetToVisualise(Chromosome chromosome, AIConfig config) throws InitialisationFailedException {
-        net = initNet(config, chromosome);
+        net = NEATNeuralNet.createNet(config, chromosome);
         prepareNetToVisualise();
     }
 
@@ -339,7 +334,7 @@ public class NetVisualisator {
     }
 
 
-    class DisplayNeuron {
+   static class DisplayNeuron {
         private NEATNeuron neuron;
         private float x;
         private float y;
@@ -423,7 +418,7 @@ public class NetVisualisator {
     }
 
 
-    public NEATNeuralNet initNet(AIConfig config, Chromosome chromo) throws InitialisationFailedException {
+    /*public NEATNeuralNet initNet(AIConfig config, Chromosome chromo) throws InitialisationFailedException {
         NeuralNet net = null;
         // need to create a nn based on this chromo.
         net = this.createNet(config);
@@ -436,7 +431,7 @@ public class NetVisualisator {
         NEATNetManager netManager = new NEATNetManager();
         netManager.initialise(config, false);
         return ((NEATNeuralNet)netManager.managedNet());
-    }
+    }*/
 
 
 

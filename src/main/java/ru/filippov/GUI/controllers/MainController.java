@@ -49,6 +49,7 @@ import org.gillius.jfxutils.chart.JFXChartUtil;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.applications.train.NEATTrainingForJavaFX;
+import org.neat4j.neat.core.NEATChromosome;
 import org.neat4j.neat.core.NEATConfig;
 import org.neat4j.neat.core.NEATLoader;
 import org.neat4j.neat.data.core.DataKeeper;
@@ -74,6 +75,8 @@ public class MainController {
 
 
     private TrainReporter trainReporter;
+
+
 
 
 
@@ -394,6 +397,9 @@ public class MainController {
 
     @FXML
     private JFXButton startPredictionButton;
+
+    @FXML
+    private JFXButton savePredictionReport;
 
     @FXML
     private VBox predictionVBox;
@@ -1659,7 +1665,7 @@ public class MainController {
     private void viewNetTopologyInNewWindow(TreeItem<ProjectFileDescriptor> treeItem) {
         ViewNetWindow viewNetWindow = ViewNetWindow.getInstance(this.scene, treeItem.getValue().getName());
         viewNetWindow.show();
-        this.netVisualisator.setNetToVisualise(treeItem.getValue().getAsFile(), this.loadConfig(treeItem.getParent().getParent().getValue().getFullPath()));
+        this.netVisualisator.setNetToVisualise(treeItem.getValue().getAsFile());
         this.netVisualisator.visualiseNet(viewNetWindow.getPaneToDraw());
     }
 
@@ -1667,7 +1673,13 @@ public class MainController {
 
         MenuItem save = new MenuItem("Save");
 
-        save.setOnAction(event -> saveModel(projectTreeView.getSelectionModel().getSelectedItem()));
+        save.setOnAction(event -> {
+            try {
+                saveModel(projectTreeView.getSelectionModel().getSelectedItem());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
 
 
 
@@ -1910,15 +1922,37 @@ public class MainController {
     }
 
 
-    private void saveModel(TreeItem<ProjectFileDescriptor> model){
+    private void saveModel(TreeItem<ProjectFileDescriptor> model) throws IOException {
 
         SaveDialogue saveDialogue = SaveDialogue.getInstance(this.scene);
-        //saveDialogue.setModelToSave(model.getValue().getAsFile());
+        saveDialogue.setFileDirectory(model.getValue().getAsFile().getParent());
+        saveDialogue.setExtension("ser");
         saveDialogue.show();
 
         if(saveDialogue.getNameOfNewFile().length() != 0){
+            InputStream is = null;
+            OutputStream os = null;
+
             ProjectFileDescriptor value = model.getValue();
             ProjectFileDescriptor newModel = new ProjectFileDescriptor(value.getType(), value.getDirectoryPath(), saveDialogue.getNameOfNewFile(), value.getExtension());
+
+
+            try {
+                is = new FileInputStream(model.getValue().getAsFile());
+                os = new FileOutputStream(newModel.getAsFile());
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = is.read(buffer)) > 0) {
+                    os.write(buffer, 0, length);
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                is.close();
+                os.close();
+            }
 
             TreeItemContextMenu<ProjectFileDescriptor> treeItemContextMenu = new TreeItemContextMenu<>(newModel, newModel.getGraphic(), dataContextMenu);
             model.getParent().getChildren().add(treeItemContextMenu);
@@ -2254,6 +2288,7 @@ public class MainController {
             //this.projectTreeView.getSelectionModel().getSelectedItem().getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
             parentProject.getChildren().stream().filter(treeItem -> treeItem.getValue().getType() == ProjectFileDescriptor.TYPE.TRAINING_FOLDER).findFirst().orElse(null).getChildren().add(new TreeItemContextMenu<>(projectFileDescriptor, projectFileDescriptor.getGraphic(), dataContextMenu));
             this.trainDatasetChoiceBox.getItems().add(projectFileDescriptor);
+            this.predictionDatasetChoiceBox.getItems().add(projectFileDescriptor);
             //this.trainDatasetChoiceBox.getSelectionModel().select(projectFileDescriptor);
         }
         /*String nameOfDataSet = NewDataPreparatorDialogue.getInstance(this.scene);
@@ -2563,110 +2598,6 @@ public class MainController {
         return xyData;
     }
 
-    public void testModel(ActionEvent actionEvent) {
-
-        /*if(testThread != null) {
-            if (testThread.isAlive()) {
-                testThread.interrupt();
-                logger.debug("testModel() : Test thread was interrupted");
-            }
-        }
-        this.testingProgressBar.progressProperty().bind(new SimpleObjectProperty<Double>((double) 0));
-        logger.debug("testModel() : Current test data " + testDatasetChoiceBox.getSelectionModel().getSelectedItem().getFullPath());
-        this.initNEATConfigUsingGUI(currentNEATConfig);
-        this.currentNEATConfig.updateConfig("TEST.DATA", tempDirectory.getAbsolutePath()+"\\"+UUID.randomUUID()+"."+testDatasetChoiceBox.getSelectionModel().getSelectedItem().getExtension());
-        logger.debug("testModel() : Current temp test data " + currentNEATConfig.configElement("TEST.DATA"));
-        try {
-            this.saveTempDataSet(this.currentNEATConfig.configElement("TEST.DATA"), this.testDataSet);
-            this.currentNEATConfig.updateConfig("AI.SOURCE", this.trainedModelsChoiceBox.getValue().getFullPath());
-            logger.debug("testModel() : Current model " + this.currentNEATConfig.configElement("AI.SOURCE"));
-
-            NEATPredictionEngineForJavaFX neatPredictionEngineForJavaFX = new NEATPredictionEngineForJavaFX();
-            neatPredictionEngineForJavaFX.initialise(this.currentNEATConfig);
-
-            if(this.testValueChart.getData().isEmpty()){
-                //double tick = this.testDataSet.getLegend().stream().mapToDouble(value -> {return value;}).sum() / this.testDataSet.getLegend().size();
-                double tick = (this.testDataSet.getLegend().get(this.testDataSet.getLegend().size()-1) - this.testDataSet.getLegend().get(0)) / (this.testDataSet.getLegend().size()-1);
-                ((NumberAxis) testValueChart.getXAxis()).setTickUnit(tick);
-                //((NumberAxis)testValueGraphicChart.getXAxis()).setTickUnit(this.testDataSet.legend.get(1)-this.testDataSet.legend.get(0));
-                ((NumberAxis) testValueChart.getXAxis()).setLowerBound(this.testDataSet.getLegend().get(0)-((NumberAxis) testValueChart.getXAxis()).getTickUnit());
-                ((NumberAxis) testValueChart.getXAxis()).setUpperBound(this.testDataSet.getLegend().get(this.testDataSet.getLegend().size()-1)+((NumberAxis) testValueChart.getXAxis()).getTickUnit());
-                testValueChart.getXAxis().setLabel(this.testDataSet.getLegendHeader());
-                XYChart.Series expectedOutputDataXYChart = null;
-                for (int i = 0; i < Integer.parseInt(this.outputNodesTextField.getText()); i++) {
-
-                    TableColumn tableColumn = this.testTableView.getColumns().get(this.testTableView.getColumns().size()-1-i);
-                    expectedOutputDataXYChart = new XYChart.Series();
-                    this.testValueChart.getData().add(expectedOutputDataXYChart);
-                    expectedOutputDataXYChart.setName(tableColumn.getText() + " (Факт)");
-                    for (int j = 0; j < this.testTableView.getItems().size(); j++) {
-                        if(tableColumn.getCellData(j) != null) {
-                            XYChart.Data integerObjectData = new XYChart.Data<>(testDataSet.getLegend().get(j), tableColumn.getCellData(j));
-                            integerObjectData.setNode(new StackPane());
-                            expectedOutputDataXYChart.getData().add(integerObjectData);
-                            Tooltip.install(integerObjectData.getNode(), new Tooltip(String.valueOf(tableColumn.getCellData(j))));
-                        }
-                    }
-                }
-            }
-
-            XYChart.Series outputValuesSeries = new XYChart.Series();
-            outputValuesSeries.setName(this.testTableView.getColumns().get(this.testTableView.getColumns().size()-1).getText());
-            this.testValueChart.getData().add(outputValuesSeries);
-            AtomicInteger counter = new AtomicInteger(0);
-            neatPredictionEngineForJavaFX.getOutsProperty().addListener((observable, oldValue, newValue) -> {
-                Platform.runLater(()->{
-                    *//*List<Double> outputs = newValue.get(newValue.size() - 1);*//*
-                    if(newValue!=null) {
-                        counter.set(0);
-                        for (List<Double> output : newValue) {
-                            output.stream().forEach(value -> {
-                                Double fromLegend = testDataSet.getLegend().get(counter.getAndIncrement());
-                                XYChart.Data<Number, Number> data = new XYChart.Data<>(fromLegend, value);
-                                data.setNode(new StackPane());
-                                Tooltip.install(data.getNode(), new Tooltip(String.valueOf(value)));
-                                outputValuesSeries.getData().add(data);
-                            });
-                        }
-                    }
-                });
-            });
-
-            ChangeListener<Double> neatErrorTestingListener = getListener();
-
-            neatPredictionEngineForJavaFX.getErrorProperty().addListener(neatErrorTestingListener);
-
-            neatPredictionEngineForJavaFX.getIsFinished().addListener((observable, oldValue, newValue) -> {
-                if(newValue){
-                    neatPredictionEngineForJavaFX.getErrorProperty().removeListener(neatErrorTestingListener);
-                }
-            });
-
-            this.testThread = new Thread(neatPredictionEngineForJavaFX);
-            this.testThread.start();
-            
-
-        } catch (IOException e) {
-            AlertWindow.createAlertWindow("Can't open file!\n" + e.getMessage()).showAndWait();
-            e.printStackTrace();
-        } catch (InitialisationFailedException e) {
-            AlertWindow.createAlertWindow("Initialisation failed!\n" + e.getMessage()).showAndWait();
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            AlertWindow.createAlertWindow("Несовместимость модели и тестируемой выборки\n" + e.getMessage()).showAndWait();
-            e.printStackTrace();
-        }*/
-
-
-    }
-
-
-
-
-    public void showMenu(ActionEvent actionEvent) {
-
-    }
-
     private void menuSlide(Timeline timeline, SplitPane splitPane, BorderPane menuBorderPane ,int i, int direction) {
 
         double pos = splitPane.getDividers().get(0).getPosition();
@@ -2733,7 +2664,7 @@ public class MainController {
         File file = fileChooser.showSaveDialog(this.scene.getWindow());//Указываем текущую сцену
         if(file!=null) {
 
-            if(this.trainReporter.createReport(file)){
+            if(this.trainReporter.createReport(file, null)){
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Сохранение");
 
@@ -2828,6 +2759,7 @@ public class MainController {
         this.initNEATConfigUsingGUI(config);
 
         DataKeeper predictionData = this.predictionDataSet.getValue();
+
         int windowSize = Integer.parseInt(windowSizeTextField.getText());
         int yearPrediction = Integer.parseInt(yearPredictionTextField.getText());
         WindowPrediction windowPrediction = this.windowPrediction.getValue();
@@ -2839,12 +2771,13 @@ public class MainController {
                 updateTitledPane(i, predictionData, yearPrediction);
             }
 
+            DataKeeper finalPredictionData = predictionData;
             windowPrediction.trainIsFinishedProperty().addListener(new ChangeListener<Boolean>() {
                 @Override
                 public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
 
                     if(newValue){
-                        predict(predictionData, windowPrediction);
+                        predict(finalPredictionData, windowPrediction);
 
 
                         windowPrediction.trainIsFinishedProperty().removeListener(this);
@@ -3195,7 +3128,6 @@ public class MainController {
                         outputSeries.getData().addAll(predictedOuts);
                     });
 
-
                     windowPrediction.getValue().getInputPredictionEndedProperty(i).removeListener(this);
                 }
             }
@@ -3272,7 +3204,8 @@ public class MainController {
             predictionChart.getData().add(series);
             predictionChart.getYAxis().setLabel("Значения");
             predictionChart.getXAxis().setLabel(this.predictionDataSet.getValue().getLegendHeader());
-
+            this.savePredictionReport.disableProperty().unbind();
+            this.savePredictionReport.disableProperty().bind(windowPrediction.getValue().trainIsFinishedProperty().isEqualTo(false));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -3280,5 +3213,36 @@ public class MainController {
         }
     }
 
+    public void savePredictionReport(ActionEvent event) {
+
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Сохранить отчет");
+
+        fileChooser.getExtensionFilters().add( new FileChooser.ExtensionFilter("DOC files (*.docx)", "*.docx"));//Расширение));//Расширение);
+
+        fileChooser.setInitialDirectory(Paths.get(".").toAbsolutePath().toFile());
+        File file = fileChooser.showSaveDialog(this.scene.getWindow());//Указываем текущую сцену
+        if(file!=null) {
+            PredictionReporter predictionReporter = new PredictionReporter(this.windowPrediction.getValue(), resourceBundle);
+            if(predictionReporter.report(file)){
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Сохранение");
+
+                // Header Text: null
+                alert.setHeaderText(null);
+                alert.setContentText("Сохранение прошло успешно!");
+
+                alert.showAndWait();
+            } else {
+                AlertWindow.createAlertWindow("Произошла ошибка во время сохранения.\n Закройте файл и повторите попытку.").show();
+            }
+        }
+
+
+
+
+
+    }
 
 }

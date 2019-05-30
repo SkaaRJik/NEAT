@@ -13,6 +13,7 @@ import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.core.NEATNetDescriptor;
 import org.neat4j.neat.data.core.NetworkDataSet;
 import org.neat4j.neat.data.csv.CSVDataLoader;
+import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.nn.core.*;
 import org.neat4j.neat.nn.core.learning.GALearnable;
 
@@ -49,9 +50,23 @@ public class NEATNetManager implements AIController {
 		return (descriptor);
 	}
 
+	public NeuralNetDescriptor createNetDescriptor(Chromosome chromo) {
+		NeuralNetDescriptor descriptor = null;
+		int inputLayerSize = chromo.getInputs();
+
+		descriptor = new NEATNetDescriptor(inputLayerSize, null);
+
+		return (descriptor);
+	}
+
 	public void initialise(AIConfig config, boolean loadData) throws InitialisationFailedException {
 		this.config = config;
 		NeuralNetDescriptor descriptor = this.createNetDescriptor(loadData);
+		this.net = NeuralNetFactory.getFactory().createNN(descriptor);
+	}
+
+	public void initialise(Chromosome chromosome) throws InitialisationFailedException {
+		NeuralNetDescriptor descriptor = this.createNetDescriptor(chromosome);
 		this.net = NeuralNetFactory.getFactory().createNN(descriptor);
 	}
 

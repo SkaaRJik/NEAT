@@ -1,7 +1,12 @@
 package org.neat4j.neat.data.core;
 
+import org.neat4j.core.InitialisationFailedException;
+import org.neat4j.neat.core.NEATNeuralNet;
+import org.neat4j.neat.core.NEATNeuron;
 import org.neat4j.neat.data.normaliser.DataScaler;
 import org.neat4j.neat.data.normaliser.LinearScaler;
+import org.neat4j.neat.ga.core.Chromosome;
+import org.neat4j.neat.nn.core.NeuralNet;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -53,6 +58,12 @@ public class DataKeeper implements Serializable{
         this.legend = legend;
     }
 
+    public DataKeeper(List<List<Double>> data, List<String> headers, String legendHeader, List<Double> legend) {
+        this.data = data;
+        this.headers = headers;
+        this.legend = legend;
+        this.legendHeader = legendHeader;
+    }
 
     public List<List<Double>> getData() {
         return data;
@@ -221,5 +232,67 @@ public class DataKeeper implements Serializable{
 
     public DataKeeper denormalise(){
         return ((LinearScaler)this.dataScaler).denormalise(this.data);
+    }
+
+    public DataKeeper createDataKeeperForChromosome(Chromosome chromosome) throws ExceptionInInitializerError{
+        List<List<Double>> newData = new ArrayList<>(data.size());
+
+
+
+        try {
+            NeuralNet net = NEATNeuralNet.createNet(chromosome);
+            for (int i = 0; i < data.size(); i++) {
+                newData.add(new ArrayList<>(chromosome.getInputs()+getOutputs()));
+            }
+            List<String> newHeaders = new ArrayList<>(chromosome.getInputs()+getOutputs());
+
+
+            putDataByLayers(newData, newHeaders, net);
+
+            DataKeeper dataKeeper = new DataKeeper(newData, newHeaders, this.legendHeader, this.legend);
+            dataKeeper.setInputs(net.inputLayer().size());
+            dataKeeper.setOutputs(net.outputLayer().size());
+            dataKeeper.setDataScaler(dataScaler);
+            return dataKeeper;
+
+        } catch (InitialisationFailedException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void putDataByLayers(List<List<Double>> newData, List<String> newHeaders, NeuralNet neatNeurons) throws ExceptionInInitializerError{
+        int counter = 0;
+        for (int i = 0; i < this.inputs; i++) {
+            for (int j = 0; j < neatNeurons.inputLayer().size(); j++) {
+                if (this.headers.get(i).equals(neatNeurons.inputLayer().get(j).getLabel())) {
+                    counter++;
+                    for (int k = 0; k < data.size(); k++) {
+                        newData.get(k).add(data.get(k).get(i));
+                    }
+                    newHeaders.add(this.headers.get(i));
+                    break;
+                }
+            }
+        }
+        if(counter == 0) throw new ExceptionInInitializerError("Не соответствие моделей: \nНе удалось подобрать данные для входного слоя.");
+        counter = 0;
+        for (int i = this.inputs; i < this.headers.size(); i++) {
+            for (int j = 0; j < neatNeurons.outputLayer().size(); j++) {
+                if (this.headers.get(i).equals(neatNeurons.outputLayer().get(j).getLabel())) {
+                    counter++;
+                    for (int k = 0; k < data.size(); k++) {
+                        newData.get(k).add(data.get(k).get(i));
+                    }
+                    newHeaders.add(this.headers.get(i));
+                    break;
+                }
+            }
+        }
+        if(counter == 0) throw new ExceptionInInitializerError("Не соответствие моделей: \nНе удалось подобрать данные для выходного слоя.");
+    }
+
+    public void setDataScaler(DataScaler dataScaler) {
+        this.dataScaler = dataScaler;
     }
 }

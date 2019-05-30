@@ -156,7 +156,7 @@ public class WindowPrediction implements Runnable {
 
         }
 
-        NEATNeuralNet neatNeuralNet = this.initNet(config, bestChromosome);
+        NEATNeuralNet neatNeuralNet = NEATNeuralNet.createNet(config, bestChromosome);
         //double[] inputPattern = new double[windowsSize];
         NetworkInput input = null;
         NetworkOutputSet execute = null;
@@ -196,7 +196,7 @@ public class WindowPrediction implements Runnable {
             throw new IllegalArgumentException("Data and Model Mismatch!\n Trained model: Inputs = " +configInputs + " Outputs = " + configOutputs + "\n" +
                     "Data: Inputs = " +dataKeeper.getInputs() + " Outputs = " + dataKeeper.getOutputs());
         }
-        NEATNeuralNet neatNeuralNet = this.initNet(config, chromo);
+        NEATNeuralNet neatNeuralNet = NEATNeuralNet.createNet(config, chromo);
         predict(neatNeuralNet);
 
 
@@ -223,7 +223,7 @@ public class WindowPrediction implements Runnable {
         List<Double> netOutputs = null;
 
 
-        for (int i = 0; i < yearPrediction; i++) {
+        for (int i = 0; i < windowsSize; i++) {
             input = new InputImpl(dataKeeper.getData().get(i));
             os = neatNeuralNet.execute(input);
             netOutputs = os.nextOutput().getNetOutputs();
@@ -288,23 +288,6 @@ public class WindowPrediction implements Runnable {
     }
 
 
-
-
-    protected NEATNeuralNet initNet(AIConfig config, Chromosome chromo) throws InitialisationFailedException {
-        NeuralNet net = null;
-        // need to create a nn based on this chromo.
-        net = this.createNet(config);
-        ((NEATNetDescriptor)(net.netDescriptor())).updateStructure(chromo);
-        ((NEATNeuralNet)net).updateNetStructure();
-        return (NEATNeuralNet) net;
-    }
-
-    protected NeuralNet createNet(AIConfig config) throws InitialisationFailedException {
-        NEATNetManager netManager = new NEATNetManager();
-        netManager.initialise(config, false);
-        return ((NEATNeuralNet)netManager.managedNet());
-    }
-
     public SimpleObjectProperty<Boolean> getInputPredictionEndedProperty(int index){
         return this.predictionInputEnded[index];
     }
@@ -315,5 +298,42 @@ public class WindowPrediction implements Runnable {
 
     public DataKeeper getDataKeeper() {
         return dataKeeper;
+    }
+
+
+    public DataKeeper[] getDataForWindow() {
+        return dataForWindow;
+    }
+
+    public DataKeeper[] getDataFromWindows() {
+        return dataFromWindows;
+    }
+
+    public AIConfig[] getConfigForWindow() {
+        return configForWindow;
+    }
+
+    public int getWindowsSize() {
+        return windowsSize;
+    }
+
+    public int getInputs() {
+        return inputs;
+    }
+
+    public int getYearPrediction() {
+        return yearPrediction;
+    }
+
+    public NEATTrainingForJavaFX[] getTrainer() {
+        return trainer;
+    }
+
+    public Double[][] getPredictedInputDatas() {
+        return predictedInputDatas;
+    }
+
+    public Double[][] getPredictedWindowDatas() {
+        return predictedWindowDatas;
     }
 }
