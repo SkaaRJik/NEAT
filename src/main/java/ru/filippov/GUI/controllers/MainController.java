@@ -2821,6 +2821,7 @@ public class MainController {
 
         try {
             windowPrediction.predict(config);
+            windowPrediction.stopTimer();
 
             List<List<Double>> outputData = windowPrediction.getOutputData();
 

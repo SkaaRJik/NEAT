@@ -39,7 +39,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
     private Double lastTrainError = 0.0;
     private Double lastValidationError = null;
 
-
+    private Double timeSpend;
 
 
     String pathToSave;
@@ -97,6 +97,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
     }
 
     public void evolve() {
+
         int epochs = Integer.parseInt(config.configElement("NUMBER.EPOCHS"));
         double terminateVal = ((NEATGADescriptor)this.ga.getDescriptor()).getErrorTerminationValue();
         boolean terminateEnabled = ((NEATGADescriptor)this.ga.getDescriptor()).isToggleErrorTerminationValue();
@@ -106,6 +107,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
 
         pathToSave = config.configElement("SAVE.LOCATION");
         int i = 0;
+        Long startTime = System.currentTimeMillis();
         while (i < epochs) {
             if(Thread.interrupted()) {
                 break;
@@ -127,6 +129,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
             }
 
         }
+        this.timeSpend = (double)(System.currentTimeMillis() - startTime) / 1000;
         this.status.setValue(1.0);
         this.isEnded.setValue(true);
         logger.debug("Innovation Database Stats - Hits:" + innovationDatabase.totalHits + " - totalMisses:" + innovationDatabase.totalMisses);
@@ -219,5 +222,9 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
 
     public DataKeeper getDataKeeper(){
         return dataKeeper.getValue();
+    }
+
+    public Double getTimeSpend() {
+        return timeSpend;
     }
 }

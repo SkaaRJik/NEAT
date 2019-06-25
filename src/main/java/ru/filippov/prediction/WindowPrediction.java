@@ -39,6 +39,8 @@ public class WindowPrediction implements Runnable {
     SimpleObjectProperty<Boolean>[] predictionInputEnded;
     SimpleObjectProperty<Boolean> predictionOutputEnded;
 
+    Double timeSpend;
+    Long startTime;
 
     WindowTrainThread[] inputThreads;
 
@@ -109,6 +111,7 @@ public class WindowPrediction implements Runnable {
     public void run() {
         trainIsFinished.setValue(false);
         status.setValue(0.0);
+        startTime = System.currentTimeMillis();
         Thread[] threads = new Thread[this.inputs];
         for (int i = 0; i < this.inputs; i++) {
             threads[i] = train(i, configForWindow[i] );
@@ -196,6 +199,8 @@ public class WindowPrediction implements Runnable {
 
 
     }
+
+
 
     public List<Double> getPredictedInputs(int index){
         List<Double> list = new ArrayList<>(predictedInputDatas.length);
@@ -364,6 +369,14 @@ public class WindowPrediction implements Runnable {
 
     public SimpleObjectProperty<Double> statusProperty() {
         return status;
+    }
+
+    public void stopTimer(){
+        this.timeSpend = (double) (System.currentTimeMillis() - this.startTime) / 1000;
+    }
+
+    public Double getTimeSpend() {
+        return timeSpend;
     }
 
     /*public Double[][] getPredictedWindowDatas() {

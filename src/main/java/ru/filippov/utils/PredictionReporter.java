@@ -109,7 +109,11 @@ public class PredictionReporter{
                         row.add(data.get(i).get(j));
                     }
                 }
+                long minutes = Math.round(windowPrediction.getTimeSpend() / 60);
+                long seconds = Math.round(windowPrediction.getTimeSpend() - (minutes*60000));
+
                 createDocParagraph(document, "Ошибка прогнозирования: " + predictionError.toString().replace(".",","), ParagraphAlignment.LEFT);
+                createDocParagraph(document, String.format("Время затрачено: %d мин. %d сек.", minutes, seconds), ParagraphAlignment.LEFT);
                 createDocParagraph(document, "Прогноз целевых показателей:", ParagraphAlignment.CENTER);
 
                 List<Integer> indexes = new ArrayList<>(predictedGoalData.get(0).size());
