@@ -85,5 +85,10 @@ public class WhitingScaler implements DataScaler  {
         return null;
     }
 
+    @Override
+    public List<List<Double>> denormaliseColumns(List<List<Double>> column, List<Integer> columnIndexes) {
+        return null;
+    }
+
 
 }

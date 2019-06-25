@@ -19,7 +19,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class WindowPredictionTest {
+public class WindowPredictionTest {
 
     Logger logger = Logger.getLogger(WindowPredictionTest.class);
 
@@ -80,12 +80,12 @@ class WindowPredictionTest {
     }
 
     @Test
-    void configIsLoaded(){
+    public void configIsLoaded(){
         Assertions.assertNotNull(config);
     }
 
     @Test
-    void prepareDataOneColumnTest(){
+    public void prepareDataOneColumnTest(){
         DataKeeper dataKeeper1 = windowPrediction.prepareDataForWindow(0, dataKeeper);
         Assertions.assertEquals(WINDOW_SIZE+1, dataKeeper1.getData().get(0).size());
     }
@@ -94,7 +94,7 @@ class WindowPredictionTest {
 
 
     @Test
-    void startTest(){
+    public void startTest(){
 
         Thread thread = new Thread(this.windowPrediction);
         thread.start();
@@ -108,7 +108,7 @@ class WindowPredictionTest {
     }
 
     @Test
-    void retainTest(){
+    public  void retainTest(){
 
         try {
             windowPrediction.train(1, DefaultConfig.getDefaultConfig()).join();
@@ -142,13 +142,13 @@ class WindowPredictionTest {
 
 
     @Test
-    void tryToPredictWithNoTraining(){
+    public  void tryToPredictWithNoTraining(){
         InitialisationFailedException thrown = assertThrows(InitialisationFailedException.class, () -> windowPrediction.predict(config));
         Assertions.assertNotNull(thrown);
     }
 
     @Test
-    void predictTest(){
+    public  void predictTest(){
         Thread thread = new Thread(this.windowPrediction);
         thread.start();
         try {
@@ -167,21 +167,5 @@ class WindowPredictionTest {
         }
     }
 
-    @Test
-    void reverseTest(){
-        String hello = "hello";
-        System.out.println(new StringBuilder(hello).reverse().toString());
 
-
-
-    }
-
-
-    @Test
-    void forik(){
-        int i = 0;
-        int n1 = 36, n2 = 24;
-        for ( i=n1-1; !(n1 % i ==0 && n2 % i ==0); i--);
-        System.out.println(i);
-    }
 }

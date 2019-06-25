@@ -30,11 +30,13 @@ public class PredictionReporter{
     DataKeeper dataKeeper;
     Integer windowSize;
     Integer yearSize;
+    Integer inputs;
     ResourceBundle resourceBundle;
     private Double predictionError;
     XWPFDocument document;
     List<List<Double>> predictedGoalData;
     List<List<List<Double>>> predictedFactorData;
+    WindowPrediction windowPrediction;
 
     static {
         hMergeStart.setVal(STMerge.RESTART);
@@ -53,24 +55,18 @@ public class PredictionReporter{
         yearSize = windowPrediction.getYearPrediction();
         windowSize = windowPrediction.getWindowsSize();
         predictedGoalData = windowPrediction.getOutputData();
-
+        this.inputs = dataKeeper.getInputs()+dataKeeper.getOutputs();
         predictionError = windowPrediction.getPredictionError();
-
+        this.windowPrediction = windowPrediction;
         predictedFactorData = new ArrayList<>(dataKeeper.getInputs());
+        this.resourceBundle = resourceBundle;
 
-
-        Double[][] predictedWindowDatas = windowPrediction.getPredictedWindowDatas();
+        //Double[][] predictedWindowDatas = windowPrediction.getPredictedWindowDatas();
         Double[][] predictedInputDatas = windowPrediction.getPredictedInputDatas();
 
-        for (int i = 0; i < dataKeeper.getInputs(); i++) {
-            List<List<Double>> factData = new ArrayList<>(dataKeeper.getData().size()+windowSize);
+        for (int i = 0; i < this.inputs; i++) {
+            List<List<Double>> factData = new ArrayList<>(predictedInputDatas.length);
 
-            for (int j = 0; j < predictedWindowDatas.length; j++) {
-                factData.add(new ArrayList<>(1));
-            }
-            for (int j = 0; j < predictedWindowDatas.length; j++) {
-                factData.get(j).add(predictedWindowDatas[j][i]);
-            }
             for (int j = 0; j < predictedInputDatas.length; j++) {
                 int finalJ = j;
                 int finalI = i;
@@ -99,7 +95,7 @@ public class PredictionReporter{
                 createDocParagraph(document, "Пргнозируемый набор смотреть в приложении 1.", ParagraphAlignment.LEFT);
 
 
-                List<List<Double>> data = dataKeeper.getData();
+                List<List<Double>> data = dataKeeper.denormaliseData().getData();
                 List<List<Double>> dataToWrite = new ArrayList<>(data.size());
                 List<Double> row;
                 for (int i = 0; i < data.size(); i++) {
@@ -113,16 +109,28 @@ public class PredictionReporter{
                         row.add(data.get(i).get(j));
                     }
                 }
-                createDocParagraph(document, "Ошибка прогнозирования: " + predictionError, ParagraphAlignment.LEFT);
+                createDocParagraph(document, "Ошибка прогнозирования: " + predictionError.toString().replace(".",","), ParagraphAlignment.LEFT);
                 createDocParagraph(document, "Прогноз целевых показателей:", ParagraphAlignment.CENTER);
-                writePredictedDataIntoTable(document, predictedGoalData, dataToWrite, dataKeeper.getInputs(), 0);
+
+                List<Integer> indexes = new ArrayList<>(predictedGoalData.get(0).size());
+                for (int i = dataKeeper.getInputs(); i < dataKeeper.getData().get(0).size(); i++) {
+                    indexes.add(i);
+                }
+
+
+                List<List<Double>> denormalisedPredictedData = dataKeeper.denormaliseColumns(predictedGoalData, indexes);
 
 
 
-                for (int i = 0; i < dataKeeper.getInputs(); i++) {
+                writePredictedDataIntoTable(document, denormalisedPredictedData, dataToWrite, dataKeeper.getInputs(), 0);
+
+
+
+                for (int i = 0; i < this.inputs; i++) {
                     document.createParagraph().createRun().addBreak(BreakType.PAGE);
                     createDocParagraph(document, "Прогнозирование факторного показателя:", ParagraphAlignment.CENTER);
                     createDocParagraph(document, dataKeeper.getHeaders().get(i), ParagraphAlignment.CENTER);
+                    createDocParagraph(document, String.format("Ошибка обучения: %f; Ошибка тестирования: %f", windowPrediction.getTrainer(i).getLastTrainError(), windowPrediction.getTrainer(i).getLastValidationError()), ParagraphAlignment.LEFT);
                     dataToWrite = new ArrayList<>(data.size());
                     for (int j = 0; j < data.size(); j++) {
                         dataToWrite.add(new ArrayList<>(1));
@@ -133,6 +141,7 @@ public class PredictionReporter{
                     }
                     writePredictedDataIntoTable(document, this.predictedFactorData.get(i), dataToWrite, i, windowSize);
 
+                    writeAIConfig(document, windowPrediction.getConfigForWindow()[i]);
 
                 }
 
@@ -200,6 +209,8 @@ public class PredictionReporter{
     protected XWPFParagraph createDocParagraph(XWPFDocument docxModel, String text, ParagraphAlignment alignment){
         XWPFParagraph bodyParagraph = docxModel.createParagraph();
         XWPFRun paragraphConfig = bodyParagraph.createRun();
+        paragraphConfig.setFontFamily("Times New Roman");
+        //1559629738043
         paragraphConfig.setFontSize(14);
         bodyParagraph.setAlignment(alignment);
         // HEX цвет без решетки #
@@ -223,6 +234,8 @@ public class PredictionReporter{
         int index = 2;
 
         int size = predictedData.size() > factData.size() ? predictedData.size() : factData.size();
+
+
 
         for (int i = 0; i < predictedData.get(0).size(); i++) {
             table.getRow(0).getCell(i+1).setText(dataKeeper.getHeaders().get(headerIndex+i));
@@ -248,7 +261,7 @@ public class PredictionReporter{
         for (int i = 0; i < headersForTableView.size(); i++) {
             String suffix = "\n ( Легенда )";
             if(i > 0) {
-                suffix = (i) <= dataKeeper.getInputs() ? "\n ( Вход )" : "\n( Выход )";
+                suffix = (i) <= this.inputs ? "\n ( Вход )" : "\n( Выход )";
             }
             tableRowOne.getCell(i).setText(headersForTableView.get(i)+suffix);
         }
@@ -272,7 +285,6 @@ public class PredictionReporter{
         createDocParagraph(docxDoc, resourceBundle.getString("GA_SETTINGS"), ParagraphAlignment.CENTER);
         createDocParagraph(docxDoc,  resourceBundle.getString("GENERATOR_SEED") + " : " + config.configElement("GENERATOR.SEED"), ParagraphAlignment.LEFT);
         createDocParagraph(docxDoc,  resourceBundle.getString("MUTATION_PROBABILITY") + " : " + config.configElement("PROBABILITY.MUTATION"), ParagraphAlignment.LEFT);
-        createDocParagraph(docxDoc,  resourceBundle.getString("CROSSOVER_PROBABILITY") + " : " + config.configElement("PROBABILITY.CROSSOVER"), ParagraphAlignment.LEFT);
         createDocParagraph(docxDoc,  resourceBundle.getString("ADD_LINK_PROBABILITY") + " : " + config.configElement("PROBABILITY.ADDLINK"), ParagraphAlignment.LEFT);
         createDocParagraph(docxDoc,  resourceBundle.getString("ADD_NODE_PROBABILITY") + " : " + config.configElement("PROBABILITY.ADDNODE"), ParagraphAlignment.LEFT);
         createDocParagraph(docxDoc,  resourceBundle.getString("NEW_ACTIVATION_FUNCTION_PROBABILITY") + " : " + config.configElement("PROBABILITY.NEWACTIVATIONFUNCTION"), ParagraphAlignment.LEFT);
@@ -334,7 +346,7 @@ public class PredictionReporter{
         for (int i = 0; i < headersForTableView.size(); i++) {
             String suffix = "\n ( Легенда )";
             if(i > 0) {
-                suffix = (i) <= dataKeeper.getInputs() ? "\n ( Вход )" : "\n( Выход )";
+                suffix = (i) <= this.inputs ? "\n ( Вход )" : "\n( Выход )";
             }
             tableRowOne.getCell(i).setText(headersForTableView.get(i)+suffix);
         }

@@ -292,33 +292,34 @@ public class NewDataPreparatorDialogueController{
     private void initLoadDataTab() {
 
         this.currentLoadMode.addListener((observable, oldValue, newValue) -> {
-            if(!newValue.equals(oldValue)){
-                switch (newValue){
-                    case CSV:
-                        this.encodingChoiceBox.getSelectionModel().selectedIndexProperty().removeListener(this.xlsxListener);
-                        this.encodingChoiceBox.getItems().clear();
-                        this.encodingChoiceBox.getItems().addAll("UTF-8", "cp1251");
-                        switch (Locale.getDefault().getLanguage()){
-                            case "ru":
-                                this.encodingChoiceBox.getSelectionModel().select("cp1251");
-                                break;
-                            default:
-                                this.encodingChoiceBox.getSelectionModel().select("UTF-8");
-                                break;
-                        }
-                        this.encodingChoiceBox.getSelectionModel().selectedItemProperty().addListener(this.encoderListener);
-                        break;
-                    case XLSX:
-                        encodingChoiceBox.getSelectionModel().selectedItemProperty().removeListener(this.encoderListener);
-                        encodingChoiceBox.getItems().clear();
-                        for (int i = 0; i < workBook.getNumberOfSheets(); i++) {
-                            encodingChoiceBox.getItems().add(workBook.getSheetName(i));
-                        }
-
-                        encodingChoiceBox.getSelectionModel().selectedIndexProperty().addListener(this.xlsxListener);
-                        break;
-                }
+            if(newValue == null) {
+                encodingChoiceBox.getSelectionModel().selectedIndexProperty().removeListener(this.xlsxListener);
+                encodingChoiceBox.getSelectionModel().selectedItemProperty().removeListener(this.encoderListener);
+                encodingChoiceBox.getItems().clear();
+                return;
             }
+
+            switch (newValue){
+                case CSV:
+                    this.encodingChoiceBox.getItems().addAll("UTF-8", "cp1251");
+                    switch (Locale.getDefault().getLanguage()){
+                        case "ru":
+                            this.encodingChoiceBox.getSelectionModel().select("cp1251");
+                            break;
+                        default:
+                            this.encodingChoiceBox.getSelectionModel().select("UTF-8");
+                            break;
+                    }
+                    this.encodingChoiceBox.getSelectionModel().selectedItemProperty().addListener(this.encoderListener);
+                    break;
+                case XLSX:
+                    for (int i = 0; i < workBook.getNumberOfSheets(); i++) {
+                        encodingChoiceBox.getItems().add(workBook.getSheetName(i));
+                    }
+                    encodingChoiceBox.getSelectionModel().selectedIndexProperty().addListener(this.xlsxListener);
+                    break;
+            }
+
         });
 
 
@@ -707,6 +708,7 @@ public class NewDataPreparatorDialogueController{
             this.fileTextField.setText(dataFile.getAbsolutePath());
 
             try {
+                currentLoadMode.set(null);
                 if(dataFile.getName().split("[.]")[1].contains("xls")){
                     readXLSXfile(dataFile);
                 }
@@ -762,8 +764,6 @@ public class NewDataPreparatorDialogueController{
     }
 
     public void readXLSXfile(File dataFile){
-        //инициализируем потоки
-        String result = "";
 
         try {
 
@@ -772,6 +772,7 @@ public class NewDataPreparatorDialogueController{
 
             currentLoadMode.set(Mode.XLSX);
             encodingChoiceBox.getSelectionModel().select(0);
+
 
         } catch (IOException e) {
             e.printStackTrace();

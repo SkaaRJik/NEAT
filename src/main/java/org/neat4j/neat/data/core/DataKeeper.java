@@ -2,7 +2,6 @@ package org.neat4j.neat.data.core;
 
 import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.core.NEATNeuralNet;
-import org.neat4j.neat.core.NEATNeuron;
 import org.neat4j.neat.data.normaliser.DataScaler;
 import org.neat4j.neat.data.normaliser.LinearScaler;
 import org.neat4j.neat.ga.core.Chromosome;
@@ -230,10 +229,6 @@ public class DataKeeper implements Serializable{
         this.trainIndexEnd = (int) Math.round(this.data.size() * percent);
     }
 
-    public DataKeeper denormalise(){
-        return ((LinearScaler)this.dataScaler).denormalise(this.data);
-    }
-
     public DataKeeper createDataKeeperForChromosome(Chromosome chromosome) throws ExceptionInInitializerError{
         List<List<Double>> newData = new ArrayList<>(data.size());
 
@@ -294,5 +289,17 @@ public class DataKeeper implements Serializable{
 
     public void setDataScaler(DataScaler dataScaler) {
         this.dataScaler = dataScaler;
+    }
+
+
+
+    public DataKeeper denormaliseData(){
+       return this.dataScaler.denormalise(this.getData());
+    }
+
+
+
+    public List<List<Double>> denormaliseColumns(List<List<Double>> column, List<Integer> columnIndexes){
+        return this.dataScaler.denormaliseColumns(column, columnIndexes);
     }
 }

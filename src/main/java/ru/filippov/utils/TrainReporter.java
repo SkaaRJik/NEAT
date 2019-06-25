@@ -281,7 +281,6 @@ public class TrainReporter {
         createDocParagraph(docxDoc, resourceBundle.getString("GA_SETTINGS"), ParagraphAlignment.CENTER);
         createDocParagraph(docxDoc,  resourceBundle.getString("GENERATOR_SEED") + " : " + config.configElement("GENERATOR.SEED"), ParagraphAlignment.LEFT);
         createDocParagraph(docxDoc,  resourceBundle.getString("MUTATION_PROBABILITY") + " : " + config.configElement("PROBABILITY.MUTATION"), ParagraphAlignment.LEFT);
-        createDocParagraph(docxDoc,  resourceBundle.getString("CROSSOVER_PROBABILITY") + " : " + config.configElement("PROBABILITY.CROSSOVER"), ParagraphAlignment.LEFT);
         createDocParagraph(docxDoc,  resourceBundle.getString("ADD_LINK_PROBABILITY") + " : " + config.configElement("PROBABILITY.ADDLINK"), ParagraphAlignment.LEFT);
         createDocParagraph(docxDoc,  resourceBundle.getString("ADD_NODE_PROBABILITY") + " : " + config.configElement("PROBABILITY.ADDNODE"), ParagraphAlignment.LEFT);
         createDocParagraph(docxDoc,  resourceBundle.getString("NEW_ACTIVATION_FUNCTION_PROBABILITY") + " : " + config.configElement("PROBABILITY.NEWACTIVATIONFUNCTION"), ParagraphAlignment.LEFT);

@@ -193,7 +193,7 @@ public class NEATTrainingForJavaFX extends NEATGATrainingManager implements Runn
         return bestEverChromosomeProperty;
     }
 
-    public boolean isIsEnded() {
+    public boolean isFinished() {
         return isEnded.get();
     }
 

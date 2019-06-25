@@ -28,9 +28,26 @@ public class InputImpl implements NetworkInput {
 		//System.arraycopy(input, 0, this.inputPattern, 0, this.inputPattern.length);
 	}
 
+	public InputImpl(Double[] input, Integer inputs) {
+		this.inputPattern = new double[inputs];
+		for (int i = 0; i < inputs; i++) {
+			this.inputPattern[i] = new Double(input[i]);
+		}
+		//System.arraycopy(input, 0, this.inputPattern, 0, this.inputPattern.length);
+	}
+
+
 	public InputImpl(List<Double> input) {
 		this.inputPattern = new double[input.size()];
 		for (int i = 0; i < this.inputPattern.length; i++) {
+			this.inputPattern[i] = new Double(input.get(i));
+		}
+		//System.arraycopy(input, 0, this.inputPattern, 0, this.inputPattern.length);
+	}
+
+	public InputImpl(List<Double> input, Integer inputs) {
+		this.inputPattern = new double[inputs];
+		for (int i = 0; i < inputs; i++) {
 			this.inputPattern[i] = new Double(input.get(i));
 		}
 		//System.arraycopy(input, 0, this.inputPattern, 0, this.inputPattern.length);

@@ -30,7 +30,8 @@ public class WindowPrediction implements Runnable {
     int yearPrediction = 0;
     NEATTrainingForJavaFX[] trainer;
     Double[][] predictedInputDatas;
-    Double[][] predictedWindowDatas;
+
+    SimpleObjectProperty<Double> status = new SimpleObjectProperty<>(0.0);
 
     List<List<Double>> outputData;
     SimpleObjectProperty<Boolean> trainIsFinished = new SimpleObjectProperty<>(false);
@@ -50,10 +51,13 @@ public class WindowPrediction implements Runnable {
     }
 
     public void initialise(DataKeeper dataKeeper, int windowsSize, int yearPrediction, AIConfig config) throws IOException, InitialisationFailedException {
+        if(dataKeeper.getData().size() - windowsSize <= 3) throw new InitialisationFailedException("Размера набора данных недостаточно для заданного размера окна\n" +
+                "Выборка будет состоять из " + (dataKeeper.getData().size() - windowsSize) + " элементов, необходимо хотя бы 4");
         this.dataKeeper = dataKeeper;
         this.windowsSize = windowsSize;
+
         this.yearPrediction = yearPrediction;
-        this.inputs = dataKeeper.getInputs();
+        this.inputs = dataKeeper.getInputs()+dataKeeper.getOutputs();
         this.dataFromWindows = new DataKeeper[this.inputs];
         dataForWindow = new DataKeeper[this.inputs];
         config.updateConfig("INPUT.NODES", String.valueOf(windowsSize));
@@ -68,8 +72,9 @@ public class WindowPrediction implements Runnable {
             configForWindow[i] = new NEATConfig((NEATConfig) config);
             predictionInputEnded[i] = new SimpleObjectProperty<>(false);
         }
-        predictedInputDatas = new Double[yearPrediction][inputs];
-        predictedWindowDatas = new Double[dataKeeper.getData().size()-windowsSize][inputs];
+        predictedInputDatas = new Double[dataKeeper.getData().size()-windowsSize+yearPrediction][inputs];
+        //predictedWindowDatas = new Double[dataKeeper.getData().size()-windowsSize][inputs];
+
     }
 
     public DataKeeper prepareDataForWindow(int index, DataKeeper dataKeeper){
@@ -103,11 +108,24 @@ public class WindowPrediction implements Runnable {
     @Override
     public void run() {
         trainIsFinished.setValue(false);
+        status.setValue(0.0);
         Thread[] threads = new Thread[this.inputs];
         for (int i = 0; i < this.inputs; i++) {
             threads[i] = train(i, configForWindow[i] );
         }
-
+        Thread updateStatusThread = new Thread(() -> {
+            double status = 0;
+            while (!trainIsFinished.getValue()){
+                status = 0;
+                for (int i = 0; i < this.inputs; i++) {
+                    status += this.trainer[i].getStatus();
+                }
+                status /= this.inputs;
+                this.status.setValue(status);
+            }
+            logger.debug("Status checker work finished");
+        });
+        updateStatusThread.start();
         try {
             for (int i = 0; i < this.inputs; i++) {
                     threads[i].join();
@@ -161,6 +179,11 @@ public class WindowPrediction implements Runnable {
         NetworkInput input = null;
         NetworkOutputSet execute = null;
         Double[] inputTemp  = new Double[windowsSize];
+
+        for (int i = 0 ; i < bestChromosome.getOutputValues().size() ; i++) {
+            predictedInputDatas[i][index] = bestChromosome.getOutputValues().get(i).get(0);
+        }
+
         for (int i = 0; i < yearPrediction; i++) {
             for (int j = 0; j < windowsSize; j++) {
                 inputTemp[j] = inputs.get(i+j);
@@ -168,18 +191,16 @@ public class WindowPrediction implements Runnable {
             input = new InputImpl(inputTemp);
             execute = neatNeuralNet.execute(input);
             inputs.add(execute.nextOutput().getNetOutputs().get(0));
-            predictedInputDatas[i][index] = execute.nextOutput().getNetOutputs().get(0);
+            predictedInputDatas[bestChromosome.getOutputValues().size()+i][index] = execute.nextOutput().getNetOutputs().get(0);
         }
 
-        for (int i = 0 ; i < bestChromosome.getOutputValues().size() ; i++) {
-            predictedWindowDatas[i][index] = bestChromosome.getOutputValues().get(i).get(0);
-        }
+
     }
 
     public List<Double> getPredictedInputs(int index){
         List<Double> list = new ArrayList<>(predictedInputDatas.length);
         for (int j = 0; j < predictedInputDatas.length; j++) {
-            list.add(predictedWindowDatas[j][index]);
+            list.add(predictedInputDatas[j][index]);
         }
         return list;
     }
@@ -208,7 +229,7 @@ public class WindowPrediction implements Runnable {
 
         for (int i = 0; i < predictedInputDatas.length; i++) {
             for (int j = 0; j < predictedInputDatas[i].length; j++) {
-                if(predictedInputDatas[i][j] == null || predictedWindowDatas[i][j] == null){
+                if(predictedInputDatas[i][j] == null){
                     throw new InitialisationFailedException("WindowPrediction model should be trained firstly");
                 }
             }
@@ -225,35 +246,39 @@ public class WindowPrediction implements Runnable {
 
         for (int i = 0; i < windowsSize; i++) {
             input = new InputImpl(dataKeeper.getData().get(i));
+            input = new InputImpl(dataKeeper.getData().get(i), this.dataKeeper.getInputs());
             os = neatNeuralNet.execute(input);
             netOutputs = os.nextOutput().getNetOutputs();
             this.outputData.add(netOutputs);
             for (int j = 0; j < netOutputs.size(); j++) {
-                error += Math.pow(netOutputs.get(j)-dataKeeper.getData().get(i+windowsSize).get(dataKeeper.getInputs()+j), 2);
+                error += Math.pow(netOutputs.get(j)-dataKeeper.getData().get(i).get(dataKeeper.getInputs()+j), 2);
                 n++;
             }
         }
 
-
-        for (int i = 0; i < predictedWindowDatas.length; i++) {
-            input = new InputImpl(predictedWindowDatas[i]);
+        //0.038117398190327154
+        for (int i = 0; i < predictedInputDatas.length; i++) {
+            input = new InputImpl(predictedInputDatas[i]);
+            input = new InputImpl(predictedInputDatas[i], this.dataKeeper.getInputs());
             os = neatNeuralNet.execute(input);
             netOutputs = os.nextOutput().getNetOutputs();
             this.outputData.add(netOutputs);
-            for (int j = 0; j < netOutputs.size(); j++) {
-                error += Math.pow(netOutputs.get(j)-dataKeeper.getData().get(i+windowsSize).get(dataKeeper.getInputs()+j), 2);
-                n++;
+            if(i+windowsSize <  dataKeeper.getData().size()) {
+                for (int j = 0; j < netOutputs.size(); j++) {
+                    error += Math.pow(netOutputs.get(j) - dataKeeper.getData().get(i + windowsSize).get(dataKeeper.getInputs() + j), 2);
+                    n++;
+                }
             }
         }
         error = Math.sqrt(error/n);
         this.predictionError = error;
 
 
-        for (int i = 0; i < yearPrediction; i++) {
+        /*for (int i = 0; i < yearPrediction; i++) {
             input = new InputImpl(predictedInputDatas[i]);
             os = neatNeuralNet.execute(input);
             this.outputData.add(os.nextOutput().getNetOutputs());
-        }
+        }*/
 
         predictionOutputEnded.setValue(true);
     }
@@ -333,7 +358,15 @@ public class WindowPrediction implements Runnable {
         return predictedInputDatas;
     }
 
-    public Double[][] getPredictedWindowDatas() {
-        return predictedWindowDatas;
+    public Double getStatus() {
+        return status.get();
     }
+
+    public SimpleObjectProperty<Double> statusProperty() {
+        return status;
+    }
+
+    /*public Double[][] getPredictedWindowDatas() {
+        return predictedWindowDatas;
+    }*/
 }

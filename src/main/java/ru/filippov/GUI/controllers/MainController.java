@@ -49,7 +49,6 @@ import org.gillius.jfxutils.chart.JFXChartUtil;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.applications.train.NEATTrainingForJavaFX;
-import org.neat4j.neat.core.NEATChromosome;
 import org.neat4j.neat.core.NEATConfig;
 import org.neat4j.neat.core.NEATLoader;
 import org.neat4j.neat.data.core.DataKeeper;
@@ -341,6 +340,7 @@ public class MainController {
 
     @FXML private VBox trainVBox;
     @FXML private ProgressBar trainingProgressBar;
+    @FXML private ProgressBar predictionProgressBar;
 
     @FXML
     private BorderPane trainHeaderBorderPane;
@@ -1012,6 +1012,13 @@ public class MainController {
 
 
                     trainErrorChart.getData().clear();
+                    testErrorChart.getData().clear();
+
+                    testErrorTextField.setText("");
+                    lastErrorTextField.setText("");
+                    currentEpochTextField.setText("");
+
+
                     trainValueGraphicChart.getData().clear();
                     drawablePane.getChildren().clear();
                     saveReport.setDisable(true);
@@ -1059,18 +1066,19 @@ public class MainController {
 
         //trainigTab.setDisable(true);
         //testingTab.setDisable(true);
-        this.trainingProgressBar = new ProgressBar(0);
+
         this.trainingProgressBar.setOnMouseClicked(event -> {
             if(event.getButton() == MouseButton.PRIMARY){
                 if(!this.trainigTab.isDisable())
                     this.infoTabPane.getSelectionModel().select(this.trainigTab);
             }
         });
-
-
-
-        trainigTab.setGraphic(new BorderPane(trainingProgressBar,null,null,null, null));
-
+        this.predictionProgressBar.setOnMouseClicked(event -> {
+            if(event.getButton() == MouseButton.PRIMARY){
+                if(!this.predictionTab.isDisable())
+                    this.infoTabPane.getSelectionModel().select(this.predictionTab);
+            }
+        });
 
         trainErrorChartClearButton.setOnAction(event -> {
             this.trainErrorChart.getData().clear();
@@ -2470,7 +2478,7 @@ public class MainController {
 
 
 
-                            /*if (neatTrainingForJavaFX.isIsEnded())
+                            /*if (neatTrainingForJavaFX.isFinished())
                                 neatTrainingForJavaFX.getBestEverChromosomesList().removeListener(this);*/
 
 
@@ -2763,7 +2771,8 @@ public class MainController {
         int windowSize = Integer.parseInt(windowSizeTextField.getText());
         int yearPrediction = Integer.parseInt(yearPredictionTextField.getText());
         WindowPrediction windowPrediction = this.windowPrediction.getValue();
-
+        this.predictionProgressBar.progressProperty().unbind();
+        this.predictionProgressBar.progressProperty().bind(windowPrediction.statusProperty());
         try {
             windowPrediction.initialise(predictionData, windowSize, yearPrediction, config);
             //this.setChartsRange();
@@ -2790,8 +2799,10 @@ public class MainController {
 
         } catch (IOException e) {
             e.printStackTrace();
+            AlertWindow.createAlertWindow(e.getMessage()).showAndWait();
         } catch (InitialisationFailedException e) {
             e.printStackTrace();
+            AlertWindow.createAlertWindow(e.getMessage()).showAndWait();
         }
 
 
@@ -2881,7 +2892,8 @@ public class MainController {
         AIConfig config = new NEATConfig();
         this.initNEATConfigUsingGUI(config);
         WindowPrediction windowPrediction = this.windowPrediction.getValue();
-        windowPrediction.train(i, config);
+
+
         NEATTrainingForJavaFX trainer = windowPrediction.getTrainer(i);
         //List<Tooltip> seriesTooltip = new ArrayList<>(windowPrediction.getDataKeeper().getData().size() + Integer.parseInt(yearPredictionTextField.getText()));
         XYChart.Series<Number, Number> outputSeries = new XYChart.Series<>();
@@ -2897,39 +2909,7 @@ public class MainController {
         ((LineChart<Number, Number>) dynamicPredictionNodes.get(i).get("teChart")).getData().add(teSeries);
         teSeries.setName(predictionInputTime.get(i)+". " + windowPrediction.getDataKeeper().getHeaders().get(i));
 
-
-        trainer.isEndedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-
-                if(newValue) {
-                    predict(windowPrediction.getDataKeeper(), windowPrediction);
-                    Double xValue;
-                    Double yValue;
-                    Tooltip tooltip;
-                    Double start = trainer.getDataKeeper().getLegend().get(0);
-
-                    for (int j = 0; j < trainer.getDataKeeper().getData().size(); j++) {
-                        xValue = start;
-                        yValue = trainer.getBestChromosomeProperty().getValue().getOutputValues().get(j).get(0);
-
-                        outputSeries.getData().add(new XYChart.Data<>(xValue, yValue));
-                        outputSeries.getData().get(j).setNode(new StackPane());
-                        tooltip = new Tooltip(lineChart.getXAxis().getLabel() + ": " + xValue + "\n" + lineChart.getYAxis().getLabel() + ": " + yValue);
-
-                        Tooltip.install(outputSeries.getData().get(j).getNode(), tooltip);
-                        start += tick;
-                    }
-
-                    Platform.runLater(() -> {
-                        lineChart.getData().add(outputSeries);
-                    });
-                    trainer.isEndedProperty().removeListener(this);
-                }
-            }
-        });
-
-
+        DataKeeper finalPredictionData = windowPrediction.getDataKeeper();
         windowPrediction.getInputPredictionEndedProperty(i).addListener(new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
@@ -2939,30 +2919,29 @@ public class MainController {
                     Double xValue;
                     Double yValue;
                     Tooltip tooltip;
-                    XYChart.Data<Number, Number> xyChart;
-                    List<XYChart.Data<Number, Number>> predictedOuts = new ArrayList<>(predictedInputs.size());
-                    Double start = (Double) outputSeries.getData().get(outputSeries.getData().size()-1).getXValue()+tick;
+                    Double start = trainer.getDataKeeper().getLegend().get(0);
+
                     for (int j = 0; j < predictedInputs.size(); j++) {
                         xValue = start;
                         yValue = predictedInputs.get(j);
-                        xyChart = new XYChart.Data<>(xValue, yValue);
-                        //yValue = newValue.getData().get(j).get(newValue.getInputs());
-                        predictedOuts.add(xyChart);
-                        xyChart.setNode(new StackPane());
-                        tooltip = new Tooltip(lineChart.getXAxis().getLabel()+": " + xValue + "\n" + lineChart.getYAxis().getLabel() + ": " + yValue);
-                        //seriesTooltip.add(tooltip);
-                        Tooltip.install(xyChart.getNode(), tooltip);
-                        start+=tick;
+                        outputSeries.getData().add(new XYChart.Data<>(xValue, yValue));
+                        outputSeries.getData().get(j).setNode(new StackPane());
+                        tooltip = new Tooltip(lineChart.getXAxis().getLabel() + ": " + xValue + "\n" + lineChart.getYAxis().getLabel() + ": " + yValue);
+                        Tooltip.install(outputSeries.getData().get(j).getNode(), tooltip);
+                        start += tick;
                     }
-                    Platform.runLater(()->{
-                        outputSeries.getData().addAll(predictedOuts);
+                    Platform.runLater(() -> {
+                        lineChart.getData().add(outputSeries);
                     });
-
-
+                    predict(finalPredictionData, windowPrediction);
                     windowPrediction.getInputPredictionEndedProperty(i).removeListener(this);
                 }
             }
         });
+
+
+
+
 
         JFXTextField error = (JFXTextField) dynamicPredictionNodes.get(i).get("error");
         JFXTextField valError = (JFXTextField) dynamicPredictionNodes.get(i).get("valError");
@@ -2987,14 +2966,14 @@ public class MainController {
                     });
 
 
-                    if(trainer.isIsEnded()) trainer.getBestChromosomeProperty().removeListener(this);
+                    if(trainer.isFinished()) trainer.getBestChromosomeProperty().removeListener(this);
                 }
 
             }
         });
 
 
-
+        windowPrediction.train(i, config);
 
 
     }
@@ -3061,7 +3040,7 @@ public class MainController {
                     });
 
 
-                    if(trainer.isIsEnded()) trainer.getBestChromosomeProperty().removeListener(this);
+                    if(trainer.isFinished()) trainer.getBestChromosomeProperty().removeListener(this);
                 }
 
             }
@@ -3071,34 +3050,7 @@ public class MainController {
         predictionInputTime.set(i, predictionInputTime.get(i)+1);
         outputSeries.setName(predictionInputTime.get(i)+". " + predictionData.getHeaders().get(i));
         Double tick = ((NumberAxis) lineChart.getXAxis()).getTickUnit();
-        trainer.isEndedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                if(newValue) {
 
-                    Double xValue;
-                    Double yValue;
-                    Tooltip tooltip;
-                    Double start = trainer.getDataKeeper().getLegend().get(0);
-
-                    for (int j = 0; j < trainer.getDataKeeper().getData().size(); j++) {
-                        xValue = start;
-                        yValue = trainer.getBestChromosomeProperty().getValue().getOutputValues().get(j).get(0);
-                        //yValue = newValue.getData().get(j).get(newValue.getInputs());
-                        outputSeries.getData().add(new XYChart.Data<>(xValue, yValue));
-                        outputSeries.getData().get(j).setNode(new StackPane());
-                        tooltip = new Tooltip(lineChart.getXAxis().getLabel() + ": " + xValue + "\n" + lineChart.getYAxis().getLabel() + ": " + yValue);
-                        //seriesTooltip.add(tooltip);
-                        Tooltip.install(outputSeries.getData().get(j).getNode(), tooltip);
-                        start += tick;
-                    }
-                    Platform.runLater(() -> {
-                        lineChart.getData().add(outputSeries);
-                    });
-                    trainer.isEndedProperty().removeListener(this);
-                }
-            }
-        });
 
         windowPrediction.getValue().getInputPredictionEndedProperty(i).addListener(new ChangeListener<Boolean>() {
             @Override
@@ -3106,26 +3058,22 @@ public class MainController {
                 if(newValue){
                     List<Double> predictedInputs = windowPrediction.getValue().getPredictedInputs(i);
 
-                        Double xValue;
-                        Double yValue;
-                        Tooltip tooltip;
-                        XYChart.Data<Number, Number> xyChart;
-                        List<XYChart.Data<Number, Number>> predictedOuts = new ArrayList<>(predictedInputs.size());
-                        Double start = (Double) outputSeries.getData().get(outputSeries.getData().size()-1).getXValue()+tick;
-                        for (int j = 0; j < predictedInputs.size(); j++) {
-                            xValue = start;
-                            yValue = predictedInputs.get(j);
-                            xyChart = new XYChart.Data<>(xValue, yValue);
-                            //yValue = newValue.getData().get(j).get(newValue.getInputs());
-                            predictedOuts.add(xyChart);
-                            xyChart.setNode(new StackPane());
-                            tooltip = new Tooltip(lineChart.getXAxis().getLabel()+": " + xValue + "\n" + lineChart.getYAxis().getLabel() + ": " + yValue);
-                            //seriesTooltip.add(tooltip);
-                            Tooltip.install(xyChart.getNode(), tooltip);
-                            start+=tick;
-                        }
-                    Platform.runLater(()->{
-                        outputSeries.getData().addAll(predictedOuts);
+                    Double xValue;
+                    Double yValue;
+                    Tooltip tooltip;
+                    Double start = trainer.getDataKeeper().getLegend().get(0);
+
+                    for (int j = 0; j < predictedInputs.size(); j++) {
+                        xValue = start;
+                        yValue = predictedInputs.get(j);
+                        outputSeries.getData().add(new XYChart.Data<>(xValue, yValue));
+                        outputSeries.getData().get(j).setNode(new StackPane());
+                        tooltip = new Tooltip(lineChart.getXAxis().getLabel() + ": " + xValue + "\n" + lineChart.getYAxis().getLabel() + ": " + yValue);
+                        Tooltip.install(outputSeries.getData().get(j).getNode(), tooltip);
+                        start += tick;
+                    }
+                    Platform.runLater(() -> {
+                        lineChart.getData().add(outputSeries);
                     });
 
                     windowPrediction.getValue().getInputPredictionEndedProperty(i).removeListener(this);
@@ -3133,24 +3081,7 @@ public class MainController {
             }
         });
 
-        /*for (int i = 0; i < trainDataSet.getOutputs(); i++) {
-            outputValues.add(new XYChart.Series<>());
-            seriesTooltip.add(new ArrayList<>(trainDataSet.getData().size()));
-            this.trainValueGraphicChart.getData().add(outputValues.get(i));
-            for (int j = 0; j < trainDataSet.getData().size(); j++) {
 
-                dataChart = new XYChart.Data<>(trainDataSet.getLegend().get(j), 0);
-                dataChart.setNode(new StackPane());
-                seriesTooltip.get(i).add(new Tooltip(String.valueOf(0)));
-                Tooltip.install(dataChart.getNode(), seriesTooltip.get(i).get(j));
-                outputValues.get(i).getData().add(dataChart);
-            }
-            outputValues.get(i).setName(this.trainingCount + ". " + trainDataSet.getHeaders().get(trainDataSet.getInputs()+i));
-        }*/
-
-
-
-        //
 
         TitledPane titledPane = (TitledPane) map.get("titledPane");
         titledPane.setVisible(true);
