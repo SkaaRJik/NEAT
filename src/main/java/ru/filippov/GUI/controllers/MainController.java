@@ -243,8 +243,8 @@ public class MainController {
 
 
     @FXML private SplitPane neatSplitPane;
-    
-    
+
+
     @FXML private Label neatOptionsLabel;
     private Label noActiveProjectLabel;
 
@@ -316,7 +316,7 @@ public class MainController {
     private JFXToggleButton terminationValueToggle;
     private JFXTextField terminationValueTextField;
 
-    
+
     @FXML private TabPane infoTabPane;
 
     @FXML private ChoiceBox<ProjectFileDescriptor> trainDatasetChoiceBox;
@@ -485,7 +485,7 @@ public class MainController {
         JFXUtils.addValidator(trainPercentageTextField, new NumberValidator("Промежуток [0.0-100.0]", 0 , 100));
 
 
-        
+
 
         confirmTrainPercantageButton.disableProperty().bind(
                 trainPercentageTextField.textProperty().isEmpty().or(
@@ -1393,7 +1393,11 @@ public class MainController {
     @FXML
     private void openProject(){
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setInitialDirectory(new File(Paths.get("").toAbsolutePath().toString()+"\\projects\\"));
+        File projectFolder = new File(Paths.get("").toAbsolutePath().toString() + "/projects/");
+        if(!projectFolder.exists()){
+            projectFolder.mkdirs();
+        }
+        fileChooser.setInitialDirectory(projectFolder);
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Project file", "*.prj"));
         fileChooser.setTitle(resourceBundle.getString("CHOOSE_PROJECT"));
         File projectFile = fileChooser.showOpenDialog(this.scene.getWindow());

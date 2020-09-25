@@ -79,8 +79,8 @@ public class NewProjectDialogueController {
             AlertWindow.createAlertWindow(this.resourceBundle.getString("ALREADY_EXISTS")).show();
         } else {
 
-            projectFile = new File(projectDirectory.getAbsolutePath()+"\\"+projectNameTextField.getText()+".prj");
-            projectFile.getParentFile().mkdir();
+            projectFile = new File(projectDirectory.getAbsolutePath()+"/"+projectNameTextField.getText()+".prj");
+            projectFile.getParentFile().mkdirs();
             try{
                 FileWriter fileWriter = new FileWriter(projectFile, false);
 
@@ -117,7 +117,7 @@ public class NewProjectDialogueController {
     public void browse() {
         File directory = new File(this.projectLocationTextField.getText());
         if(!directory.exists())
-            directory.mkdir();
+            directory.mkdirs();
         this.directoryChooser.setInitialDirectory(directory);
         File dir = this.directoryChooser.showDialog(this.stage);
         if (dir != null) {
@@ -127,7 +127,7 @@ public class NewProjectDialogueController {
 
     public void refreshFields(){
         projectFile = null;
-        this.projectLocationTextField.setText(Paths.get("").toAbsolutePath().toString()+"\\projects\\");
+        this.projectLocationTextField.setText(Paths.get("").toAbsolutePath().toString()+"/projects/");
         this.projectNameTextField.setText("");
     }
 }
