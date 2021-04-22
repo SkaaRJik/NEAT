@@ -15,8 +15,8 @@ class NonLinearScalerTest {
     @Test
     void normalize() {
         List<List<Double>> data = DataCreator.getRandomDataSet(5,5, 1000);
-        DataScaler dataScaler = new NonLinearScaler(new SigmoidFunction());
-        DataKeeper normalized = dataScaler.normalise(data, 0, 1);
+        DataScalerBase dataScaler = new NonLinearScaler(new SigmoidFunction());
+        DataKeeper normalized = dataScaler.normalise(data, 0, 1, false);
         for (List<Double> rows : normalized.getData()){
             for(Double value : rows){
                 Assertions.assertTrue(value <= 1);

@@ -4,10 +4,6 @@
  */
 package org.neat4j.neat.ga.core;
 
-import org.neat4j.neat.core.NEATChromosome;
-import org.neat4j.neat.data.core.NetworkOutputSet;
-
-import java.io.File;
 import java.io.Serializable;
 import java.util.List;
 

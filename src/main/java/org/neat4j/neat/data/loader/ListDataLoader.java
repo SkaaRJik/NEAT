@@ -5,12 +5,13 @@
 package org.neat4j.neat.data.loader;
 
 import org.apache.log4j.Category;
-import org.neat4j.neat.data.core.*;
+import org.neat4j.neat.data.core.NetworkDataSet;
+import org.neat4j.neat.data.core.NetworkInput;
+import org.neat4j.neat.data.core.NetworkOutput;
 import org.neat4j.neat.data.set.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 /**
  * @author MSimmerson

@@ -7,7 +7,6 @@
 package org.neat4j.neat.core;
 
 import org.neat4j.neat.ga.core.Gene;
-import org.neat4j.neat.nn.core.ActivationFunction;
 
 /**
  * Extension of the Gene interface to provide more specific NEAT behaviour

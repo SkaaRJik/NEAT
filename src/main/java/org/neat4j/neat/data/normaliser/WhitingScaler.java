@@ -2,10 +2,9 @@ package org.neat4j.neat.data.normaliser;
 
 import org.neat4j.neat.data.core.DataKeeper;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class WhitingScaler implements DataScaler  {
+public class WhitingScaler extends DataScalerBase  {
 
     int inputs;
     int outputs;
@@ -16,7 +15,17 @@ public class WhitingScaler implements DataScaler  {
     }
 
     @Override
-    public DataKeeper normalise(List<List<Double>> dataToNormalize, double minRange, double maxRange) {
+    public DataKeeper normalise(List<List<Double>> dataToNormalize, double minRange, double maxRange, boolean enableLogTransform) {
+
+        List<List<Double>> data = dataToNormalize;
+        this.enableLogTransform = enableLogTransform;
+
+        if(this.enableLogTransform){
+            data = this.logTransform(data);
+            if(data == dataToNormalize){
+                this.enableLogTransform = false;
+            }
+        }
 
         double sredX = 0;
         double sredY = 0;

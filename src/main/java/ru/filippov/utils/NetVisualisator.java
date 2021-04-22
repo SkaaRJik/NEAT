@@ -11,17 +11,20 @@ import javafx.scene.text.Text;
 import org.apache.log4j.Logger;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
-import org.neat4j.neat.core.*;
-import org.neat4j.neat.core.control.NEATNetManager;
+import org.neat4j.neat.core.NEATChromosome;
+import org.neat4j.neat.core.NEATNeuralNet;
+import org.neat4j.neat.core.NEATNeuron;
+import org.neat4j.neat.core.NEATNodeGene;
 import org.neat4j.neat.ga.core.Chromosome;
-import org.neat4j.neat.nn.core.NeuralNet;
 import org.neat4j.neat.nn.core.Synapse;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class NetVisualisator {
     private static final Logger cat = Logger.getLogger(NetVisualisator.class);

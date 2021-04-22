@@ -30,7 +30,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.neat4j.neat.data.core.DataKeeper;
-import org.neat4j.neat.data.normaliser.DataScaler;
+import org.neat4j.neat.data.normaliser.DataScalerBase;
 import org.neat4j.neat.data.normaliser.LinearScaler;
 import org.neat4j.neat.data.normaliser.NonLinearScaler;
 import org.neat4j.neat.nn.core.functions.SigmoidFunction;
@@ -81,6 +81,7 @@ public class NewDataPreparatorDialogueController{
     @FXML    private JFXButton previousButton;
     @FXML    private JFXButton nextButton;
     @FXML    private JFXButton cancelButton;
+    @FXML    private CheckBox enableLogTransform;
 
     Workbook workBook = null;
     private String file;
@@ -431,7 +432,7 @@ public class NewDataPreparatorDialogueController{
 
         this.usedData = new ArrayList<>(this.selectUsableDataTableView.getItems().size());
         List<String> headers = new ArrayList<>(this.selectUsableDataTableView.getColumns().size());
-
+        this.enableLogTransform.setDisable(false);
         ObservableList<List<String>> items = this.selectUsableDataTableView.getItems();
         this.legend = new ArrayList<>(items.size());
         List<Integer> outs = new ArrayList<>(this.selectUsableDataTableView.getColumns().size());
@@ -466,7 +467,11 @@ public class NewDataPreparatorDialogueController{
                 indexJ = i;
                 for (int j = 0; j < items.size(); j++) {
                     indexI = j;
-                    usedData.get(j).add(Double.valueOf(items.get(j).get(i)));
+                    Double aDouble = Double.valueOf(items.get(j).get(i));
+                    if(aDouble <= 0){
+                        this.enableLogTransform.setDisable(true);
+                    }
+                    usedData.get(j).add(aDouble);
                 }
                 headers.add(((TextField)((BorderPane) selectUsableDataTableView.getColumns().get(i).getGraphic()).getTop()).getText());
             }
@@ -581,6 +586,7 @@ public class NewDataPreparatorDialogueController{
 
            for (List<String> strings : newValue){
                for (int j = 0 ; j < strings.size(); j++){
+
                    hasNull = StringUtils.containsIgnoreCase(strings.get(j), "null");
 
                    if(hasNull && !(((ChoiceBox)((BorderPane) selectUsableDataTableView.getColumns().get(j).getGraphic()).getCenter()).getValue().equals("Unused"))) break;
@@ -821,7 +827,6 @@ public class NewDataPreparatorDialogueController{
                         break;
                     default:
                         rowString.add("null");
-
                         break;
                 }
             }
@@ -844,13 +849,13 @@ public class NewDataPreparatorDialogueController{
 
     @FXML    void normaliseData(ActionEvent event) {
         normaliseDataAccordion.setVisible(true);
-        DataScaler dataScaler;
+        DataScalerBase dataScaler;
         try {
             switch (chooseNormaliseMethodChoiceBox.getValue()) {
                 case "Линейный":
                     //dataScaler = new LinearScalerGlobalValues();
                     dataScaler = new LinearScaler();
-                    normalisedUsedData = dataScaler.normalise(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
+                    normalisedUsedData = dataScaler.normalise(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()), enableLogTransform.isSelected());
 
                     //normalisedUsedData = dataScaler.normalise(usedData);
 
@@ -859,12 +864,11 @@ public class NewDataPreparatorDialogueController{
                     switch (chooseActivationFunctionChoiceBox.getValue()) {
                         case "sigmoid(x)":
                             dataScaler = new NonLinearScaler(new SigmoidFunction());
-                            normalisedUsedData = dataScaler.normalise(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
+                            normalisedUsedData = dataScaler.normalise(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()), enableLogTransform.isSelected());
                             break;
                         case "tanh(x)":
                             dataScaler = new NonLinearScaler(new TanhFunction());
-
-                            normalisedUsedData = dataScaler.normalise(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()));
+                            normalisedUsedData = dataScaler.normalise(usedData, Double.parseDouble(minRangeTextField.getText()), Double.parseDouble(maxRangeTextField.getText()), enableLogTransform.isSelected());
                             break;
                     }
                     break;

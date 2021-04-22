@@ -53,7 +53,6 @@ import org.neat4j.neat.core.NEATConfig;
 import org.neat4j.neat.core.NEATLoader;
 import org.neat4j.neat.data.core.DataKeeper;
 import org.neat4j.neat.ga.core.Chromosome;
-
 import org.neat4j.neat.nn.core.ActivationFunction;
 import org.neat4j.neat.nn.core.functions.ActivationFunctionFinder;
 import org.neat4j.neat.nn.core.functions.LinearFunction;

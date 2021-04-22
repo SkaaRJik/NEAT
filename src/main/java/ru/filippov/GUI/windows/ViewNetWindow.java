@@ -1,6 +1,5 @@
 package ru.filippov.GUI.windows;
 
-import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -10,7 +9,6 @@ import ru.filippov.GUI.controllers.ViewNetWindowController;
 import ru.filippov.utils.CsControl;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 

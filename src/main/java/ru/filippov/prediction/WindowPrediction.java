@@ -5,14 +5,14 @@ import org.apache.log4j.Logger;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.applications.train.NEATTrainingForJavaFX;
-import org.neat4j.neat.core.*;
-import org.neat4j.neat.core.control.NEATNetManager;
+import org.neat4j.neat.core.NEATChromosome;
+import org.neat4j.neat.core.NEATConfig;
+import org.neat4j.neat.core.NEATNeuralNet;
 import org.neat4j.neat.data.core.DataKeeper;
 import org.neat4j.neat.data.core.NetworkInput;
 import org.neat4j.neat.data.core.NetworkOutputSet;
 import org.neat4j.neat.data.set.InputImpl;
 import org.neat4j.neat.ga.core.Chromosome;
-import org.neat4j.neat.nn.core.NeuralNet;
 
 import java.io.IOException;
 import java.util.ArrayList;

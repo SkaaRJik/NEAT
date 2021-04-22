@@ -8,7 +8,6 @@ import javafx.stage.Stage;
 import ru.filippov.GUI.controllers.NewDataPreparatorDialogueController;
 import ru.filippov.utils.CsControl;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.ResourceBundle;

@@ -11,7 +11,6 @@ import org.neat4j.neat.nn.core.Neuron;
 import org.neat4j.neat.nn.core.Synapse;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * @author MSimmerson

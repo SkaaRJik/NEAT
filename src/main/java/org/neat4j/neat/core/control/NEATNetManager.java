@@ -17,8 +17,6 @@ import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.nn.core.*;
 import org.neat4j.neat.nn.core.learning.GALearnable;
 
-import java.lang.reflect.Constructor;
-
 /**
  * @author MSimmerson
  *

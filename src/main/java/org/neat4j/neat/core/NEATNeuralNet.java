@@ -6,22 +6,23 @@
  */
 package org.neat4j.neat.core;
 
-import org.apache.log4j.Category;
 import org.apache.log4j.Logger;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
-import org.neat4j.neat.core.control.NEAT;
 import org.neat4j.neat.core.control.NEATNetManager;
 import org.neat4j.neat.data.core.NetworkInput;
 import org.neat4j.neat.data.core.NetworkOutputSet;
 import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.ga.core.Gene;
-import org.neat4j.neat.nn.core.*;
-import org.neat4j.neat.nn.core.functions.LinearFunction;
-import org.neat4j.neat.nn.core.functions.SigmoidFunction;
-import org.neat4j.neat.nn.core.functions.TanhFunction;
+import org.neat4j.neat.nn.core.NeuralNet;
+import org.neat4j.neat.nn.core.NeuralNetDescriptor;
+import org.neat4j.neat.nn.core.Neuron;
+import org.neat4j.neat.nn.core.Synapse;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author MSimmerson

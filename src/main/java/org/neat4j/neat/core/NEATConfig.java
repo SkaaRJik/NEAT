@@ -4,7 +4,6 @@
  */
 package org.neat4j.neat.core;
 
-import javafx.collections.ObservableList;
 import org.neat4j.core.AIConfig;
 
 import java.io.BufferedWriter;

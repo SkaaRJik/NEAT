@@ -8,8 +8,9 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import ru.filippov.GUI.windows.AlertWindow;
 
-
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ResourceBundle;
 

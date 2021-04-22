@@ -7,8 +7,6 @@
 package org.neat4j.neat.core;
 
 
-import org.neat4j.neat.nn.core.ActivationFunction;
-
 /**
  * @author MSimmerson
  * 

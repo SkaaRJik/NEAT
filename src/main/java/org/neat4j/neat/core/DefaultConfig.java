@@ -2,9 +2,6 @@ package org.neat4j.neat.core;
 
 import org.neat4j.core.AIConfig;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class DefaultConfig {
     static private AIConfig defaultConfig;
 

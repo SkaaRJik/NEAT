@@ -8,7 +8,6 @@ import org.neat4j.neat.data.core.NetworkOutput;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**

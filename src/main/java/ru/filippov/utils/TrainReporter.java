@@ -2,10 +2,8 @@ package ru.filippov.utils;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.scene.layout.Pane;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
-import org.apache.poi.wp.usermodel.Paragraph;
 import org.apache.poi.xwpf.usermodel.*;
 import org.neat4j.core.AIConfig;
 import org.neat4j.neat.data.core.DataKeeper;

@@ -8,7 +8,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import ru.filippov.GUI.windows.AlertWindow;
 
-import java.io.*;
+import java.io.File;
 import java.util.ResourceBundle;
 
 public class SaveDialogueController {

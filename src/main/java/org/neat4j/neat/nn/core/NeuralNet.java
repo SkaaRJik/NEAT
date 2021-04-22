@@ -5,7 +5,6 @@ import org.neat4j.neat.data.core.NetworkInput;
 import org.neat4j.neat.data.core.NetworkOutputSet;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.List;
 
 

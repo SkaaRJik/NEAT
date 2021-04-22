@@ -9,11 +9,13 @@ import javafx.stage.Stage;
 import org.neat4j.neat.core.DefaultConfig;
 import ru.filippov.GUI.windows.AlertWindow;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.Set;
 
 public class NewDatasetDialogueController {
     @FXML

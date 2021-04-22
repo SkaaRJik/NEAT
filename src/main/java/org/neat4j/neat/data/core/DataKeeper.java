@@ -2,8 +2,7 @@ package org.neat4j.neat.data.core;
 
 import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.core.NEATNeuralNet;
-import org.neat4j.neat.data.normaliser.DataScaler;
-import org.neat4j.neat.data.normaliser.LinearScaler;
+import org.neat4j.neat.data.normaliser.DataScalerBase;
 import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.nn.core.NeuralNet;
 
@@ -14,7 +13,7 @@ import java.util.List;
 public class DataKeeper implements Serializable{
 
 
-    DataScaler dataScaler;
+    DataScalerBase dataScaler;
     List<List<Double>> data;
 
 
@@ -41,7 +40,7 @@ public class DataKeeper implements Serializable{
     }
 
 
-    public DataKeeper(List<List<Double>> data, DataScaler dataScaler) {
+    public DataKeeper(List<List<Double>> data, DataScalerBase dataScaler) {
         this.data = data;
         this.dataScaler = dataScaler;
 
@@ -176,7 +175,7 @@ public class DataKeeper implements Serializable{
 
     }
 
-    public DataScaler getDataScaler() {
+    public DataScalerBase getDataScaler() {
         return dataScaler;
     }
 
@@ -287,7 +286,7 @@ public class DataKeeper implements Serializable{
         if(counter == 0) throw new ExceptionInInitializerError("Не соответствие моделей: \nНе удалось подобрать данные для выходного слоя.");
     }
 
-    public void setDataScaler(DataScaler dataScaler) {
+    public void setDataScaler(DataScalerBase dataScaler) {
         this.dataScaler = dataScaler;
     }
 

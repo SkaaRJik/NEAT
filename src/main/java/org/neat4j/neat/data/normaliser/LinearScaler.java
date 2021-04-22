@@ -5,7 +5,7 @@ import org.neat4j.neat.data.core.DataKeeper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LinearScaler implements DataScaler {
+public class LinearScaler extends DataScalerBase {
 
     List<Double> mins;
     List<Double> maxs;
@@ -13,42 +13,53 @@ public class LinearScaler implements DataScaler {
     Double d2;
 
     @Override
-    public DataKeeper normalise(List<List<Double>> dataToNormalize, double minRange, double maxRange) {
+    public DataKeeper normalise(List<List<Double>> dataToNormalize, double minRange, double maxRange, boolean enableLogTransform) {
+
+        List<List<Double>> data = dataToNormalize;
+        this.enableLogTransform = enableLogTransform;
+        
+        if(this.enableLogTransform){
+            data = this.logTransform(data);
+            if(data == dataToNormalize){
+                this.enableLogTransform = false;
+            }
+        }
+        
         double min = 0;
         double max = 0;
         d1 = minRange;
         d2 = maxRange;
-        List<List<Double>> output = new ArrayList<>(dataToNormalize.size());
-        mins = new ArrayList<>(dataToNormalize.get(0).size());
-        maxs = new ArrayList<>(dataToNormalize.get(0).size());
-        for (int i = 0; i < dataToNormalize.get(0).size(); i++) {
-            for(int j = 0 ; j < dataToNormalize.size(); j++){
+        List<List<Double>> output = new ArrayList<>(data.size());
+        mins = new ArrayList<>(data.get(0).size());
+        maxs = new ArrayList<>(data.get(0).size());
+        for (int i = 0; i < data.get(0).size(); i++) {
+            for(int j = 0 ; j < data.size(); j++){
                 if(i==0){
-                    output.add(new ArrayList<>(dataToNormalize.get(0).size()));
+                    output.add(new ArrayList<>(data.get(0).size()));
                 }
                 if(j == 0){
-                    if(dataToNormalize.get(j).get(i) != null) {
-                        min = dataToNormalize.get(j).get(i);
-                        max = dataToNormalize.get(j).get(i);
+                    if(data.get(j).get(i) != null) {
+                        min = data.get(j).get(i);
+                        max = data.get(j).get(i);
                     }
                     continue;
                 }
-                if(dataToNormalize.get(j).get(i) != null) {
-                    min = Double.min(min, dataToNormalize.get(j).get(i));
-                    max = Double.max(max, dataToNormalize.get(j).get(i));
+                if(data.get(j).get(i) != null) {
+                    min = Double.min(min, data.get(j).get(i));
+                    max = Double.max(max, data.get(j).get(i));
                 }
             }
             mins.add(min);
             maxs.add(max);
-            for(int j = 0 ; j < dataToNormalize.size(); j++){
-                if(dataToNormalize.get(j).get(i) == null) {
+            for(int j = 0 ; j < data.size(); j++){
+                if(data.get(j).get(i) == null) {
                     output.get(j).add(null);
                     continue;
                 }
                 if(minRange >= 0)
-                    output.get(j).add(((dataToNormalize.get(j).get(i)-min)/(max-min))*(maxRange-minRange)+minRange);
+                    output.get(j).add(((data.get(j).get(i)-min)/(max-min))*(maxRange-minRange)+minRange);
                 else
-                    output.get(j).add(((dataToNormalize.get(j).get(i)-min)/(max-min))*(maxRange*2) + minRange);
+                    output.get(j).add(((data.get(j).get(i)-min)/(max-min))*(maxRange*2) + minRange);
             }
 
         }
@@ -74,6 +85,10 @@ public class LinearScaler implements DataScaler {
                 //output.get(j).add(((dataToNormalize.get(j).get(i)-mins.get(i))*(max-min))/(maxs.get(i)-mins.get(i))+min);
                 //output.get(j).add(((dataToNormalize.get(j).get(i)-min)/(max-min))*(maxs.get(i)-mins.get(i))+mins.get(i));
             }
+        }
+
+        if(this.enableLogTransform){
+            output = this.expTransform(output);
         }
 
         return new DataKeeper(output, this);
@@ -111,7 +126,9 @@ public class LinearScaler implements DataScaler {
                 //output.get(j).add(((columns.get(j).get(i)-min)/(max-min))*(maxs.get(columnIndexes.get(i))-mins.get(columnIndexes.get(i)))+mins.get(columnIndexes.get(i)));
             }
         }
-
+        if(this.enableLogTransform){
+            output = this.expTransform(output);
+        }
         return output;
     }
 

@@ -3,12 +3,7 @@ package org.neat4j.neat.applications.core;
 import org.neat4j.core.AIConfig;
 import org.neat4j.core.InitialisationFailedException;
 import org.neat4j.neat.data.core.NetworkDataSet;
-import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.nn.core.NeuralNet;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 
 /**
  * Provides bare bones NEAT application 

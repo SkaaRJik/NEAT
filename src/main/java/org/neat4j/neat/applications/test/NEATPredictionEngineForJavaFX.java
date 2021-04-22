@@ -5,10 +5,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.neat4j.neat.data.core.*;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class NEATPredictionEngineForJavaFX extends MSENEATPredictionEngine implements Runnable {

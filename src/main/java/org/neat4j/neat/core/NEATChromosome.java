@@ -6,7 +6,6 @@
  */
 package org.neat4j.neat.core;
 
-import org.neat4j.neat.data.core.NetworkOutputSet;
 import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.ga.core.Gene;
 

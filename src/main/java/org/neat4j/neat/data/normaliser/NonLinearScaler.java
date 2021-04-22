@@ -6,11 +6,9 @@ import org.neat4j.neat.nn.core.ActivationFunction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 
-public class NonLinearScaler implements DataScaler {
+public class NonLinearScaler extends DataScalerBase {
     ActivationFunction activationFunction;
     Double minRange;
     Double maxRange;
@@ -23,7 +21,18 @@ public class NonLinearScaler implements DataScaler {
     }
 
     @Override
-    public DataKeeper normalise(List<List<Double>> dataToNormalize, double minRange, double maxRange) {
+    public DataKeeper normalise(List<List<Double>> dataToNormalize, double minRange, double maxRange, boolean enableLogTransform) {
+
+        List<List<Double>> data = dataToNormalize;
+        this.enableLogTransform = enableLogTransform;
+
+        if(this.enableLogTransform){
+            data = this.logTransform(data);
+            if(data == dataToNormalize){
+                this.enableLogTransform = false;
+            }
+        }
+
         Double[][] dataArray = dataToNormalize.stream().map(doubles -> doubles.stream().toArray(Double[]::new)).toArray(Double[][]::new);
         Double[][] normalisedDataArray = new Double[dataArray.length][dataArray[0].length];
 

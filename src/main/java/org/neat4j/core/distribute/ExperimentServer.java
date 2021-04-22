@@ -1,16 +1,5 @@
 package org.neat4j.core.distribute;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ArrayBlockingQueue;
-
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Category;
 import org.neat4j.core.AIConfig;
@@ -23,6 +12,13 @@ import org.neat4j.neat.core.NEATLoader;
 import org.neat4j.neat.ga.core.Chromosome;
 import org.neat4j.neat.ga.core.FitnessFunction;
 import org.neat4j.neat.ga.core.Population;
+
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ArrayBlockingQueue;
 
 public class ExperimentServer implements AIController {
 	private static final Category cat = Category.getInstance(ExperimentServer.class);

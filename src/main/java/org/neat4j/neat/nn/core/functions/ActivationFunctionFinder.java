@@ -1,7 +1,5 @@
 package org.neat4j.neat.nn.core.functions;
 
-import org.neat4j.neat.nn.core.ActivationFunction;
-
 public class ActivationFunctionFinder {
     public  static String getFunctionClassNameByName(String name){
         if(ArctgFunction.getStaticFunctionName().equalsIgnoreCase(name)) return ArctgFunction.class.getName();
